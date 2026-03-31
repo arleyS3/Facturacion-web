@@ -1,0 +1,14 @@
+spring:
+  application:
+    name: api
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui
+
+sunat:
+  api:
+    base-url: https://api.apis.net.pe
+    token: ${SUNAT_API_TOKEN}
