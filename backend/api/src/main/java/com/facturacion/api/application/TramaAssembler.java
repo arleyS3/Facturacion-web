@@ -10,11 +10,11 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * En el desktop, la trama se arma concatenando tramas por sección (A + B + A2 ...).
- * Aquí empezamos con una implementación mínima y extensible: concatena secciones por orden
- * según tipoDocumento, leyendo valores desde el JSON.
+ * Ensamblador de tramas.
  *
- * Esto permite ir reemplazando gradualmente con la lógica real de Seccion* del proyecto.
+ * <p>Construye una trama textual concatenando las secciones del documento en el orden
+ * esperado por el sistema legacy. Lee valores desde el payload JSON y delega en
+ * {@link com.facturacion.api.core.documento.DocumentoElectronico} para la generación final.</p>
  */
 @Component
 public class TramaAssembler {
@@ -103,5 +103,7 @@ public class TramaAssembler {
         return String.valueOf(fallbackIdx);
     }
 
-    // mapeo centralizado en TipoDocumentoMapper
+    /**
+     * Mapeo centralizado en {@link TipoDocumentoMapper}.
+     */
 }

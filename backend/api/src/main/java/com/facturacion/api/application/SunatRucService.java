@@ -17,6 +17,13 @@ public class SunatRucService {
         this.properties = properties;
     }
 
+    /**
+     * Consulta información de un RUC en el servicio externo de SUNAT.
+     *
+     * @param ruc Número de RUC a consultar.
+     * @return {@link RucResponse} con los datos devueltos por la API o null si la respuesta no es 2xx.
+     * @throws IllegalStateException si no está configurado el token de acceso a la API.
+     */
     public RucResponse consultarPorRuc(String ruc) {
         if (properties.getToken() == null || properties.getToken().isBlank()) {
             throw new IllegalStateException("No se configuró SUNAT_API_TOKEN");

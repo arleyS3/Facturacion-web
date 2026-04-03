@@ -22,6 +22,7 @@ import com.facturacion.api.core.catalogo.*;
 public class CatalogController {
 
   @GetMapping("/unidades-medida")
+  /** Devuelve las unidades de medida disponibles. */
   public List<CatalogItem> unidadesDeMedida() {
     return Arrays.stream(UnidadDeMedida.values())
         .map(u -> CatalogItem.of(u.getCodigo(), u.getDescripcion()))
@@ -29,6 +30,7 @@ public class CatalogController {
   }
 
   @GetMapping("/motivos-traslado")
+  /** Devuelve los motivos de traslado (catalogo). */
   public List<CatalogItem> motivosTraslado() {
     return Arrays.stream(MotivoTraslado.values())
         .map(m -> CatalogItem.of(m.getCodigo(), m.getDescripcion()))
@@ -36,6 +38,7 @@ public class CatalogController {
   }
 
   @GetMapping("/puertos")
+  /** Lista puertos peruanos del catálogo. */
   public List<CatalogItem> puertos() {
     return Arrays.stream(PuertosPeru.values())
         .map(p -> CatalogItem.of(p.getCodigo(), p.getDescripcion(), p.getCodigoSunat()))
@@ -43,6 +46,7 @@ public class CatalogController {
   }
 
   @GetMapping("/aeropuertos")
+  /** Lista aeropuertos del catálogo. */
   public List<CatalogItem> aeropuertos() {
     return Arrays.stream(AeropuertosPeru.values())
         .map(a -> CatalogItem.of(a.getCodigo(), a.getDescripcion(), a.getCodigoSunat()))
@@ -50,6 +54,7 @@ public class CatalogController {
   }
 
   @GetMapping("/tipos-documento")
+  /** Tipos de documento soportados por la API. */
   public List<CatalogItem> tiposDocumento() {
     return List.of(
         CatalogItem.of("01", "Factura"),
@@ -61,6 +66,7 @@ public class CatalogController {
   }
 
   @GetMapping("/tipos-operacion")
+  /** Tipos de operación (catalogo). */
   public List<CatalogItem> tiposOperacion() {
     return Arrays.stream(TipoOperacion.values())
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
@@ -68,6 +74,7 @@ public class CatalogController {
   }
 
   @GetMapping("/tipos-afectacion-igv")
+  /** Tipos de afectación de IGV (catalogo). */
   public List<CatalogItem> tiposAfectacionIGV() {
     return Arrays.stream(TipoAfectacionIGV.values())
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion(), t.getCodigoTributario()))
@@ -75,6 +82,7 @@ public class CatalogController {
   }
 
   @GetMapping("/tipos-documento-identidad")
+  /** Tipos de documento de identidad del catálogo. */
   public List<CatalogItem> tiposDocumentoIdentidad() {
     return Arrays.stream(TipoDocumentoIdentidad.values())
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
@@ -82,6 +90,7 @@ public class CatalogController {
   }
 
   @GetMapping("/codigos-tipo-tributo")
+  /** Códigos de tipo de tributo (catalogo). */
   public List<CatalogItem> codigosTipoTributo() {
     return Arrays.stream(CodigoTipTributo.values())
         .map(c -> CatalogItem.of(c.getCodigo(), c.getDescripcion()))
@@ -89,6 +98,7 @@ public class CatalogController {
   }
 
   @GetMapping("/tipos-nota-credito")
+  /** Tipos de nota de crédito. */
   public List<CatalogItem> tiposNotaCredito() {
     return Arrays.stream(TipoNotaCredito.values())
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
@@ -96,6 +106,7 @@ public class CatalogController {
   }
 
   @GetMapping("/tipos-nota-debito")
+  /** Tipos de nota de débito. */
   public List<CatalogItem> tiposNotaDebito() {
     return Arrays.stream(TipoNotaDebito.values())
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
@@ -103,6 +114,7 @@ public class CatalogController {
   }
 
   @GetMapping("/documentos-relacionados-transporte")
+  /** Documentos relacionados a transporte (catalogo). */
   public List<CatalogItem> documentosRelacionadosTransporte() {
     return Arrays.stream(DocumentosRelacionadosTransporte.values())
         .map(d -> CatalogItem.of(d.getCodigo(), d.getDescripcion()))
@@ -110,6 +122,7 @@ public class CatalogController {
   }
 
   @GetMapping("/monedas")
+  /** Lista monedas leyendo ISO-4217 desde recursos. */
   public List<CatalogItem> monedas() {
     // Lee el archivo ISO-4217.txt desde resources
     InputStream is = getClass().getClassLoader().getResourceAsStream("BD/ISO-4217.txt");
@@ -133,6 +146,7 @@ public class CatalogController {
   }
 
   @GetMapping("/series/{tipoDocumento}")
+  /** Devuelve series de ejemplo para el tipo de documento. */
   public List<String> series(@PathVariable String tipoDocumento) {
     return switch (tipoDocumento) {
       case "Factura", "Nota de débito", "Nota de crédito" -> List.of("F001", "F002", "F003", "F004", "F005");

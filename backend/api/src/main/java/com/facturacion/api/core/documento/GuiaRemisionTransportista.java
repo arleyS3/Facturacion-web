@@ -2,6 +2,10 @@ package com.facturacion.api.core.documento;
 
 import com.facturacion.api.core.seccion.SeccionSimple;
 
+/**
+ * Guía de Remisión (Transportista). Reutiliza la serialización por secciones
+ * para construir la trama TXT.
+ */
 public class GuiaRemisionTransportista extends DocumentoElectronico {
     public GuiaRemisionTransportista() {
         this.seccionA = new SeccionSimple();

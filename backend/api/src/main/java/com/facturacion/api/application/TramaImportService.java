@@ -89,6 +89,9 @@ public class TramaImportService {
         };
     }
 
+    /**
+     * Resultado de la importación: tipo de documento detectado y el payload con secciones.
+     */
     public record ImportResult(String tipoDocumento, SeccionesPayload secciones) {
     }
 }

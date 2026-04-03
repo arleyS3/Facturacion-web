@@ -2,6 +2,10 @@ package com.facturacion.api.core.documento;
 
 import com.facturacion.api.core.seccion.SeccionSimple;
 
+/**
+ * Representa una Guía de Remisión. Las secciones se implementan como {@link com.facturacion.api.core.seccion.SeccionSimple}
+ * para permitir una representación flexible de campos sin estructura compleja.
+ */
 public class GuiaRemision extends DocumentoElectronico {
     public GuiaRemision() {
         this.seccionA = new SeccionSimple();

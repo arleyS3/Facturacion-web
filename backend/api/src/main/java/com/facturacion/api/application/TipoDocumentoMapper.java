@@ -2,10 +2,19 @@ package com.facturacion.api.application;
 
 import java.util.Locale;
 
+/**
+ * Mapea nombres legibles de tipo de documento a su código SUNAT de 2 dígitos.
+ */
 public final class TipoDocumentoMapper {
     private TipoDocumentoMapper() {
     }
 
+    /**
+     * Convierte una representación legible ("Factura", "Boleta", etc.) o un código
+     * de 2 dígitos a su código SUNAT correspondiente.
+     *
+     * @throws IllegalArgumentException si el tipo no es soportado o es nulo/vacío.
+     */
     public static String toCodigoSunat(String tipoDocumento) {
         if (tipoDocumento == null || tipoDocumento.isBlank()) {
             throw new IllegalArgumentException("tipoDocumento es requerido");

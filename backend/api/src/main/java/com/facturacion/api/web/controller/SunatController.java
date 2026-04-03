@@ -35,6 +35,7 @@ public class SunatController {
             @ApiResponse(responseCode = "400", description = "RUC inválido")
     })
     @GetMapping(value = "/sunat", produces = MediaType.APPLICATION_JSON_VALUE)
+    /** Consulta información de contribuyente por RUC (vía servicio SUNAT externo). */
     public RucResponse consultarRuc(
             @RequestParam("ruc")
             @Pattern(regexp = "^[0-9]{11}$", message = "El RUC debe tener 11 dígitos")

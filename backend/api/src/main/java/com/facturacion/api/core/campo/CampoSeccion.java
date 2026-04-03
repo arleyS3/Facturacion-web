@@ -4,6 +4,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+/**
+ * Representa un campo dentro de una sección: nombre, valor y valor2 (opcional).
+ *
+ * <p>Se apoya en Lombok para getters/setters y constructor sin-args.</p>
+ */
 @Getter
 @Setter
 @NoArgsConstructor
@@ -11,7 +16,6 @@ public class CampoSeccion {
     private String nombre;
     private String valor;
     private String valor2;
-
 
     public CampoSeccion(String nombre, String valor, String valor2) {
         this.nombre = nombre;

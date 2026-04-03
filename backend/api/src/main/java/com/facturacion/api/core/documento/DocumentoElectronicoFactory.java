@@ -1,5 +1,9 @@
 package com.facturacion.api.core.documento;
 
+/**
+ * Factory simple para crear instancias de {@link DocumentoElectronico} según
+ * el código SUNAT de tipo de documento.
+ */
 public final class DocumentoElectronicoFactory {
     private DocumentoElectronicoFactory() {
     }

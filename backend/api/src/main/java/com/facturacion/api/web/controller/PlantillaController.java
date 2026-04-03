@@ -18,6 +18,7 @@ public class PlantillaController {
   }
 
   @GetMapping("/{slug}")
+  /** Devuelve una plantilla por slug (ej. factura, boleta). */
   public SeccionesPayload get(@PathVariable String slug) {
     return plantillaService.plantillaPorSlug(slug);
   }

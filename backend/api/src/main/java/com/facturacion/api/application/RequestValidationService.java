@@ -12,6 +12,16 @@ import java.util.HashMap;
 @Service
 public class RequestValidationService {
 
+    /**
+     * Valida la solicitud de generación de trama.
+     *
+     * <p>Aplica un conjunto de validaciones mínimas trasladadas desde la lógica "desktop".
+     * Si se detectan errores, lanza {@link ValidationException} con la lista de mensajes.</p>
+     *
+     * @param request Request a validar. No puede ser null.
+     * @throws IllegalArgumentException si request es null o contiene datos imprescindibles faltantes.
+     * @throws ValidationException si la validación detecta errores de negocio.
+     */
     public void validar(GenerarTramaRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("request es requerido");
@@ -48,6 +58,13 @@ public class RequestValidationService {
         }
     }
 
+    /**
+     * Valida reglas específicas para Guía de Remisión.
+     *
+     * @param errores Lista donde se acumulan mensajes de error.
+     * @param campos  Mapa de campos por sección.
+     * @param listas  Mapa de listas por sección.
+     */
     private static void validarGuiaRemision(
             List<String> errores,
             Map<String, Map<String, String>> campos,
@@ -109,43 +126,6 @@ public class RequestValidationService {
                 errores.add("G4.IndicadorTraslado: Falta SUNAT_Envio_IndicadorTrasladoTotalDAMoDS para motivo 08/09");
             }
         }
-        /*
-        // Reglas de modalidad (desktop: ValidacionSeccionG1/ValidarSeccionG11)
-        if (ValidationUtils.requerido(modalidadTraslado)) {
-            boolean tieneM1L = codigosIndicador.stream()
-                    .anyMatch(s -> "SUNAT_Envio_IndicadorTrasladoVehiculoM1L".equalsIgnoreCase(s));
-            boolean tieneRegVehConductor = codigosIndicador.stream()
-                    .anyMatch(s -> "SUNAT_Envio_IndicadorVehiculoConductoresTransp".equalsIgnoreCase(s));
-
-            // G1: si modalidad 01 y (M1L o registro veh/conductor) => requiere FecIniTras (cuando se trabaja esa parte)
-            // Aquí lo aplicamos como: si el cliente envía G1.FecIniTras vacío cuando debería, marcamos error.
-            Map<String, String> g1 = campos != null ? campos.get("G1") : null;
-            String fecIniTras = get(g1, "FecIniTras");
-            if ("02".equalsIgnoreCase(modalidadTraslado)) {
-                if (!ValidationUtils.requerido(fecIniTras)) {
-                    errores.add("G1.FecIniTras: Requerido para modalidad 02");
-                }
-            } else if ("01".equalsIgnoreCase(modalidadTraslado) && (tieneM1L || tieneRegVehConductor)) {
-                if (!ValidationUtils.requerido(fecIniTras)) {
-                    errores.add("G1.FecIniTras: Requerido para modalidad 01 con indicadores (M1L o registro veh/conductor)");
-                }
-            }
-
-            // G11: conductor requerido según modalidad + indicadores
-            // Si se envía lista G11 (conductores) vacía cuando debería, error.
-            List<Map<String, String>> conductores = listas != null ? listas.get("G11") : null;
-            boolean hayConductor = conductores != null && !conductores.isEmpty();
-            boolean requiereConductor = switch (modalidadTraslado) {
-                case "03" -> true;
-                case "02" -> !tieneM1L;
-                case "01" -> !tieneM1L && tieneRegVehConductor;
-                default -> false;
-            };
-            if (requiereConductor && !hayConductor) {
-                errores.add("G11: Se requiere al menos un conductor para la modalidad/indicadores actuales");
-            }
-        }*/
-
         // G2: puerto/aeropuerto requerido para motivo 08/09 (desktop: ValidacionSeccionG2)
         if ("08".equalsIgnoreCase(motivoTraslado) || "09".equalsIgnoreCase(motivoTraslado)) {
             Map<String, String> g2 = campos != null ? campos.get("G2") : null;
@@ -155,6 +135,11 @@ public class RequestValidationService {
             }
         }
     }
+
+    /**
+     * Valida las reglas mínimas para Guía de Remisión.
+     * Añade mensajes a la lista de errores cuando aplica.
+     */
 
     private static void validarComprobante(
             List<String> errores,
@@ -552,7 +537,10 @@ public class RequestValidationService {
         };
     }
 
-        private static void validarSeccionAComun(
+    /**
+     * Valida la sección A con reglas comunes (serie, correlativo, fecha, emisor, etc.).
+     */
+    private static void validarSeccionAComun(
             List<String> errores,
             String tipoDocumentoSunat,
             Map<String, Map<String, String>> campos

@@ -3,6 +3,7 @@ package com.facturacion.api.core.seccion;
 import java.util.List;
 
 
+/** Sección E: datos adicionales (adicionales SUNAT). */
 public class SeccionE extends Seccion<Object> {
     @Override
     public List<Object> cargarCamposDesdeArchivo(String ruta) {

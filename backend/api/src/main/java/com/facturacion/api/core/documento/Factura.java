@@ -7,6 +7,10 @@ import com.facturacion.api.core.seccion.SeccionB;
 import com.facturacion.api.core.seccion.SeccionE;
 import com.facturacion.api.core.seccion.SeccionM;
 
+/**
+ * Implementación de {@link DocumentoElectronico} para Factura.
+ * Inicializa las secciones relevantes y genera la trama TXT en el orden esperado.
+ */
 public class Factura extends DocumentoElectronico {
     public Factura() {
         this.seccionA = new SeccionA();

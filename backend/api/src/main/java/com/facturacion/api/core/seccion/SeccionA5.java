@@ -3,6 +3,7 @@ package com.facturacion.api.core.seccion;
 import java.util.List;
 
 
+/** Sección A5: datos de cuotas/financiamiento (cuando aplica). */
 public class SeccionA5 extends Seccion<Object> {
     @Override
     public List<Object> cargarCamposDesdeArchivo(String ruta) {

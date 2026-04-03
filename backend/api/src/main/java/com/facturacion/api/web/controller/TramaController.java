@@ -27,6 +27,14 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+/**
+ * Controlador REST para operaciones relacionadas con tramas TXT.
+ *
+ * Exposa endpoints para:
+ * - generar una trama a partir de un payload por secciones (JSON),
+ * - descargar la trama como archivo .txt,
+ * - importar un archivo TXT y convertirlo al payload por secciones.
+ */
 @RestController
 @RequestMapping("/api/v1/tramas")
 @Tag(name = "Tramas", description = "Generación/descarga/importación de tramas TXT por secciones")

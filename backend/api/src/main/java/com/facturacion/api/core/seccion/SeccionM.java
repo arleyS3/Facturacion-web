@@ -3,6 +3,7 @@ package com.facturacion.api.core.seccion;
 import java.util.List;
 
 
+/** Sección M: datos de envío por email (Mails). */
 public class SeccionM extends Seccion<Object> {
     @Override
     public List<Object> cargarCamposDesdeArchivo(String ruta) {
