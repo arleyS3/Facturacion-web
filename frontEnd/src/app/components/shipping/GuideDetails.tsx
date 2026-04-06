@@ -16,6 +16,10 @@ interface Product {
   unidadMedida: string;
 }
 
+/**
+ * Componente que permite agregar productos a la guía (detalle de items).
+ * Sincroniza la lista con el formulario principal (shippingItems).
+ */
 export function GuideDetails() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

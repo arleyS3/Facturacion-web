@@ -9,6 +9,10 @@ import { FileText } from "lucide-react";
 import { IssuerData } from "../shared/IssuerData";
 import { useFormContext } from "react-hook-form";
 
+/**
+ * Agrupa las secciones principales del formulario de guía (traslado,
+ * transportista, partida, llegada y proveedor).
+ */
 export function GuideInformation() {
   const methods = useFormContext();
 

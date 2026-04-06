@@ -15,6 +15,9 @@ interface AdditionalData {
   descripcion: string;
 }
 
+/**
+ * Componente para administrar datos adicionales de la guía de remisión.
+ */
 export function GuideAdditionalData() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

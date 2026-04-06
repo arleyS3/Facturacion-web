@@ -5,6 +5,9 @@ import { Textarea } from "../ui/textarea";
 import { useCatalog } from "../../hooks/useCatalog";
 import { useFormContext } from "react-hook-form";
 
+/**
+ * Sección con datos del traslado (motivo, peso, fechas, modalidad, observaciones).
+ */
 export function TransportData() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

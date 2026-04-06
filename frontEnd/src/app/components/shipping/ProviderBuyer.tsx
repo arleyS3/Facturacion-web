@@ -4,6 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useCatalog } from "../../hooks/useCatalog";
 import { useFormContext } from "react-hook-form";
 
+/**
+ * Sección para ingresar datos del proveedor y comprador en la guía.
+ */
 export function ProviderBuyer() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

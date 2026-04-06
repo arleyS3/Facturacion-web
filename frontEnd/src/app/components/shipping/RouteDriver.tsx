@@ -19,6 +19,9 @@ interface Driver {
   nroLicencia: string;
 }
 
+/**
+ * Componente para administrar conductores relacionados al traslado.
+ */
 export function RouteDriver() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

@@ -4,6 +4,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useCatalog } from "../../hooks/useCatalog";
 import { useFormContext } from "react-hook-form";
 
+/**
+ * Sección para ingresar datos del destinatario en la guía de remisión.
+ */
 export function TransportDestination() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

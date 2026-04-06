@@ -7,6 +7,10 @@ import { useCatalog } from "../../hooks/useCatalog";
 import { useFormContext } from "react-hook-form";
 import { Map } from "lucide-react";
 
+/**
+ * Componente para seleccionar el punto de partida (departamento/provincia/distrito)
+ * y dirección asociada para la guía de remisión.
+ */
 export function StartPoint() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

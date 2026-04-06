@@ -5,6 +5,9 @@ import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useCatalog } from "../../hooks/useCatalog";
 
+/**
+ * Componente para seleccionar aeropuerto/puerto asociado al traslado.
+ */
 export function RouteAirport() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

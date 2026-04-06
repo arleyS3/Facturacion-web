@@ -12,6 +12,10 @@ interface Indicator {
   indicador: string;
 }
 
+/**
+ * Componente para administrar indicadores de traslado en la guía de remisión.
+ * Permite agregar/remover indicadores y sincronizarlos con el formulario.
+ */
 export function RouteIndicators() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

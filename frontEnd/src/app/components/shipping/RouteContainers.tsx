@@ -13,6 +13,10 @@ interface Container {
   nroPrecinto: string;
 }
 
+/**
+ * Componente para administrar contenedores asociados a la guía de remisión.
+ * Permite agregar/remover contenedores y sincronizarlos con el formulario.
+ */
 export function RouteContainers() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

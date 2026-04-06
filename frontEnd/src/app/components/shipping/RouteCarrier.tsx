@@ -20,6 +20,9 @@ interface Carrier {
   numRegMTC: string;
 }
 
+/**
+ * Componente para administrar transportistas (carriers) en la guía de remisión.
+ */
 export function RouteCarrier() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

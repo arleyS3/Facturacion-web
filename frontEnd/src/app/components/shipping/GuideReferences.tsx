@@ -18,6 +18,9 @@ interface Reference {
   rucEmisor: string;
 }
 
+/**
+ * Componente para gestionar documentos de referencia asociados a la guía.
+ */
 export function GuideReferences() {
   const methods = useFormContext();
   const setValue = methods?.setValue;

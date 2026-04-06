@@ -7,6 +7,10 @@ import { RouteContainers } from "./RouteContainers";
 import { RouteIndicators } from "./RouteIndicators";
 import { RouteSecondaryVehicles } from "./RouteSecondaryVehicles";
 
+/**
+ * Agrupa las secciones del tramo de la guía: transportista, conductor,
+ * aeropuerto, contenedores, indicadores y vehículos secundarios.
+ */
 export function GuideRoute() {
   return (
     <div className="space-y-6">

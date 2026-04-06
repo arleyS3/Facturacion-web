@@ -13,6 +13,9 @@ interface SecondaryVehicle {
   certificado: string;
 }
 
+/**
+ * Componente para administrar vehículos secundarios en la guía de remisión.
+ */
 export function RouteSecondaryVehicles() {
   const methods = useFormContext();
   const setValue = methods?.setValue;
