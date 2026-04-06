@@ -23,6 +23,10 @@ import {
   showServerValidationErrors,
 } from "../lib/emitErrorNotification";
 
+/**
+ * Componente del formulario de documentos de venta. Maneja el flujo de
+ * armado del payload, llamada a /tramas/generar y descarga de TXT.
+ */
 export function InvoiceForm() {
   const [showEmitDialog, setShowEmitDialog] = useState(false);
   const goHome = () => {

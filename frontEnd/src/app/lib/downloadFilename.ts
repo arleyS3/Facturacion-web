@@ -31,3 +31,8 @@ export const buildFilenameFromPayload = (
   const correlativo = sanitizeFilenamePart(a?.Correlativo, "00000000");
   return `${ruc}-${tipoDoc}-${serie}-${correlativo}.txt`;
 };
+
+/**
+ * Extrae nombre del header Content-Disposition o devuelve fallback.
+ * (ya existe getFilenameFromDisposition que hace el trabajo en este archivo)
+ */

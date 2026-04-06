@@ -5,6 +5,12 @@ import {
   type OptionalListaSection,
 } from "./payloadSections";
 
+/**
+ * Convierte etiquetas legibles de tipo de documento a código SUNAT.
+ *
+ * @param label etiqueta (por ejemplo "Factura")
+ * @returns código SUNAT (ej. "01") o undefined
+ */
 export function docTypeLabelToCode(label?: string) {
   if (!label) return undefined;
   const l = label.toString().toLowerCase();

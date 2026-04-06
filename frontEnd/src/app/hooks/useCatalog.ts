@@ -3,6 +3,13 @@ import { api } from "../lib/api";
 
 export type CatalogItem = { code: string; label: string; extra?: string };
 
+/**
+ * Hook simple para obtener un catálogo desde el backend.
+ * Devuelve { data, loading, error } y evita peticiones cuando los parámetros
+ * están incompletos.
+ *
+ * @param path ruta para la llamada al API (por ejemplo '/catalogos/monedas')
+ */
 export function useCatalog(path: string) {
   const [data, setData] = useState<CatalogItem[] | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

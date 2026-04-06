@@ -151,6 +151,12 @@ function buildSecondaryVehicles(values: Values): Array<Record<string, string>> {
   );
 }
 
+/**
+ * Construye el payload para guías de remisión compatible con el backend.
+ *
+ * @param values objeto con campos del formulario de guía
+ * @returns payload con { tipoDocumento, secciones }
+ */
 export function buildShippingPayload(values: Values) {
   const tipoDocumento = toStringValue(values.docType, "09");
 

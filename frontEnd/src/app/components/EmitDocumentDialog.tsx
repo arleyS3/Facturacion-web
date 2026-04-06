@@ -22,6 +22,14 @@ interface EmitDocumentDialogProps {
   onEmit?: () => Promise<void> | void;
 }
 
+/**
+ * Dialogo para confirmar la emisión y selección de formatos de salida.
+ *
+ * @param props.open indica si el diálogo está abierto
+ * @param props.onOpenChange callback cuando cambia el estado de apertura
+ * @param props.documentType tipo de documento (sales | shipping)
+ * @param props.onEmit función que ejecuta la emisión
+ */
 export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }: EmitDocumentDialogProps) {
   const methods = useFormContext();
   const [isEmitting, setIsEmitting] = useState(false);
