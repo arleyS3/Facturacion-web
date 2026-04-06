@@ -1,7 +1,38 @@
 spring:
   application:
-    name: api
+    name: central-fianzas
 
+  # DataSource (PostgreSQL / Supabase)
+  datasource:
+    url: ${DB_URL}
+    driver-class-name: org.postgresql.Driver
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    hikari:
+      maximum-pool-size: 2
+      minimum-idle: 1
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      initialization-fail-timeout: 10000
+      leak-detection-threshold: 60000
+      data-source-properties:
+        preferQueryMode: simple
+        ApplicationName: central-fianzas-api
+        prepareThreshold: 0
+
+  # JPA / Hibernate
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        connection:
+          autocommit: true
 springdoc:
   api-docs:
     path: /api-docs
@@ -10,5 +41,12 @@ springdoc:
 
 sunat:
   api:
-    base-url: https://api.apis.net.pe
+    base-url: ${SUNAT_API_URL}
     token: ${SUNAT_API_TOKEN}
+
+# Server
+server:
+  port: 8080
+
+
+
