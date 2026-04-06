@@ -66,7 +66,7 @@ Este repositorio contiene dos partes principales: el backend (API REST en Java S
 <p>Requisitos: JDK 21. El backend está en <code>backend/api</code> y usa el wrapper de Maven.</p>
 
 <pre><code># ir a la carpeta del API
-cd backend/api
+cd src/backend/api
 
 # ejecutar la aplicación
 ./mvnw spring-boot:run
@@ -87,7 +87,7 @@ cd backend/api
 
 <p>Requisitos: Node.js y npm.</p>
 
-<pre><code>cd frontEnd
+<pre><code>cd src/frontEnd
 npm install
 npm run dev
 </code></pre>
