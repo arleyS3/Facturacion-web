@@ -18,6 +18,7 @@ public class OpenApiConfig {
             @Value("${app.api.version:1.0}") String apiVersion,
             @Value("${app.api.server-url:http://localhost:8080}") String serverUrl
     ) {
+        // Construye la definición OpenAPI usada por springdoc-openapi
         return new OpenAPI()
                 .info(new Info()
                         .title(applicationName + " - API")

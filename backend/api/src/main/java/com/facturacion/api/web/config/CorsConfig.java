@@ -5,6 +5,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
+/**
+ * Configuración CORS para permitir orígenes de frontend conocidos en desarrollo
+ * y production (dominios vercel). Ajustar según necesidades de despliegue.
+ */
 @Configuration
 public class CorsConfig {
     @Bean

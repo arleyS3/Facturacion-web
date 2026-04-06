@@ -6,6 +6,13 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.web.client.RestClient;
 
+/**
+ * Configuración de cliente REST para consultas hacia el proveedor SUNAT.
+ * <p>
+ * Define un {@link org.springframework.web.client.RestClient} con la URL base y
+ * headers por defecto (Accept: application/json).
+ * </p>
+ */
 @Configuration
 public class SunatClientConfig {
 

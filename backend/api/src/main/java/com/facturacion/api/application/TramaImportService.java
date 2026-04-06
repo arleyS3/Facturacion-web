@@ -14,9 +14,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Servicio para importar una trama TXT y convertirla a un payload por secciones.
+ * <p>
+ * El formato esperado es líneas separadas por salto de línea con campos
+ * separados por `;`. Detecta secciones, campos y listas (índices) y construye
+ * un {@link com.facturacion.api.web.dto.SeccionesPayload} con la estructura
+ * resultante.
+ * </p>
+ */
 @Service
 public class TramaImportService {
 
+    /**
+     * Importa el contenido del stream que contiene la trama TXT y devuelve el
+     * resultado con el tipo de documento detectado y el payload por secciones.
+     *
+     * @param inputStream flujo de datos de la trama (UTF-8)
+     * @return resultado de la importación con payload y tipo de documento
+     * @throws IOException si ocurre un error de lectura
+     */
     public ImportResult importar(InputStream inputStream) throws IOException {
         Map<String, Map<String, String>> campos = new LinkedHashMap<>();
         Map<String, List<Map<String, String>>> listas = new LinkedHashMap<>();
@@ -74,6 +91,14 @@ public class TramaImportService {
         return new ImportResult(tipoDocumento, payload);
     }
 
+    /**
+     * Mapea el código interno de TipoDTE (p. ej. "01") al nombre legible del
+     * documento (p. ej. "Factura").
+     *
+     * @param tipoDte código detectado en la trama
+     * @return nombre legible del tipo de documento o {@code null} si no se
+     * reconoce
+     */
     private static String mapCodigoToTipoDocumento(String tipoDte) {
         if (tipoDte == null || tipoDte.isBlank()) {
             return null;
@@ -90,7 +115,11 @@ public class TramaImportService {
     }
 
     /**
-     * Resultado de la importación: tipo de documento detectado y el payload con secciones.
+     * Resultado de la importación: tipo de documento detectado y el payload con
+     * secciones.
+     *
+     * @param tipoDocumento nombre legible del documento (Factura, Boleta, ...)
+     * @param secciones     payload con las secciones y listas detectadas
      */
     public record ImportResult(String tipoDocumento, SeccionesPayload secciones) {
     }
