@@ -1,30 +1,50 @@
 package com.facturacion.api.web.controller;
 
 import com.facturacion.api.web.dto.CatalogItem;
+import com.facturacion.api.web.repositories.AeropuertosPeruRepository;
+import com.facturacion.api.web.repositories.PuertosPeruRepository;
+import com.facturacion.api.web.repositories.MonedaRepository;
+import com.facturacion.api.web.repositories.UnidadesMedidaRepository;
+import com.facturacion.api.web.repositories.CodigoTipoTributoRepository;
+import com.facturacion.api.web.repositories.MotivoTrasladoRepository;
+import com.facturacion.api.web.repositories.TipoNotaCreditoRepository;
+import com.facturacion.api.web.repositories.TipoNotaDebitoRepository;
+import com.facturacion.api.web.repositories.TipoOperacionRepository;
+import com.facturacion.api.web.repositories.TipoDocumentoIdentidadRepository;
+import com.facturacion.api.web.repositories.TipoAfectacionIgvRepository;
+import com.facturacion.api.web.repositories.DocumentosRelacionadosTransporteRepository;
+import lombok.RequiredArgsConstructor;
 
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Comparator;
+
 import java.util.List;
-import java.util.stream.Collectors;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.facturacion.api.core.catalogo.*;
 
 
 @RestController
 @RequestMapping("/api/v1/catalogos")
+@RequiredArgsConstructor
 public class CatalogController {
+
+  private final AeropuertosPeruRepository aeropuertosPeruRepository;
+  private final PuertosPeruRepository puertosPeruRepository;
+  private final MonedaRepository monedaRepository;
+  private final UnidadesMedidaRepository unidadesMedidaRepository;
+  private final CodigoTipoTributoRepository codigoTipoTributoRepository;
+  private final MotivoTrasladoRepository motivoTrasladoRepository;
+  private final TipoNotaCreditoRepository tipoNotaCreditoRepository;
+  private final TipoNotaDebitoRepository tipoNotaDebitoRepository;
+  private final TipoOperacionRepository tipoOperacionRepository;
+  private final TipoDocumentoIdentidadRepository tipoDocumentoIdentidadRepository;
+  private final TipoAfectacionIgvRepository tipoAfectacionIgvRepository;
+  private final DocumentosRelacionadosTransporteRepository documentosRelacionadosTransporteRepository;
 
   @GetMapping("/unidades-medida")
   /** Devuelve las unidades de medida disponibles. */
   public List<CatalogItem> unidadesDeMedida() {
-    return Arrays.stream(UnidadDeMedida.values())
+    return unidadesMedidaRepository.findAll().stream()
         .map(u -> CatalogItem.of(u.getCodigo(), u.getDescripcion()))
         .toList();
   }
@@ -32,7 +52,7 @@ public class CatalogController {
   @GetMapping("/motivos-traslado")
   /** Devuelve los motivos de traslado (catalogo). */
   public List<CatalogItem> motivosTraslado() {
-    return Arrays.stream(MotivoTraslado.values())
+    return motivoTrasladoRepository.findAll().stream()
         .map(m -> CatalogItem.of(m.getCodigo(), m.getDescripcion()))
         .toList();
   }
@@ -40,16 +60,16 @@ public class CatalogController {
   @GetMapping("/puertos")
   /** Lista puertos peruanos del catálogo. */
   public List<CatalogItem> puertos() {
-    return Arrays.stream(PuertosPeru.values())
-        .map(p -> CatalogItem.of(p.getCodigo(), p.getDescripcion(), p.getCodigoSunat()))
+    return puertosPeruRepository.findAll().stream()
+        .map(p -> CatalogItem.of(p.getCodigo(), p.getNombre(), p.getUbigeo()))
         .toList();
   }
 
   @GetMapping("/aeropuertos")
   /** Lista aeropuertos del catálogo. */
   public List<CatalogItem> aeropuertos() {
-    return Arrays.stream(AeropuertosPeru.values())
-        .map(a -> CatalogItem.of(a.getCodigo(), a.getDescripcion(), a.getCodigoSunat()))
+    return aeropuertosPeruRepository.findAll().stream()
+        .map(a -> CatalogItem.of(a.getCodigo(), a.getNombre(), a.getUbigeo()))
         .toList();
   }
 
@@ -68,7 +88,7 @@ public class CatalogController {
   @GetMapping("/tipos-operacion")
   /** Tipos de operación (catalogo). */
   public List<CatalogItem> tiposOperacion() {
-    return Arrays.stream(TipoOperacion.values())
+    return tipoOperacionRepository.findAll().stream()
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -76,7 +96,7 @@ public class CatalogController {
   @GetMapping("/tipos-afectacion-igv")
   /** Tipos de afectación de IGV (catalogo). */
   public List<CatalogItem> tiposAfectacionIGV() {
-    return Arrays.stream(TipoAfectacionIGV.values())
+    return tipoAfectacionIgvRepository.findAll().stream()
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion(), t.getCodigoTributario()))
         .toList();
   }
@@ -84,7 +104,7 @@ public class CatalogController {
   @GetMapping("/tipos-documento-identidad")
   /** Tipos de documento de identidad del catálogo. */
   public List<CatalogItem> tiposDocumentoIdentidad() {
-    return Arrays.stream(TipoDocumentoIdentidad.values())
+    return tipoDocumentoIdentidadRepository.findAll().stream()
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -92,7 +112,7 @@ public class CatalogController {
   @GetMapping("/codigos-tipo-tributo")
   /** Códigos de tipo de tributo (catalogo). */
   public List<CatalogItem> codigosTipoTributo() {
-    return Arrays.stream(CodigoTipTributo.values())
+    return codigoTipoTributoRepository.findAll().stream()
         .map(c -> CatalogItem.of(c.getCodigo(), c.getDescripcion()))
         .toList();
   }
@@ -100,7 +120,7 @@ public class CatalogController {
   @GetMapping("/tipos-nota-credito")
   /** Tipos de nota de crédito. */
   public List<CatalogItem> tiposNotaCredito() {
-    return Arrays.stream(TipoNotaCredito.values())
+    return tipoNotaCreditoRepository.findAll().stream()
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -108,7 +128,7 @@ public class CatalogController {
   @GetMapping("/tipos-nota-debito")
   /** Tipos de nota de débito. */
   public List<CatalogItem> tiposNotaDebito() {
-    return Arrays.stream(TipoNotaDebito.values())
+    return tipoNotaDebitoRepository.findAll().stream()
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -116,33 +136,16 @@ public class CatalogController {
   @GetMapping("/documentos-relacionados-transporte")
   /** Documentos relacionados a transporte (catalogo). */
   public List<CatalogItem> documentosRelacionadosTransporte() {
-    return Arrays.stream(DocumentosRelacionadosTransporte.values())
-        .map(d -> CatalogItem.of(d.getCodigo(), d.getDescripcion()))
+    return documentosRelacionadosTransporteRepository.findAll().stream()
+        .map(d -> CatalogItem.of(d.getCodigo(), d.getNombre()))
         .toList();
   }
 
   @GetMapping("/monedas")
-  /** Lista monedas leyendo ISO-4217 desde recursos. */
   public List<CatalogItem> monedas() {
-    // Lee el archivo ISO-4217.txt desde resources
-    InputStream is = getClass().getClassLoader().getResourceAsStream("BD/ISO-4217.txt");
-    if (is == null)
-      return List.of();
-    try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
-      return reader.lines()
-          .skip(1) // salta encabezado
-          .map(line -> line.split(",", -1))
-          .filter(cols -> cols.length >= 3 && !cols[2].isBlank())
-          .map(cols -> CatalogItem.of(
-              cols[2].trim(), // CodigoAlfabetico
-              cols[1].trim() + (cols[0].isBlank() ? "" : " (" + cols[0].trim() + ")"), // Divisa (Entidad)
-              cols[3].trim() // CodigoNumerico
-          ))
-          .sorted(Comparator.comparing(CatalogItem::label))
-          .collect(Collectors.toList());
-    } catch (Exception e) {
-      return List.of();
-    }
+    return monedaRepository.findAll().stream()
+        .map(m -> CatalogItem.of(m.getCodigoAlfabetico(), m.getDivisa()))
+        .toList();
   }
 
   @GetMapping("/series/{tipoDocumento}")
