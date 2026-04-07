@@ -106,5 +106,3 @@ npm run dev
 - Levantar backend: <code>cd backend/api &amp;&amp; ./mvnw spring-boot:run</code>
 - Levantar frontend: <code>cd frontEnd &amp;&amp; npm install &amp;&amp; npm run dev</code>
 - Ramas: usa <code>develop</code> para integración, <code>feature/*</code> para trabajo en curso, <code>hotfix/*</code> para arreglos urgentes y <code>main</code> para producción.
-
-<p>Si quieres que agregue una sección <em>Contributing</em>, ejemplos de <code>docker-compose</code> o plantillas de Pull Request, dime cuál y lo incluyo.</p>
