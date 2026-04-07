@@ -1,7 +1,11 @@
 package com.facturacion.api.web.controller;
 
-import com.facturacion.api.application.UbigeoService;
 import com.facturacion.api.web.dto.CatalogItem;
+import com.facturacion.api.web.models.UbigeoEntity;
+import com.facturacion.api.web.repositories.UbigeoRepository;
+
+import lombok.RequiredArgsConstructor;
+
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -11,18 +15,15 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/catalogos/ubigeo")
+@RequiredArgsConstructor
 public class    UbigeoController {
 
-    private final UbigeoService ubigeoService;
-
-    public UbigeoController(UbigeoService ubigeoService) {
-        this.ubigeoService = ubigeoService;
-    }
+    private final UbigeoRepository ubigeoRepository;
 
     @GetMapping("/departamentos")
     /** Devuelve la lista de departamentos (label/value). */
     public List<CatalogItem> departamentos() {
-        return ubigeoService.listarDepartamentos().stream()
+        return ubigeoRepository.findDistinctDepartamentos().stream()
                 .map(d -> CatalogItem.of(d, d))
                 .toList();
     }
@@ -30,7 +31,7 @@ public class    UbigeoController {
     @GetMapping("/provincias")
     /** Devuelve provincias para el departamento indicado. */
     public List<CatalogItem> provincias(@RequestParam String departamento) {
-        return ubigeoService.listarProvincias(departamento).stream()
+        return ubigeoRepository.findProvinciasByDepartamento(departamento).stream()
                 .map(p -> CatalogItem.of(p, p))
                 .toList();
     }
@@ -38,15 +39,15 @@ public class    UbigeoController {
     @GetMapping("/distritos")
     /** Devuelve distritos (con código ubigeo) para departamento y provincia. */
     public List<CatalogItem> distritos(@RequestParam String departamento, @RequestParam String provincia) {
-        return ubigeoService.listarDistritos(departamento, provincia).stream()
-                .map(d -> CatalogItem.of(d.ubigeo(), d.distrito()))
+        return ubigeoRepository.findUbigeoByDepartamentoAndProvincia(departamento, provincia).stream()
+                .map(d -> CatalogItem.of(d.getUbigeo(), d.getDistrito()))
                 .toList();
     }
 
     @GetMapping("/buscar")
     /** Busca un distrito por su código ubigeo. */
-    public UbigeoService.UbigeoDistrito buscar(@RequestParam String ubigeo) {
-        return ubigeoService.buscarPorUbigeo(ubigeo)
+    public UbigeoEntity buscar(@RequestParam String ubigeo) {
+        return ubigeoRepository.findById(ubigeo)
                 .orElseThrow(() -> new IllegalArgumentException("ubigeo no encontrado"));
     }
 }
