@@ -27,6 +27,27 @@ La API expone servicios para:
 - Consultar ubigeo (departamento, provincia, distrito, ubigeo).
 - Obtener plantillas base por tipo de documento.
 
+Nota importante (actualización):
+
+Los catálogos que antes provenían de enums en tiempo de ejecución ahora se sirven desde la base de datos mediante entidades JPA y repositorios Spring Data JPA.
+Se añadieron las siguientes entidades bajo `com.facturacion.api.web.models` y sus repositorios en `com.facturacion.api.web.repositories`:
+
+- AeropuertosPeruEntity
+- PuertosPeruEntity
+- MonedaEntity
+- UbigeoEntity
+- UnidadesMedidaEntity
+- TipoDocumentoIdentidadEntity
+- TipoNotaCreditoEntity
+- TipoNotaDebitoEntity
+- TipoOperacionEntity
+- TipoAfectacionIgvEntity
+- CodigoTipoTributoEntity
+- DocumentosRelacionadosTransporteEntity
+- MotivoTrasladoEntity
+
+Esto permite mantener los catálogos dinámicamente y mantener la consistencia con la base de datos Postgres.
+
 ## Stack tecnológico
 
 - Java 21
@@ -204,4 +225,3 @@ Ejecución:
 - Errores de validación y negocio retornan `400 Bad Request` con payload de error (`ErrorResponse`).
 - En descarga de TXT se usa `Content-Disposition: attachment` con nombre de archivo basado en:
 	`ruc-tipoDoc-serie-correlativo.txt`.
-
