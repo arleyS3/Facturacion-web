@@ -54,7 +54,7 @@ export const Login: React.FC = () => {
       {/* Lado izquierdo */}
       <div className="hidden lg:flex w-1/2 bg-slate-100 items-center justify-center relative">
         <div className="text-slate-400 text-lg font-medium border-2 border-dashed border-slate-300 p-8 rounded-lg">
-          [Aquí irá la imagen ilustrativa]
+          [Aquí irá el logo]
         </div>
       </div>
 
