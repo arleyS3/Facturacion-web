@@ -4,11 +4,16 @@ import { Home } from "./pages/Home";
 import { SalesDocuments } from "./pages/SalesDocuments";
 import { ShippingGuide } from "./pages/ShippingGuide";
 import { NotFound } from "./pages/NotFound";
+import { Registro } from "./pages/Registro";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     Component: Login, 
+  },
+  {
+  path: "/registro",
+  Component: Registro,
   },
   {
     path: "/home",
