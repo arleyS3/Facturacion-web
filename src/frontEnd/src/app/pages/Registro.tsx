@@ -4,6 +4,7 @@ import { api } from '../lib/api';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
+import logoEmpresa from '../assets/logo-empresa.png';
 
 export const Registro: React.FC = () => {
   // 1. Estados del formulario
@@ -63,11 +64,13 @@ export const Registro: React.FC = () => {
     <div className="flex min-h-screen w-full bg-white">
       
       {/* Lado izquierdo: Espacio para la imagen */}
-      <div className="hidden lg:flex w-1/2 bg-slate-100 items-center justify-center relative">
-        <div className="text-slate-400 text-lg font-medium border-2 border-dashed border-slate-300 p-8 rounded-lg">
-          [Aquí irá la imagen ilustrativa del Registro]
-        </div>
-      </div>
+      <div className="hidden lg:flex w-1/2 bg-white relative overflow-hidden">
+             <img
+               src={logoEmpresa}
+               alt="Logo de la Empresa"
+               className="w-full  object-cover absolute inset-0"
+             />
+           </div>
 
       {/* Lado derecho: Formulario de Registro */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8 sm:p-12">
