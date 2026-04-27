@@ -1,35 +1,32 @@
-# 🧾 Facturación Web
+<div align="center">
+  <img src="./docs/logo/Logo%20Transparente.png" alt="AutonomiFlow" width="170" />
 
-> Generación y descarga de tramas TXT para comprobantes electrónicos.
+  # AutonomiFlow
 
-![Java](https://img.shields.io/badge/Java-21-informational?style=flat)
-![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-brightgreen?style=flat)
-![React](https://img.shields.io/badge/React-18-blue?style=flat)
-![TypeScript](https://img.shields.io/badge/TypeScript-%5E4.0-blue?style=flat)
+  <p><strong>Generación y descarga de tramas TXT y XML UBL 2.1 para comprobantes electrónicos.</strong></p>
+
+  [![Java 21](https://img.shields.io/badge/Java-21-007396?style=flat-square&logo=openjdk&logoColor=white)](https://www.oracle.com/java/)
+  [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.x-6DB33F?style=flat-square&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+  [![React 18](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+  [![TypeScript](https://img.shields.io/badge/TypeScript-%5E4.0-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+</div>
 
 Repositorio full-stack compuesto por una API REST en Java Spring Boot (`src/backend/api`) y una aplicación web en React + TypeScript (`src/frontEnd`).
 
 ---
 
-## 📌 Tecnologías
+## 📌 Tecnologías usadas
 
-### Backend
-- Java 21
-- Spring Boot 4.x (Web MVC, Validation)
-- Maven (wrapper incluido)
-- springdoc-openapi (Swagger)
-- JUnit
-
-### Frontend
-- Node.js v20+ / npm
-- React 18 + TypeScript
-- Vite
-- React Router, React Hook Form, Axios
-- Tailwind CSS, Radix UI, TanStack React Query
+| Capa | Stack |
+|------|-------|
+| Backend | Java 21, Spring Boot 4.x (Web MVC, Validation), Maven (wrapper), springdoc-openapi (Swagger), JUnit |
+| Frontend | Node.js v20+, npm, React 18 + TypeScript, Vite, React Router, React Hook Form, Axios, Tailwind CSS, Radix UI, TanStack React Query |
 
 ---
 
 ## 🌿 Ramas
+
+Flujo recomendado para desarrollo, integración y correcciones urgentes.
 
 | Rama | Descripción |
 |------|-------------|
@@ -40,6 +37,38 @@ Repositorio full-stack compuesto por una API REST en Java Spring Boot (`src/back
 
 > Ejemplos: `feature/emitir-trama`, `hotfix/fix-encoding-txt`
 
+---
+
+## 📂 Evidencias
+
+Ubicaciones de evidencias:
+- Carpeta base del proyecto: [`/docs/evidencias`](./docs/evidencias)
+- Imágenes de flujo Git: [`/git-sim_media/Imagenes`](./git-sim_media/Imagenes)
+- Video de flujo Git: [`/git-sim_media/Videos`](./git-sim_media/Videos)
+
+### Capturas
+
+![Git branch develop](./git-sim_media/Imagenes/git-develop.jpg)
+![Historial y autores](./git-sim_media/Imagenes/git-history-users.png)
+![Git Graph en VS Code](./git-sim_media/Imagenes/vs-code-grafica.png)
+
+### Video
+
+<video src="./git-sim_media/Videos/flujo-git.mp4" controls width="100%">
+	Tu navegador no soporta la etiqueta de video.
+</video>
+
+Enlace directo: [Ver flujo-git.mp4](./git-sim_media/Videos/flujo-git.mp4)
+
+---
+
+## ✅ Funcionalidades actuales
+
+Se mantiene el checklist para el seguimiento funcional.
+
+- [ ] Generación de tramas TXT para comprobantes electrónicos
+- [ ] Descarga de tramas generadas
+- [ ] Login
 ---
 
 ## 🚀 Ejecución local
@@ -80,25 +109,9 @@ VITE_API_BASE_URL=http://localhost:8080/api/v1
 
 ---
 
-## 📂 Evidencias
-
-<!-- Agrega capturas de pantalla o GIFs en /docs/evidencias y enlázalos aquí -->
-
-Ver carpeta [`/docs/evidencias`](./docs/evidencias)
-
----
-
-## ✅ Funcionalidades actuales
-
-- [ ] Generación de tramas TXT para comprobantes electrónicos
-- [ ] Descarga de tramas generadas
-- [ ] <!-- Agrega más funcionalidades aquí -->
-
----
-
 ## ⚙️ Requisitos previos
 
 - JDK 21
 - Node.js v20+
 - npm
-- Variables de entorno configuradas (ver `.env.example` si existe)
+- Variables de entorno configuradas
