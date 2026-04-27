@@ -58,7 +58,7 @@ Ubicaciones de evidencias:
 	Tu navegador no soporta la etiqueta de video.
 </video>
 
-Enlace directo: [Ver flujo-git.mp4](./git-sim_media/Videos/flujo-git.mp4)
+Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa6ZageN674umi7EHmAruQy/view?usp=sharing)
 
 ---
 
