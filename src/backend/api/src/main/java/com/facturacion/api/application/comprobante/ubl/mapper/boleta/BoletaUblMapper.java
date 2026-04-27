@@ -47,7 +47,7 @@ public class BoletaUblMapper {
             null,
             null,
             null,
-            lineas
+            null, lineas
         );
     }
 
