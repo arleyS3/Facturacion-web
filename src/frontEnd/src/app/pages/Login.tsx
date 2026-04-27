@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { api } from '../lib/api.ts'; 
+import { api } from '../lib/api.ts';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Button } from '../components/ui/button';
+import logoEmpresa from '../assets/logo-empresa.png';
 
 export const Login: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -19,13 +20,13 @@ export const Login: React.FC = () => {
     setIsLoading(true);
 
     try {
-      
+
       const response = await api.post('/auth/login', {
         email,
         password
       });
 
-     
+
       const data = response.data;
 
       if (data.token) {
@@ -35,12 +36,12 @@ export const Login: React.FC = () => {
       navigate('/home');
 
     } catch (err: any) {
-   
+
       if (err.response) {
-     
+
         setError(err.response.data.message || 'Credenciales inválidas o usuario no encontrado');
       } else {
-      
+
         setError('Error de conexión. Verifica que el servidor Backend esté encendido.');
       }
     } finally {
@@ -50,18 +51,20 @@ export const Login: React.FC = () => {
 
   return (
     <div className="flex min-h-screen w-full bg-white">
-      
+
       {/* Lado izquierdo */}
-      <div className="hidden lg:flex w-1/2 bg-slate-100 items-center justify-center relative">
-        <div className="text-slate-400 text-lg font-medium border-2 border-dashed border-slate-300 p-8 rounded-lg">
-          [Aquí irá el logo]
-        </div>
+      <div className="hidden lg:flex w-1/2 bg-white relative overflow-hidden">
+        <img
+          src={logoEmpresa}
+          alt="Logo de la Empresa"
+          className="w-full  object-cover absolute inset-0"
+        />
       </div>
 
       {/* Lado derecho: Formulario */}
       <div className="flex w-full lg:w-1/2 items-center justify-center p-8 sm:p-12">
         <div className="w-full max-w-md space-y-8">
-          
+
           <div className="text-left">
             <h2 className="text-3xl font-bold tracking-tight text-slate-900">
               ¡Bienvenido de AutonomiFlow!
@@ -72,7 +75,7 @@ export const Login: React.FC = () => {
           </div>
 
           <form className="space-y-6" onSubmit={handleLogin}>
-            
+
             {error && (
               <div className="p-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-md">
                 {error}
@@ -81,27 +84,27 @@ export const Login: React.FC = () => {
 
             <div className="space-y-2">
               <Label htmlFor="email">Correo electrónico</Label>
-              <Input 
-                id="email" 
-                type="email" 
-                placeholder="Example@email.com" 
-                required 
+              <Input
+                id="email"
+                type="email"
+                placeholder="Example@email.com"
+                required
                 className="w-full"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)} 
+                onChange={(e) => setEmail(e.target.value)}
               />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
-              <Input 
-                id="password" 
-                type="password" 
+              <Input
+                id="password"
+                type="password"
                 placeholder="Al menos 8 caracteres"
-                required 
+                required
                 className="w-full"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)} 
+                onChange={(e) => setPassword(e.target.value)}
               />
               <div className="flex justify-end mt-1">
                 <a href="#" className="text-sm font-medium text-blue-600 hover:text-blue-500">
@@ -110,8 +113,8 @@ export const Login: React.FC = () => {
               </div>
             </div>
 
-            <Button 
-              className="w-full bg-slate-900 hover:bg-slate-800 text-white" 
+            <Button
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white"
               type="submit"
               disabled={isLoading}
             >
