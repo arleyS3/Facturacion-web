@@ -7,6 +7,9 @@ tags:
 aliases:
   - Nota de Credito XML
   - Nota de Crédito UBL 2.1
+related:
+  - [[Arquitectura de Desarrollo]]
+  - [[Plan de Implementacion por Ramas XML UBL]]
 ---
 
 # Estructura de Nota de Crédito electrónica vs Formato XML

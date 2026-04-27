@@ -7,6 +7,9 @@ tags:
 aliases:
   - BoletaXML
   - Boleta UBL 2.1
+related:
+  - [[Arquitectura de Desarrollo]]
+  - [[Plan de Implementacion por Ramas XML UBL]]
 ---
 
 # Estructura de Boleta electrónica vs Formato XML

@@ -7,6 +7,9 @@ tags:
 aliases:
   - FacturaXML
   - Factura UBL 2.1
+related:
+  - [[Arquitectura de Desarrollo]]
+  - [[Plan de Implementacion por Ramas XML UBL]]
 ---
 
 # Estructura de Factura electrónica vs Formato XML

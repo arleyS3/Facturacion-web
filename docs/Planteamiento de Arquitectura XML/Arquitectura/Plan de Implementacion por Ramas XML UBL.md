@@ -34,6 +34,16 @@ develop
      └─ feature/xml-ubl-09-guia-remision
 ```
 
+> [!info]
+> Guías por rama (detalle de carpetas y reglas de edición):
+> - [[Rama XML UBL - Foundation]]
+> - [[Rama XML UBL - Factura 01]]
+> - [[Rama XML UBL - Boleta 03]]
+> - [[Rama XML UBL - Nota de Credito 07]]
+> - [[Rama XML UBL - Nota de Debito 08]]
+> - [[Rama XML UBL - Guia Remision 09]]
+> - [[Rama XML UBL - Integracion Final]]
+
 Reglas:
 - Cada rama de documento puede editar solo:
   - `application/comprobante/ubl/builder/<tipo>/**`
@@ -71,6 +81,9 @@ Reglas:
 
 ## Objetivo
 Dejar lista la columna vertebral para que las demás ramas solo implementen su tipo documental.
+
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Foundation]]
 
 ## Archivos a crear/modificar
 
@@ -144,6 +157,9 @@ public class TxtGeneradorComprobante implements GeneradorComprobante {
 ## Objetivo
 Generar `Invoice` UBL 2.1 para Factura (01).
 
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Factura 01]]
+
 ## Archivos de la rama
 
 ```text
@@ -190,6 +206,9 @@ public class FacturaUblBuilder {
 ## Objetivo
 Generar `Invoice` UBL para Boleta (03) con reglas de identificación de receptor según corresponda.
 
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Boleta 03]]
+
 ## Archivos de la rama
 
 ```text
@@ -228,6 +247,9 @@ public class BoletaUblBuilder {
 
 ## Objetivo
 Generar `CreditNote` UBL para Nota de Crédito (07) referenciando comprobante afectado.
+
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Nota de Credito 07]]
 
 ## Archivos de la rama
 
@@ -270,6 +292,9 @@ public class NotaCreditoUblBuilder {
 ## Objetivo
 Generar `DebitNote` UBL para Nota de Débito (08) con referencia al documento base.
 
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Nota de Debito 08]]
+
 ## Archivos de la rama
 
 ```text
@@ -307,6 +332,9 @@ public class NotaDebitoUblBuilder {
 
 ## Objetivo
 Generar `DespatchAdvice` UBL para Guía de Remisión (09).
+
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Guia Remision 09]]
 
 ## Archivos de la rama
 
@@ -349,6 +377,9 @@ Nombre sugerido: `feature/xml-ubl-integration-hardening`
 
 ## Objetivo
 Unificar todo, exponer endpoint XML y cerrar validación transversal.
+
+> [!note]
+> Detalle de trabajo: [[Rama XML UBL - Integracion Final]]
 
 ## Ejemplo de endpoint (opción con query param)
 
@@ -653,3 +684,25 @@ public GenerarComprobanteResponse generar(
 - [[Nota de Credito]]
 - [[Nota de Debito]]
 - [[Flujo de Facturacion]]
+
+---
+
+## 14) Documentación por Tipo de Documento
+
+> [!info]
+> Cada tipo de documento tiene documentación detallada en los siguientes archivos:
+
+### Factura Electrónica (01)
+- [[FacturaXML]] — Estructura UBL 2.1, campos obligatorios SUNAT, códigos de IGV
+
+### Boleta Electrónica (03)
+- [[BoletaXML]] — Estructura UBL 2.1, reglas de identificación de receptor
+
+### Nota de Crédito (07)
+- [[Nota de Credito]] — Estructura CreditNote, documento afectado, códigos de motivo
+
+### Nota de Débito (08)
+- [[Nota de Debito]] — Estructura DebitNote, referencia a documento base
+
+### Guía de Remisión (09)
+- *(en desarrollo)* — Estructura DespatchAdvice, motivo y modalidad de traslado
