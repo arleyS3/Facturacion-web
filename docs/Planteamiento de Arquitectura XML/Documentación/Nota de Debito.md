@@ -7,6 +7,9 @@ tags:
 aliases:
   - Nota de Debito XML
   - Nota de Débito UBL 2.1
+related:
+  - [[Arquitectura de Desarrollo]]
+  - [[Plan de Implementacion por Ramas XML UBL]]
 ---
 
 # Estructura de Nota de Débito electrónica vs Formato XML

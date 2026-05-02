@@ -2,6 +2,20 @@
 > Librería Java para generación de XML UBL 2.1 — Facturación Electrónica SUNAT Perú
 
 ---
+title: Documentación de ph-ubl
+date: 2026-04-25
+tags:
+  - libreria
+  - ph-ubl
+  - sunat
+  - ubl21
+aliases:
+  - Ph-ubl
+  - Librería UBL
+related:
+  - [[Arquitectura de Desarrollo]]
+  - [[Plan de Implementacion por Ramas XML UBL]]
+---
 
 ## 📦 Repositorio Principal (Código Fuente)
 

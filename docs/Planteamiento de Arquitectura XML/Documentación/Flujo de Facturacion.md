@@ -9,6 +9,9 @@ aliases:
   - Flujo de Facturacion
 cssclasses:
   - documentation-note
+related:
+  - [[Arquitectura de Desarrollo]]
+  - [[Plan de Implementacion por Ramas XML UBL]]
 ---
 
 # Flujo de Facturación Electrónica en Perú

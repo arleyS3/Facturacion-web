@@ -117,6 +117,16 @@ src/main/java/com/facturacion/api/application/comprobante/
   - `feature/xml-ubl-08-nota-debito`
   - `feature/xml-ubl-09-guia-remision`
 
+> [!info]
+> Guías por rama (detalle de carpetas y reglas de edición):
+> - [[Rama XML UBL - Foundation]]
+> - [[Rama XML UBL - Factura 01]]
+> - [[Rama XML UBL - Boleta 03]]
+> - [[Rama XML UBL - Nota de Credito 07]]
+> - [[Rama XML UBL - Nota de Debito 08]]
+> - [[Rama XML UBL - Guia Remision 09]]
+> - [[Rama XML UBL - Integracion Final]]
+
 Orden de merge recomendado:
 1) foundation → 2) factura → 3) boleta → 4) nota crédito → 5) nota débito → 6) guía → 7) integración final.
 
@@ -154,8 +164,17 @@ Reglas anti-conflicto:
 
 - [[Plan de Implementacion por Ramas XML UBL]]
 - [[Ph-ubl]]
-- [[FacturaXML]]
-- [[BoletaXML]]
-- [[Nota de Credito]]
-- [[Nota de Debito]]
-- [[Flujo de Facturacion]]
+
+### Documentación por Tipo de Documento
+
+| Tipo | Código SUNAT | Descripción |
+|------|-------------|-------------|
+| Factura | 01 | [[FacturaXML]] |
+| Boleta | 03 | [[BoletaXML]] |
+| Nota de Crédito | 07 | [[Nota de Credito]] |
+| Nota de Débito | 08 | [[Nota de Debito]] |
+| Guía de Remisión | 09 | *(en desarrollo)* |
+
+### Flujo General
+
+[[Flujo de Facturacion]]
