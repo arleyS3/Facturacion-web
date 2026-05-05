@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Arquitectura/Plan de Implementacion por Ramas XML UBL.md",
+                "file": "Arquitectura/Rama XML UBL - Factura 01.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Plan de Implementacion por Ramas XML UBL"
+              "title": "Rama XML UBL - Factura 01"
             }
           }
         ]
@@ -185,8 +185,9 @@
   },
   "active": "c71ee1c989ba923e",
   "lastOpenFiles": [
-    "Documentación/Flujo de Facturacion.md",
+    "Arquitectura/Arquitectura de Desarrollo.md",
     "Arquitectura/Plan de Implementacion por Ramas XML UBL.md",
+    "Documentación/Flujo de Facturacion.md",
     "Documentación/Enlaces de Informacion.md",
     "Documentación/BoletaXML.md",
     "Documentación/FacturaXML.md",
@@ -194,7 +195,6 @@
     "Efact.md",
     "Documentación/FirmaDigital.md",
     "EDICOM.md",
-    "Documentación/Nota de Debito.md",
-    "Arquitectura/Arquitectura de Desarrollo.md"
+    "Documentación/Nota de Debito.md"
   ]
 }
