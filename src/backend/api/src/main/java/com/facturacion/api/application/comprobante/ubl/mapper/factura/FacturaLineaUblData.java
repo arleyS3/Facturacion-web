@@ -12,6 +12,8 @@ import java.math.BigDecimal;
  * @param cantidad cantidad
  * @param unidadMedida unidad de medida
  * @param precioUnitario precio unitario
+ * @param precioReferencia precio de referencia
+ * @param descuentoLinea descuento por línea
  * @param precioUnitarioSinIGV precio unitario sin IGV
  * @param montoBaseIGV base imponible IGV
  * @param montoIGV monto de IGV
@@ -30,6 +32,8 @@ public record FacturaLineaUblData(
         BigDecimal cantidad,
         String unidadMedida,
         BigDecimal precioUnitario,
+        DatosPrecioReferenciaFacturaUbl precioReferencia,
+        DatosDescuentoLineaFacturaUbl descuentoLinea,
         BigDecimal precioUnitarioSinIGV,
         BigDecimal montoBaseIGV,
         BigDecimal montoIGV,
