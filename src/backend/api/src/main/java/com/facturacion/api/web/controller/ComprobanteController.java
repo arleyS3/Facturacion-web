@@ -1,6 +1,7 @@
 package com.facturacion.api.web.controller;
 
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
+import com.facturacion.api.application.comprobante.ubl.signature.XmlSignatureService;
 import com.facturacion.api.application.comprobante.ubl.strategy.UblDocumentoStrategy;
 import com.facturacion.api.web.Examples.ComprobanteExample;
 import com.facturacion.api.web.error.ErrorResponse;
@@ -57,18 +58,22 @@ public class ComprobanteController {
      * documento.
      */
     private final Map<String, UblDocumentoStrategy> estrategias;
+    private final XmlSignatureService xmlSignatureService;
 
     /**
      * Constructor que injecta todas las estrategias disponibles.
      *
      * @param estrategias lista de estrategias disponibles en el contexto de Spring
+     * @param xmlSignatureService servicio de firma digital XMLDSig
      */
-    public ComprobanteController(List<UblDocumentoStrategy> estrategias) {
+    public ComprobanteController(List<UblDocumentoStrategy> estrategias, 
+                                  XmlSignatureService xmlSignatureService) {
         // Indexa estrategias por código SUNAT para búsquedas O(1)
         this.estrategias = estrategias.stream()
                 .collect(Collectors.toMap(
                         UblDocumentoStrategy::codigoSunat,
                         Function.identity()));
+        this.xmlSignatureService = xmlSignatureService;
     }
 
     /**
@@ -87,6 +92,16 @@ public class ComprobanteController {
      * <li>07 - Nota de Crédito</li>
      * <li>08 - Nota de Débito</li>
      * <li>09 - Guía de Remisión Electrónica</li>
+     * </ul>
+     * </p>
+     *
+     * <p>
+     * <b>Códigos de afectación IGV</b> (catálogo 07):
+     * <ul>
+     * <li>10 - Gravado - Operación onerosa</li>
+     * <li>20 - Exonerado - Operación onerosa</li>
+     * <li>30 - Inafecto - Operación onerosa</li>
+     * <li>31 - Inafecto - Operación gratuita</li>
      * </ul>
      * </p>
      *
@@ -115,12 +130,32 @@ public class ComprobanteController {
     public Map<String, Object> generarXml(
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
-                    description = "Datos del comprobante canónico",
+                    description = "Datos del comprobante canónico. "
+                            + "Ejemplos para cada tipo de documento:",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             examples = {
-                                    @ExampleObject(name = "Factura (01)", description = "Factura Electrónica",
+                                    // ========== FACTURAS ==========
+                                    @ExampleObject(name = "Factura simple (01)",
+                                            description = "Factura con operación gravada estándar",
                                             value = ComprobanteExample.FACTURA_REQUEST),
-                                    @ExampleObject(name = "Boleta (03)", description = "Boleta de Venta",
+                                    @ExampleObject(name = "Factura múltiples operaciones (01)",
+                                            description = "Factura con operaciones gravadas, exoneradas e inafectas",
+                                            value = ComprobanteExample.FACTURA_MULTIPLE_OPERACIONES_REQUEST),
+                                    @ExampleObject(name = "Factura con descuento (01)",
+                                            description = "Factura con precios que incluyen descuentos",
+                                            value = ComprobanteExample.FACTURA_CON_DESCUENTO_LINEA_REQUEST),
+                                    @ExampleObject(name = "Factura exonerada (01)",
+                                            description = "Factura con operación exonerada (sin IGV)",
+                                            value = ComprobanteExample.FACTURA_EXONERADA_REQUEST),
+                                    @ExampleObject(name = "Factura inafecta (01)",
+                                            description = "Factura con operación gratuita (bonificación)",
+                                            value = ComprobanteExample.FACTURA_INAFECTA_REQUEST),
+                                    @ExampleObject(name = "Factura con orden/anticipo (01)",
+                                            description = "Factura con referencia de orden (anticipo)",
+                                            value = ComprobanteExample.FACTURA_CON_ORDEN_REQUEST),
+                                    // ========== OTROS DOCUMENTOS ==========
+                                    @ExampleObject(name = "Boleta (03)",
+                                            description = "Boleta de Venta Electrónica",
                                             value = ComprobanteExample.BOLETA_REQUEST),
                                     @ExampleObject(name = "Nota de Crédito (07)",
                                             value = ComprobanteExample.NOTA_CREDITO_REQUEST),
@@ -145,11 +180,16 @@ public class ComprobanteController {
         }
 
         try {
+            // 1. Generar XML UBL
             String xml = estrategia.generarXml(canonico);
+            
+            // 2. Firmar digitalmente el XML
+            String xmlFirmado = xmlSignatureService.signXml(xml, canonico.emisorRuc());
+            
             return Map.of(
                     "success", true,
                     "tipoDocumento", codigoSunat,
-                    "xml", xml);
+                    "xml", xmlFirmado);
         } catch (Exception e) {
             log.error("Error al generar XML: {}", e.getMessage(), e);
             return Map.of(

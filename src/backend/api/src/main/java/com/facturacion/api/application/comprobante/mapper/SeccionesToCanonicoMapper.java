@@ -4,6 +4,7 @@ import com.facturacion.api.application.TipoDocumentoMapper;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
 import com.facturacion.api.application.comprobante.modelo.DocumentoRelacionadoCanonico;
+import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
 import com.facturacion.api.application.comprobante.modelo.ParteTrasladoCanonico;
 import com.facturacion.api.web.dto.GenerarTramaRequest;
 import com.facturacion.api.web.dto.SeccionesPayload;
@@ -38,13 +39,29 @@ public class SeccionesToCanonicoMapper {
                 TipoDocumentoMapper.toCodigoSunat(request.tipoDocumento()),
                 a.getOrDefault("Serie", "") + "-" + a.getOrDefault("Correlativo", ""),
                 a.getOrDefault("FchEmis", ""),
+                a.getOrDefault("HorEmis", "10:00:00"),
+                a.getOrDefault("FecVencimiento", null),
+                a.getOrDefault("TipOperacion", "0101"),
                 a.getOrDefault("CodMoneda", "PEN"),
                 a.getOrDefault("RUTEmis", ""),
+                a.getOrDefault("RznSocEmisor", ""),
+                a.getOrDefault("NomComercial", null),
+                a.getOrDefault("DirEmisor", null),
+                a.getOrDefault("Urbanizacion", null),
+                a.getOrDefault("Ubigeo", null),
+                a.getOrDefault("Departament", null),
+                a.getOrDefault("Provincia", null),
+                a.getOrDefault("Distrito", null),
+                a.getOrDefault("CodDomicilioFiscal", "0001"),
                 a.getOrDefault("NumDocReceptor", ""),
-                null, null, null, null, null, null, null, null, null, null, null, null, null, null, null,
+                a.getOrDefault("RznSocReceptor", null),
+                a.getOrDefault("DirReceptor", null),
+                a.getOrDefault("UbigeoReceptor", null),
                 mapDetalles(secciones),
                 mapRelacionado(campos),
-                mapTraslado(campos));
+                mapTraslado(campos),
+                List.of()
+        );
     }
 
     /**

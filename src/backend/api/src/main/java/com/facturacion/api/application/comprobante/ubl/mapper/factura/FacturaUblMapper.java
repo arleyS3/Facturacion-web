@@ -2,6 +2,9 @@ package com.facturacion.api.application.comprobante.ubl.mapper.factura;
 
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
+import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -10,6 +13,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class FacturaUblMapper {
+
+    /** Porcentaje de IGV estándar. */
+    private static final BigDecimal PORCENTAJE_IGV = new BigDecimal("0.18");
 
     /**
      * Convierte el comprobante canónico a {@link FacturaUblData}.
@@ -34,6 +40,11 @@ public class FacturaUblMapper {
             canonico.detalles() != null
                 ? canonico.detalles().stream().map(this::mapLinea).toList()
                 : List.of();
+
+        // Calcular totales desde las líneas
+        DatosTotalesFacturaUbl totales = calcularTotales(lineas, canonico.moneda());
+        DatosTotalesMonetariosFacturaUbl totalesMonetarios = calcularTotalesMonetarios(
+            totales, canonico.moneda());
 
         DatosEncabezadoFacturaUbl encabezado = new DatosEncabezadoFacturaUbl(
             serie,
@@ -78,13 +89,105 @@ public class FacturaUblMapper {
             null, // referenciaOrden
             lineas.isEmpty() ? null : lineas.size(),
             List.of(), // descuentos globales
-            null, // totales (calculable en builder)
-            null, // impuestosTotales
-            null, // totalesMonetarios (calculable en builder)
+            totales,
+            null, // impuestosTotales (opcional)
+            totalesMonetarios,
             null, // percepcionDetraccion
             lineas,
-            null  // leyendas
+            mapLeyendas(canonico.leyendas())
         );
+    }
+
+    /**
+     * Calcula los totales de la factura desde las líneas.
+     *
+     * @param lineas lista de líneas UBL
+     * @param moneda código de moneda
+     * @return totales calculados
+     */
+    private DatosTotalesFacturaUbl calcularTotales(List<FacturaLineaUblData> lineas, String moneda) {
+        BigDecimal gravadas = BigDecimal.ZERO;
+        BigDecimal exoneradas = BigDecimal.ZERO;
+        BigDecimal inafectas = BigDecimal.ZERO;
+        BigDecimal totalIgv = BigDecimal.ZERO;
+        BigDecimal valorVenta = BigDecimal.ZERO;
+
+        for (FacturaLineaUblData linea : lineas) {
+            BigDecimal cantidad = linea.cantidad() != null ? linea.cantidad() : BigDecimal.ZERO;
+            BigDecimal valorUnitario = linea.precioUnitario() != null 
+                ? linea.precioUnitario() 
+                : BigDecimal.ZERO;
+            BigDecimal montoIgv = linea.montoIGV() != null ? linea.montoIGV() : BigDecimal.ZERO;
+            String tipoAfectacion = linea.tipoAfectacionIGV();
+
+            // Calcular valor de venta de la línea
+            BigDecimal valorLinea = cantidad.multiply(valorUnitario);
+            valorVenta = valorVenta.add(valorLinea);
+
+            // Clasificar según tipo de afectación IGV
+            // 10 = Gravado, 20 = Exonerado, 30/31 = Inafecto
+            if ("10".equals(tipoAfectacion)) {
+                // Gravado: el montoBaseIGV es el valor sin IGV
+                BigDecimal montoBase = montoIgv.compareTo(BigDecimal.ZERO) > 0
+                    ? montoIgv.divide(PORCENTAJE_IGV, 2, RoundingMode.HALF_UP)
+                    : valorLinea;
+                gravadas = gravadas.add(montoBase);
+                totalIgv = totalIgv.add(montoIgv);
+            } else if ("20".equals(tipoAfectacion)) {
+                // Exonerado
+                exoneradas = exoneradas.add(valorLinea);
+            } else if ("30".equals(tipoAfectacion) || "31".equals(tipoAfectacion)) {
+                // Inafecto
+                inafectas = inafectas.add(valorLinea);
+            }
+        }
+
+        BigDecimal totalImpuestos = totalIgv;
+        BigDecimal importeTotal = valorVenta.add(totalImpuestos);
+
+        return new DatosTotalesFacturaUbl(
+            gravadas,
+            exoneradas,
+            inafectas,
+            null, // ISC
+            totalIgv,
+            null, // IVAP
+            totalImpuestos,
+            importeTotal,
+            valorVenta
+        );
+    }
+
+    /**
+     * Calcula los totales monetarios.
+     *
+     * @param totales totales de impuestos
+     * @param moneda código de moneda
+     * @return totales monetarios
+     */
+    private DatosTotalesMonetariosFacturaUbl calcularTotalesMonetarios(
+            DatosTotalesFacturaUbl totales, String moneda) {
+        return new DatosTotalesMonetariosFacturaUbl(
+            totales.valorVenta(),
+            totales.importeTotal(),
+            BigDecimal.ZERO, // descuentos globales
+            totales.importeTotal()
+        );
+    }
+
+    /**
+     * Mapea leyendas canónicas a leyendas UBL.
+     *
+     * @param leyendas lista de leyendas canónicas
+     * @return lista de leyendas UBL
+     */
+    private List<LeyendaUblData> mapLeyendas(List<LeyendaCanonico> leyendas) {
+        if (leyendas == null || leyendas.isEmpty()) {
+            return List.of();
+        }
+        return leyendas.stream()
+                .map(l -> new LeyendaUblData(l.codigoLocal(), l.leyenda()))
+                .toList();
     }
 
     /**
@@ -94,24 +197,34 @@ public class FacturaUblMapper {
      * @return línea UBL
      */
     private FacturaLineaUblData mapLinea(DetalleCanonico detalle) {
+        BigDecimal cantidad = detalle.cantidad();
+        BigDecimal valorUnitario = detalle.valorUnitario();
+        BigDecimal valorVenta = cantidad.multiply(valorUnitario);
+        BigDecimal montoIgv = detalle.igv();
+        
+        // Calcular monto base IGV (valor sin impuesto)
+        BigDecimal montoBaseIGV = montoIgv.compareTo(BigDecimal.ZERO) > 0
+            ? montoIgv.divide(PORCENTAJE_IGV, 2, RoundingMode.HALF_UP)
+            : valorVenta;
+
         return new FacturaLineaUblData(
             null,                         // numero
             detalle.codigoProducto(),    // codigoProducto
             null,                         // codigoProductoSUNAT
             detalle.descripcion(),        // descripcion
-            detalle.cantidad(),          // cantidad
+            cantidad,                    // cantidad
             "NIU",                       // unidadMedida
-            detalle.valorUnitario(),      // precioUnitario
+            valorUnitario,               // precioUnitario
             null,                        // precioReferencia
             null,                        // descuentoLinea
             null,                        // precioUnitarioSinIGV
-            null,                        // montoBaseIGV (calculable)
-            detalle.igv(),              // montoIGV
-            new java.math.BigDecimal("18.00"),  // porcentajeIGV (asumido)
+            montoBaseIGV,                 // montoBaseIGV
+            montoIgv,                    // montoIGV
+            PORCENTAJE_IGV.multiply(new BigDecimal("100")), // porcentajeIGV (18.00)
             detalle.codigoTipoIgv(),     // tipoAfectacionIGV
             null,                        // montoISC
             null,                        // tipoSistemaISC
-            null,                        // valorVenta (calculable)
+            valorVenta,                  // valorVenta
             null                         // valorVentaUnitario
         );
     }

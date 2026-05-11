@@ -61,8 +61,33 @@ public class FacturaUblBuilder {
     private static final String VERSION_ESTRUCTURA = "2.0";
     private static final String CODIGO_TIPO_DOCUMENTO_FACTURA = "01";
     private static final String CODIGO_DOMICILIO_POR_DEFECTO = "0001";
-    private static final String CODIGO_IMPUESTO_IGV = "1000";
+
+    /** Código de tributo IGV. */
+    private static final String CODIGO_TRIBUTO_IGV = "1000";
+    /** Código de tributo Exonerado. */
+    private static final String CODIGO_TRIBUTO_EXONERADO = "9997";
+    /** Código de tributo Inafecto. */
+    private static final String CODIGO_TRIBUTO_INAFECTO = "9998";
+
+    /** Nombre del impuesto IGV. */
     private static final String NOMBRE_IMPUESTO_IGV = "IGV";
+    /** Nombre del impuesto Exonerado. */
+    private static final String NOMBRE_IMPUESTO_EXONERADO = "EXONERADO";
+    /** Nombre del impuesto Inafecto. */
+    private static final String NOMBRE_IMPUESTO_INAFECTO = "INAFECTO";
+
+    /** Código de tipo de tributo VAT. */
+    private static final String TIPO_TRIBUTO_VAT = "VAT";
+    /** Código de tipo de tributo FRE (Free/Exempt). */
+    private static final String TIPO_TRIBUTO_FRE = "FRE";
+
+    /** Categoría de impuesto Gravado. */
+    private static final String CATEGORIA_GRAVADO = "S";
+    /** Categoría de impuesto Exonerado. */
+    private static final String CATEGORIA_EXONERADO = "E";
+    /** Categoría de impuesto Inafecto. */
+    private static final String CATEGORIA_INAFECTO = "O";
+
     private static final BigDecimal PORCENTAJE_IGV = new BigDecimal("18.00");
 
     /**
@@ -139,7 +164,19 @@ public class FacturaUblBuilder {
     }
 
     /**
-     * Configura la firma digital si existe.
+     * Configura la firma digital del comprobante.
+     *
+     * <p>
+     * La firma digital es obligatoria para SUNAT. Contiene:
+     * - ID: identificador de la firma
+     * - SignatoryParty: identificación del firmante (RUC y razón social)
+     * </p>
+     *
+     * <p>
+     * Nota: El DigitalSignatureAttachment requiere firma criptográfica real
+     * que se implementaría con una librería externa (ej: DSS, xades4j).
+     * Por ahora se incluye la estructura básica con SignatoryParty.
+     * </p>
      *
      * @param facturaUbl factura UBL a completar
      * @param firma datos de firma
@@ -149,31 +186,43 @@ public class FacturaUblBuilder {
             return;
         }
         SignatureType signature = new SignatureType();
-        signature.setID(firma.id());
 
+        // CAMPO: ID de la firma
+        signature.setID(firma.id() != null ? firma.id() : "IDSignSP");
+
+        // CAMPO: SignatoryParty - Información de quién firma
         PartyType signatoryParty = new PartyType();
+
+        // PartyIdentification - RUC del firmante
         PartyIdentificationType identificacion = new PartyIdentificationType();
         IDType id = new IDType();
-        id.setValue(firma.rucFirmante());
+        id.setValue(firma.rucFirmante() != null ? firma.rucFirmante() : "");
         identificacion.setID(id);
         signatoryParty.addPartyIdentification(identificacion);
 
+        // PartyName - Razón social del firmante
         PartyNameType partyName = new PartyNameType();
         NameType nombre = new NameType();
-        nombre.setValue(firma.nombreFirmante());
+        nombre.setValue(firma.nombreFirmante() != null ? firma.nombreFirmante() : "");
         partyName.setName(nombre);
         signatoryParty.addPartyName(partyName);
 
         signature.setSignatoryParty(signatoryParty);
 
-        ExternalReferenceType externalReference = new ExternalReferenceType();
-        URIType uri = new URIType();
-        uri.setValue(firma.uriReferencia());
-        externalReference.setURI(uri);
-
-        /*DigitalSignatureAttachmentT firmaDigital = new DigitalSignatureAttachmentType();
-        firmaDigital.setExternalReference(externalReference);
-        signature.setDigitalSignatureAttachment(firmaDigital);*/
+        /* 
+         * Nota: DigitalSignatureAttachment no está disponible en ph-ubl21 10.1.0
+         * como método directo. En producción, la firma criptográfica real se 
+         * implementaría con una librería externa como:
+         * - DSS (Digital Signature Services)
+         * - xades4j
+         * 
+         * Estructura esperada cuando se implemente:
+         * <cac:DigitalSignatureAttachment>
+         *   <cac:ExternalReference>
+         *     <cbc:URI>#SignatureSP</cbc:URI>
+         *   </cac:ExternalReference>
+         * </cac:DigitalSignatureAttachment>
+         */
 
         facturaUbl.addSignature(signature);
     }
@@ -306,10 +355,11 @@ public class FacturaUblBuilder {
     }
 
 /**
- * Configura los impuestos si aplica IGV.
+ * Configura los impuestos por categoría (gravadas, exoneradas, inafectas).
+ * Genera un TaxTotal con tres subtotales según especificación SUNAT.
  *
  * @param facturaUbl factura UBL a completar
- * @param totales DatosTotalesFacturaUbl
+ * @param totales DatosTotalesFacturaUbl con totales por categoría
  * @param encabezado datos de encabezado
  */
     private void configurarImpuestosSiCorresponde(
@@ -319,10 +369,197 @@ public class FacturaUblBuilder {
         if (totales == null) {
             return;
         }
-        BigDecimal igv = totales.igv();
-        if (igv != null && igv.compareTo(BigDecimal.ZERO) > 0) {
-            facturaUbl.addTaxTotal(crearImpuestoTotal(igv, encabezado.moneda()));
+        String moneda = encabezado.moneda();
+
+        // Calcular total de impuestos
+        BigDecimal totalImpuestos = valorOZero(totales.totalImpuestos());
+        if (totalImpuestos.compareTo(BigDecimal.ZERO) <= 0
+                && valorOZero(totales.gravadas()).compareTo(BigDecimal.ZERO) <= 0
+                && valorOZero(totales.exoneradas()).compareTo(BigDecimal.ZERO) <= 0
+                && valorOZero(totales.inafectas()).compareTo(BigDecimal.ZERO) <= 0) {
+            return;
         }
+
+        // Crear TaxTotal con los tres subtotales
+        TaxTotalType taxTotal = new TaxTotalType();
+        taxTotal.setTaxAmount(totalImpuestos).setCurrencyID(moneda);
+
+        // Subtotal operaciones gravadas
+        BigDecimal gravadas = valorOZero(totales.gravadas());
+        BigDecimal igv = valorOZero(totales.igv());
+        if (gravadas.compareTo(BigDecimal.ZERO) > 0) {
+            taxTotal.addTaxSubtotal(crearSubtotalImpuestoGravado(gravadas, igv, moneda));
+        }
+
+        // Subtotal operaciones exoneradas
+        BigDecimal exoneradas = valorOZero(totales.exoneradas());
+        if (exoneradas.compareTo(BigDecimal.ZERO) > 0) {
+            taxTotal.addTaxSubtotal(crearSubtotalImpuestoExonerado(exoneradas, moneda));
+        }
+
+        // Subtotal operaciones inafectas
+        BigDecimal inafectas = valorOZero(totales.inafectas());
+        if (inafectas.compareTo(BigDecimal.ZERO) > 0) {
+            taxTotal.addTaxSubtotal(crearSubtotalImpuestoInafecto(inafectas, moneda));
+        }
+
+        facturaUbl.addTaxTotal(taxTotal);
+    }
+
+    /**
+     * Crea el subtotal de impuesto para operaciones gravadas (IGV).
+     *
+     * @param montoBase base imponible gravada
+     * @param montoImpuesto monto del IGV
+     * @param moneda código de moneda
+     * @return TaxSubtotalType configurado
+     */
+    private TaxSubtotalType crearSubtotalImpuestoGravado(
+            BigDecimal montoBase,
+            BigDecimal montoImpuesto,
+            String moneda) {
+        TaxSubtotalType subtotal = new TaxSubtotalType();
+        subtotal.setTaxableAmount(montoBase).setCurrencyID(moneda);
+        subtotal.setTaxAmount(montoImpuesto).setCurrencyID(moneda);
+        subtotal.setTaxCategory(crearCategoriaGravado());
+        return subtotal;
+    }
+
+    /**
+     * Crea el subtotal de impuesto para operaciones exoneradas.
+     *
+     * @param montoBase base imponible exonerada
+     * @param moneda código de moneda
+     * @return TaxSubtotalType configurado
+     */
+    private TaxSubtotalType crearSubtotalImpuestoExonerado(
+            BigDecimal montoBase,
+            String moneda) {
+        TaxSubtotalType subtotal = new TaxSubtotalType();
+        subtotal.setTaxableAmount(montoBase).setCurrencyID(moneda);
+        subtotal.setTaxAmount(BigDecimal.ZERO).setCurrencyID(moneda);
+        subtotal.setTaxCategory(crearCategoriaExonerado());
+        return subtotal;
+    }
+
+    /**
+     * Crea el subtotal de impuesto para operaciones inafectas.
+     *
+     * @param montoBase base imponible inafecta
+     * @param moneda código de moneda
+     * @return TaxSubtotalType configurado
+     */
+    private TaxSubtotalType crearSubtotalImpuestoInafecto(
+            BigDecimal montoBase,
+            String moneda) {
+        TaxSubtotalType subtotal = new TaxSubtotalType();
+        subtotal.setTaxableAmount(montoBase).setCurrencyID(moneda);
+        subtotal.setTaxAmount(BigDecimal.ZERO).setCurrencyID(moneda);
+        subtotal.setTaxCategory(crearCategoriaInafecto());
+        return subtotal;
+    }
+
+    /**
+     * Crea la categoría de impuesto para operaciones gravadas (category S).
+     *
+     * @return TaxCategoryType configurado
+     */
+    private TaxCategoryType crearCategoriaGravado() {
+        TaxCategoryType categoria = new TaxCategoryType();
+        IDType idCategoria = new IDType();
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(CATEGORIA_GRAVADO);
+        categoria.setID(idCategoria);
+        categoria.setPercent(PORCENTAJE_IGV);
+        categoria.setTaxScheme(crearEsquemaImpuestoIgv());
+        return categoria;
+    }
+
+    /**
+     * Crea la categoría de impuesto para operaciones exoneradas (category E).
+     *
+     * @return TaxCategoryType configurado
+     */
+    private TaxCategoryType crearCategoriaExonerado() {
+        TaxCategoryType categoria = new TaxCategoryType();
+        IDType idCategoria = new IDType();
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(CATEGORIA_EXONERADO);
+        categoria.setID(idCategoria);
+        categoria.setTaxScheme(crearEsquemaImpuestoExonerado());
+        return categoria;
+    }
+
+    /**
+     * Crea la categoría de impuesto para operaciones inafectas (category O).
+     *
+     * @return TaxCategoryType configurado
+     */
+    private TaxCategoryType crearCategoriaInafecto() {
+        TaxCategoryType categoria = new TaxCategoryType();
+        IDType idCategoria = new IDType();
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(CATEGORIA_INAFECTO);
+        categoria.setID(idCategoria);
+        categoria.setTaxScheme(crearEsquemaImpuestoInafecto());
+        return categoria;
+    }
+
+    /**
+     * Crea el esquema de impuesto IGV.
+     *
+     * @return TaxSchemeType configurado
+     */
+    private TaxSchemeType crearEsquemaImpuestoIgv() {
+        TaxSchemeType esquema = new TaxSchemeType();
+        IDType idEsquema = new IDType();
+        idEsquema.setSchemeID("UN/ECE 5153");
+        idEsquema.setSchemeAgencyID("6");
+        idEsquema.setValue(CODIGO_TRIBUTO_IGV);
+        esquema.setID(idEsquema);
+        esquema.setName(NOMBRE_IMPUESTO_IGV);
+        esquema.setTaxTypeCode(TIPO_TRIBUTO_VAT);
+        return esquema;
+    }
+
+    /**
+     * Crea el esquema de impuesto Exonerado.
+     *
+     * @return TaxSchemeType configurado
+     */
+    private TaxSchemeType crearEsquemaImpuestoExonerado() {
+        TaxSchemeType esquema = new TaxSchemeType();
+        IDType idEsquema = new IDType();
+        idEsquema.setSchemeID("UN/ECE 5153");
+        idEsquema.setSchemeAgencyID("6");
+        idEsquema.setValue(CODIGO_TRIBUTO_EXONERADO);
+        esquema.setID(idEsquema);
+        esquema.setName(NOMBRE_IMPUESTO_EXONERADO);
+        esquema.setTaxTypeCode(TIPO_TRIBUTO_VAT);
+        return esquema;
+    }
+
+    /**
+     * Crea el esquema de impuesto Inafecto.
+     *
+     * @return TaxSchemeType configurado
+     */
+    private TaxSchemeType crearEsquemaImpuestoInafecto() {
+        TaxSchemeType esquema = new TaxSchemeType();
+        IDType idEsquema = new IDType();
+        idEsquema.setSchemeID("UN/ECE 5153");
+        idEsquema.setSchemeAgencyID("6");
+        idEsquema.setValue(CODIGO_TRIBUTO_INAFECTO);
+        esquema.setID(idEsquema);
+        esquema.setName(NOMBRE_IMPUESTO_INAFECTO);
+        esquema.setTaxTypeCode(TIPO_TRIBUTO_FRE);
+        return esquema;
     }
 
     /**
@@ -456,7 +693,7 @@ public class FacturaUblBuilder {
         IDType idEsquema = new IDType();
         idEsquema.setSchemeID("UN/ECE 5153");
         idEsquema.setSchemeAgencyID("6");
-        idEsquema.setValue(CODIGO_IMPUESTO_IGV);
+        idEsquema.setValue(CODIGO_TRIBUTO_IGV);
         esquemaImpuesto.setID(idEsquema);
         esquemaImpuesto.setName(NOMBRE_IMPUESTO_IGV);
         esquemaTributario.setTaxScheme(esquemaImpuesto);
@@ -650,9 +887,10 @@ public class FacturaUblBuilder {
     private static TaxCategoryType crearCategoriaImpuestoIgv() {
         TaxCategoryType categoriaImpuesto = new TaxCategoryType();
         IDType idCategoria = new IDType();
-        idCategoria.setSchemeID("UNCL5305");
-        idCategoria.setSchemeAgencyID("6");
-        idCategoria.setValue(CODIGO_IMPUESTO_IGV);
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(CATEGORIA_GRAVADO);
         categoriaImpuesto.setID(idCategoria);
         categoriaImpuesto.setPercent(PORCENTAJE_IGV);
 
@@ -741,31 +979,41 @@ public class FacturaUblBuilder {
     private InvoiceLineType crearLineaFactura(FacturaLineaUblData linea, String moneda) {
         InvoiceLineType lineaUbl = new InvoiceLineType();
 
+        // CAMPO 35: Número de orden del ítem
         int numeroLinea = linea.numero() != null ? linea.numero() : 1;
         lineaUbl.setID(String.valueOf(numeroLinea));
 
+        // CAMPO 36: Cantidad y unidad de medida (InvoicedQuantity)
+        BigDecimal cantidad = linea.cantidad();
+        String unidadMedida = linea.unidadMedida();
+        if (cantidad != null) {
+            lineaUbl.setInvoicedQuantity(crearCantidad(cantidad, unidadMedida));
+        }
+
+        // CAMPO 37: Valor de venta del ítem (sin impuestos)
         BigDecimal valorVenta = valorOZero(linea.valorVenta());
         lineaUbl.setLineExtensionAmount(valorVenta).setCurrencyID(moneda);
 
-        ItemType item = new ItemType();
-        String descripcion = linea.descripcion();
-        if (descripcion != null && !descripcion.isBlank()) {
-            DescriptionType descripcionUbl = new DescriptionType();
-            descripcionUbl.setValue(descripcion);
-            item.setDescription(Collections.singletonList(descripcionUbl));
-        }
-        lineaUbl.setItem(item);
-
+        // CAMPO 38: Precio de venta unitario (PricingReference)
         DatosPrecioReferenciaFacturaUbl precioReferencia = linea.precioReferencia();
         if (precioReferencia != null) {
             lineaUbl.setPricingReference(crearPrecioReferencia(precioReferencia, moneda));
         }
 
+        // CAMPO 40: Descuentos por ítem
         DatosDescuentoLineaFacturaUbl descuentoLinea = linea.descuentoLinea();
         if (descuentoLinea != null) {
             lineaUbl.addAllowanceCharge(crearDescuentoLinea(descuentoLinea, moneda));
         }
 
+        // CAMPO 42: Afectación al IGV por ítem (TaxTotal por línea)
+        lineaUbl.addTaxTotal(crearImpuestoLinea(linea, moneda));
+
+        // CAMPO 44-46: Descripción y códigos del producto
+        ItemType item = crearItem(linea);
+        lineaUbl.setItem(item);
+
+        // CAMPO 48: Valor unitario del ítem (Price)
         BigDecimal precioUnitario = linea.precioUnitario();
         if (precioUnitario != null) {
             PriceType precio = new PriceType();
@@ -774,6 +1022,177 @@ public class FacturaUblBuilder {
         }
 
         return lineaUbl;
+    }
+
+    /**
+     * Crea la cantidad con unidad de medida para la línea.
+     *
+     * @param cantidad cantidad del ítem
+     * @param unidadMedida código de unidad (NIU, KG, etc.)
+     * @return InvoicedQuantityType configurado
+     */
+    private InvoicedQuantityType crearCantidad(BigDecimal cantidad, String unidadMedida) {
+        InvoicedQuantityType cantidadUbl = new InvoicedQuantityType();
+        cantidadUbl.setValue(cantidad);
+
+        String unidad = unidadMedida != null ? unidadMedida : "NIU";
+        cantidadUbl.setUnitCode(unidad);
+        cantidadUbl.setUnitCodeListID("UN/ECE rec 20");
+        cantidadUbl.setUnitCodeListAgencyName("United Nations Economic Commission for Europe");
+
+        return cantidadUbl;
+    }
+
+    /**
+     * Crea el impuesto (TaxTotal) para una línea de detalle.
+     * Incluye el código de afectación IGV según el tipo de operación.
+     *
+     * @param linea datos de la línea
+     * @param moneda código de moneda
+     * @return TaxTotalType configurado para la línea
+     */
+    private TaxTotalType crearImpuestoLinea(FacturaLineaUblData linea, String moneda) {
+        BigDecimal montoIGV = valorOZero(linea.montoIGV());
+        BigDecimal montoBaseIGV = valorOZero(linea.montoBaseIGV());
+        BigDecimal porcentajeIGV = linea.porcentajeIGV();
+        String tipoAfectacion = linea.tipoAfectacionIGV();
+
+        TaxTotalType taxTotal = new TaxTotalType();
+        taxTotal.setTaxAmount(montoIGV).setCurrencyID(moneda);
+
+        // Crear el TaxSubtotal según el tipo de afectación IGV
+        TaxSubtotalType subtotal = new TaxSubtotalType();
+        subtotal.setTaxableAmount(montoBaseIGV).setCurrencyID(moneda);
+        subtotal.setTaxAmount(montoIGV).setCurrencyID(moneda);
+
+        // Crear la categoría según tipo de afectación
+        TaxCategoryType categoria = crearCategoriaImpuestoLinea(
+            tipoAfectacion,
+            porcentajeIGV != null ? porcentajeIGV : PORCENTAJE_IGV
+        );
+        subtotal.setTaxCategory(categoria);
+
+        taxTotal.addTaxSubtotal(subtotal);
+        return taxTotal;
+    }
+
+    /**
+     * Crea la categoría de impuesto para una línea según el tipo de afectación.
+     *
+     * @param tipoAfectacion código de afectación IGV (10=Gravado, 20=Exonerado, 30/31=Inafecto)
+     * @param porcentajeIGV porcentaje del IGV
+     * @return TaxCategoryType configurado
+     */
+    private TaxCategoryType crearCategoriaImpuestoLinea(String tipoAfectacion, BigDecimal porcentajeIGV) {
+        TaxCategoryType categoria = new TaxCategoryType();
+
+        // Código de categoría (S=Gravado, E=Exonerado, O=Inafecto)
+        String codigoCategoria;
+        String codigoTributo;
+        String nombreTributo;
+        String tipoTributo;
+
+        if ("10".equals(tipoAfectacion)) {
+            // Gravado
+            codigoCategoria = CATEGORIA_GRAVADO;
+            codigoTributo = CODIGO_TRIBUTO_IGV;
+            nombreTributo = NOMBRE_IMPUESTO_IGV;
+            tipoTributo = TIPO_TRIBUTO_VAT;
+        } else if ("20".equals(tipoAfectacion)) {
+            // Exonerado
+            codigoCategoria = CATEGORIA_EXONERADO;
+            codigoTributo = CODIGO_TRIBUTO_EXONERADO;
+            nombreTributo = NOMBRE_IMPUESTO_EXONERADO;
+            tipoTributo = TIPO_TRIBUTO_VAT;
+        } else if ("30".equals(tipoAfectacion) || "31".equals(tipoAfectacion)) {
+            // Inafecto (30=onerosa, 31=gratuita)
+            codigoCategoria = CATEGORIA_INAFECTO;
+            codigoTributo = CODIGO_TRIBUTO_INAFECTO;
+            nombreTributo = NOMBRE_IMPUESTO_INAFECTO;
+            tipoTributo = TIPO_TRIBUTO_FRE;
+        } else {
+            // Por defecto gravado
+            codigoCategoria = CATEGORIA_GRAVADO;
+            codigoTributo = CODIGO_TRIBUTO_IGV;
+            nombreTributo = NOMBRE_IMPUESTO_IGV;
+            tipoTributo = TIPO_TRIBUTO_VAT;
+        }
+
+        // ID de categoría
+        IDType idCategoria = new IDType();
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(codigoCategoria);
+        categoria.setID(idCategoria);
+
+        // Porcentaje (solo para gravado)
+        if (CATEGORIA_GRAVADO.equals(codigoCategoria)) {
+            categoria.setPercent(porcentajeIGV);
+        }
+
+        // Código de afectación IGV (TaxExemptionReasonCode)
+        if (tipoAfectacion != null) {
+            TaxExemptionReasonCodeType codigoAfectacion = new TaxExemptionReasonCodeType();
+            codigoAfectacion.setValue(tipoAfectacion);
+            codigoAfectacion.setListAgencyName("PE:SUNAT");
+            codigoAfectacion.setListName("SUNAT:Codigo de Tipo de Afectación del IGV");
+            codigoAfectacion.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07");
+            categoria.setTaxExemptionReasonCode(codigoAfectacion);
+        }
+
+        // Esquema de impuesto (TaxScheme)
+        TaxSchemeType esquema = new TaxSchemeType();
+        IDType idEsquema = new IDType();
+        idEsquema.setSchemeID("UN/ECE 5153");
+        idEsquema.setSchemeAgencyID("6");
+        idEsquema.setValue(codigoTributo);
+        esquema.setID(idEsquema);
+        esquema.setName(nombreTributo);
+        esquema.setTaxTypeCode(tipoTributo);
+        categoria.setTaxScheme(esquema);
+
+        return categoria;
+    }
+
+    /**
+     * Crea el ítem de la línea de detalle con descripción y código de producto.
+     *
+     * @param linea datos de la línea
+     * @return ItemType configurado
+     */
+    private ItemType crearItem(FacturaLineaUblData linea) {
+        ItemType item = new ItemType();
+
+        // Agregar descripción del producto
+        String descripcion = linea.descripcion();
+        if (descripcion != null && !descripcion.isBlank()) {
+            DescriptionType descripcionUbl = new DescriptionType();
+            descripcionUbl.setValue(descripcion);
+            item.setDescription(Collections.singletonList(descripcionUbl));
+        }
+
+        // Agregar código de producto del vendedor ( SellersItemIdentification )
+        String codigoProducto = linea.codigoProducto();
+        if (codigoProducto != null && !codigoProducto.isBlank()) {
+            ItemIdentificationType sellersItemIdentification = new ItemIdentificationType();
+            IDType idProducto = new IDType();
+            idProducto.setValue(codigoProducto);
+            sellersItemIdentification.setID(idProducto);
+            item.setSellersItemIdentification(sellersItemIdentification);
+        }
+
+        // Agregar código de producto SUNAT/UNSPSC si existe
+        String codigoProductoSunat = linea.codigoProductoSunat();
+        if (codigoProductoSunat != null && !codigoProductoSunat.isBlank()) {
+            ItemIdentificationType standardItemIdentification = new ItemIdentificationType();
+            IDType idSunat = new IDType();
+            idSunat.setValue(codigoProductoSunat);
+            standardItemIdentification.setID(idSunat);
+            item.setStandardItemIdentification(standardItemIdentification);
+        }
+
+        return item;
     }
 
     /**

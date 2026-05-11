@@ -32,6 +32,7 @@ import java.util.List;
  * @param detalles líneas del comprobante
  * @param documentoRelacionado documento relacionado (si aplica)
  * @param parteTraslado datos de traslado (si aplica)
+ * @param leyendas leyendas del comprobante (catálogo 52)
  */
 public record ComprobanteCanonico(
         @NotBlank(message = "Tipo de documento es requerido")
@@ -109,6 +110,8 @@ public record ComprobanteCanonico(
 
         DocumentoRelacionadoCanonico documentoRelacionado,
 
-        ParteTrasladoCanonico parteTraslado
+        ParteTrasladoCanonico parteTraslado,
+
+        List<LeyendaCanonico> leyendas
 ) {
 }
