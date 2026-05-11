@@ -4,10 +4,25 @@ import com.facturacion.api.application.EncryptionUtil;
 import com.facturacion.api.web.models.ConfiguracionCertificadoEntity;
 import com.facturacion.api.web.repositories.ConfiguracionCertificadoRepository;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.StringReader;
 import java.security.KeyStore;
+import java.security.MessageDigest;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
+import java.security.Signature;
 import java.util.Base64;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -143,28 +158,38 @@ public class XmlSignatureService {
             PrivateKey privateKey,
             X509Certificate certificate) throws Exception {
         try {
-            // Inicializar el proveedor de XML Security de Apache
-            org.apache.xml.security.Init.init();
-
-            // Parsear el documento XML desde String
-            javax.xml.parsers.DocumentBuilderFactory dbf = javax.xml.parsers.DocumentBuilderFactory.newInstance();
+            // Parsear el documento XML
+            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
             dbf.setNamespaceAware(true);
-            javax.xml.parsers.DocumentBuilder db = dbf.newDocumentBuilder();
+            dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+            Document doc = dbf.newDocumentBuilder().parse(
+                    new org.xml.sax.InputSource(new StringReader(xmlDocument)));
 
-            org.xml.sax.InputSource is = new org.xml.sax.InputSource(new java.io.StringReader(xmlDocument));
-            org.w3c.dom.Document doc = db.parse(is);
+            Element root = doc.getDocumentElement();
 
-            // Obtener el elemento raíz del documento
-            org.w3c.dom.Element root = doc.getDocumentElement();
+            // ===== 1. Canonicalizar el documento y calcular DigestValue =====
+            // Serializar y canonicalizar el documento
+            ByteArrayOutputStream docCanonicalized = new ByteArrayOutputStream();
+            TransformerFactory tf = TransformerFactory.newInstance();
+            Transformer transformer = tf.newTransformer();
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            transformer.transform(new DOMSource(root), new StreamResult(docCanonicalized));
+            
+            // Calcular SHA-256
+            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+            byte[] digestBytes = sha256.digest(docCanonicalized.toByteArray());
+            String digestValueBase64 = Base64.getEncoder().encodeToString(digestBytes);
+            
+            log.debug("DigestValue calculado: {} chars", digestValueBase64.length());
 
-            // Crear elemento Signature con namespace XMLDSig
-            String signatureId = "SignatureKG";
-            org.w3c.dom.Element signatureElement = doc.createElementNS(
+            // ===== 2. Crear estructura de firma =====
+            // Crear elemento Signature
+            Element signatureElement = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "Signature");
-            signatureElement.setAttribute("Id", signatureId);
+            signatureElement.setAttribute("Id", "SignatureKG");
 
-            // Insertar Signature al inicio del documento (después del elemento raíz)
-            org.w3c.dom.Node firstChild = root.getFirstChild();
+            // Insertar al inicio
+            Node firstChild = root.getFirstChild();
             if (firstChild != null) {
                 root.insertBefore(signatureElement, firstChild);
             } else {
@@ -172,82 +197,91 @@ public class XmlSignatureService {
             }
 
             // Crear SignedInfo
-            org.w3c.dom.Element signedInfoElement = doc.createElementNS(
+            Element signedInfoElement = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "SignedInfo");
             signatureElement.appendChild(signedInfoElement);
 
-            // CanonicalizationMethod - Método de canonicalización del documento
-            org.w3c.dom.Element canonMethod = doc.createElementNS(
+            // CanonicalizationMethod
+            Element canonMethod = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "CanonicalizationMethod");
             canonMethod.setAttribute("Algorithm", "http://www.w3.org/TR/2001/REC-xml-c14n-20010315");
             signedInfoElement.appendChild(canonMethod);
 
-            // SignatureMethod - Algoritmo de firma (RSA-SHA256)
-            org.w3c.dom.Element sigMethod = doc.createElementNS(
+            // SignatureMethod (RSA-SHA256)
+            Element sigMethod = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "SignatureMethod");
             sigMethod.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
             signedInfoElement.appendChild(sigMethod);
 
-            // Reference - Referencia al documento completo
-            org.w3c.dom.Element reference = doc.createElementNS(
+            // Reference
+            Element reference = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "Reference");
             reference.setAttribute("Id", "reference-doc");
-            reference.setAttribute("URI", ""); // Referencia al documento completo
+            reference.setAttribute("URI", "");
             signedInfoElement.appendChild(reference);
 
-            // DigestMethod - Algoritmo de hash (SHA-256)
-            org.w3c.dom.Element digestMethod = doc.createElementNS(
+            // DigestMethod
+            Element digestMethod = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "DigestMethod");
             digestMethod.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#sha256");
             reference.appendChild(digestMethod);
 
-            // DigestValue - Valor del hash (placeholder)
-            org.w3c.dom.Element digestValue = doc.createElementNS(
+            // DigestValue (calculado)
+            Element digestValue = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "DigestValue");
-            digestValue.setTextContent(""); // TODO: calcular hash SHA-256 real
+            digestValue.setTextContent(digestValueBase64);
             reference.appendChild(digestValue);
 
-            // SignatureValue - Valor de la firma encriptada (placeholder)
-            org.w3c.dom.Element signatureValue = doc.createElementNS(
+            // ===== 3. Calcular SignatureValue =====
+            // Canonicalizar SignedInfo
+            ByteArrayOutputStream signedInfoCanonicalized = new ByteArrayOutputStream();
+            Transformer signedInfoTransformer = tf.newTransformer();
+            signedInfoTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            signedInfoTransformer.transform(new DOMSource(signedInfoElement), 
+                    new StreamResult(signedInfoCanonicalized));
+            
+            // Firmar con RSA-SHA256
+            Signature rsaSignature = Signature.getInstance("SHA256withRSA");
+            rsaSignature.initSign(privateKey);
+            rsaSignature.update(signedInfoCanonicalized.toByteArray());
+            byte[] signatureBytes = rsaSignature.sign();
+            String signatureValueBase64 = Base64.getEncoder().encodeToString(signatureBytes);
+            
+            log.debug("SignatureValue calculado: {} chars", signatureValueBase64.length());
+
+            // SignatureValue
+            Element signatureValue = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
             signatureValue.setAttribute("Id", "signature-value");
-            // TODO: En producción, encriptar el hash con RSA
-            // byte[] hash = MessageDigest.getInstance("SHA-256").digest(signedInfoBytes);
-            // byte[] signatureBytes = privateKey.sign(Signature.getInstance("SHA256withRSA"));
-            signatureValue.setTextContent("");
+            signatureValue.setTextContent(signatureValueBase64);
             signatureElement.appendChild(signatureValue);
 
-            // KeyInfo - Información del certificado
-            org.w3c.dom.Element keyInfo = doc.createElementNS(
+            // ===== 4. KeyInfo con certificado =====
+            Element keyInfo = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "KeyInfo");
             signatureElement.appendChild(keyInfo);
 
-            // X509Data - Certificado del firmante
-            org.w3c.dom.Element x509Data = doc.createElementNS(
+            Element x509Data = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "X509Data");
             keyInfo.appendChild(x509Data);
 
-            org.w3c.dom.Element x509Cert = doc.createElementNS(
+            Element x509Cert = doc.createElementNS(
                     "http://www.w3.org/2000/09/xmldsig#", "X509Certificate");
             x509Cert.setTextContent(Base64.getEncoder().encodeToString(certificate.getEncoded()));
             x509Data.appendChild(x509Cert);
 
-            // Convertir el documento modificado a String
-            javax.xml.transform.TransformerFactory tf = javax.xml.transform.TransformerFactory.newInstance();
-            javax.xml.transform.Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(javax.xml.transform.OutputKeys.OMIT_XML_DECLARATION, "yes");
+            // Convertir a String
+            ByteArrayOutputStream result = new ByteArrayOutputStream();
+            Transformer finalTransformer = tf.newTransformer();
+            finalTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+            finalTransformer.transform(new DOMSource(doc), new StreamResult(result));
 
-            java.io.StringWriter writer = new java.io.StringWriter();
-            transformer.transform(new javax.xml.transform.dom.DOMSource(doc),
-                    new javax.xml.transform.stream.StreamResult(writer));
-
-            log.info("XML firmado exitosamente con XMLDSig");
-            return writer.toString();
+            log.info("XML firmado exitosamente con XMLDSig (RSA-SHA256)");
+            return result.toString();
 
         } catch (Exception e) {
             log.error("Error al firmar XML: {}", e.getMessage(), e);
-            // En caso de error, retornar el XML sin firma para debug
-            return xmlDocument;
+            throw new RuntimeException("Error al firmar XML: " + e.getMessage(), e);
         }
     }
 
