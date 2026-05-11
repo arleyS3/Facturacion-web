@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 /**
  * Línea canónica del comprobante.
  *
+ * @param codigoProducto código del producto (SKU)
  * @param descripcion descripción del ítem
  * @param cantidad cantidad
  * @param valorUnitario valor unitario
@@ -16,6 +17,9 @@ import java.math.BigDecimal;
  * @param codigoTipoIgv código de afectación IGV
  */
 public record DetalleCanonico(
+        @Size(max = 50, message = "Código de producto máximo 50 caracteres")
+        String codigoProducto,
+
         @NotBlank(message = "Descripción del ítem es requerida")
         @Size(max = 500, message = "Descripción máximo 500 caracteres")
         String descripcion,
