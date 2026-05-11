@@ -4,6 +4,7 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+resultado/
 
 ### STS ###
 .apt_generated
@@ -54,3 +55,9 @@ build/
 ### IDEs in subfolders ###
 **/.vscode/
 **/.idea/
+
+### Graphify
+graphify-out/**
+
+### Obsidian
+.obsidian/

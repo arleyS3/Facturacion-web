@@ -4,6 +4,7 @@ import com.facturacion.api.application.TipoDocumentoMapper;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
 import com.facturacion.api.application.comprobante.modelo.DocumentoRelacionadoCanonico;
+import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
 import com.facturacion.api.application.comprobante.modelo.ParteTrasladoCanonico;
 import com.facturacion.api.web.dto.GenerarTramaRequest;
 import com.facturacion.api.web.dto.SeccionesPayload;
@@ -38,12 +39,28 @@ public class SeccionesToCanonicoMapper {
                 TipoDocumentoMapper.toCodigoSunat(request.tipoDocumento()),
                 a.getOrDefault("Serie", "") + "-" + a.getOrDefault("Correlativo", ""),
                 a.getOrDefault("FchEmis", ""),
+                a.getOrDefault("HorEmis", "10:00:00"),
+                a.getOrDefault("FecVencimiento", null),
+                a.getOrDefault("TipOperacion", "0101"),
                 a.getOrDefault("CodMoneda", "PEN"),
                 a.getOrDefault("RUTEmis", ""),
+                a.getOrDefault("RznSocEmisor", ""),
+                a.getOrDefault("NomComercial", null),
+                a.getOrDefault("DirEmisor", null),
+                a.getOrDefault("Urbanizacion", null),
+                a.getOrDefault("Ubigeo", null),
+                a.getOrDefault("Departament", null),
+                a.getOrDefault("Provincia", null),
+                a.getOrDefault("Distrito", null),
+                a.getOrDefault("CodDomicilioFiscal", "0001"),
                 a.getOrDefault("NumDocReceptor", ""),
+                a.getOrDefault("RznSocReceptor", null),
+                a.getOrDefault("DirReceptor", null),
+                a.getOrDefault("UbigeoReceptor", null),
                 mapDetalles(secciones),
                 mapRelacionado(campos),
-                mapTraslado(campos)
+                mapTraslado(campos),
+                List.of()
         );
     }
 
@@ -62,14 +79,15 @@ public class SeccionesToCanonicoMapper {
         List<DetalleCanonico> detalles = new ArrayList<>();
 
         for (Map<String, String> item : items) {
-            if (item == null) continue;
+            if (item == null)
+                continue;
             detalles.add(new DetalleCanonico(
+                    item.getOrDefault("CodItem", null), // código de producto (opcional)
                     item.getOrDefault("NmbItem", ""),
                     decimal(item.get("QtyItem")),
                     decimal(item.get("VlrCodItem")),
                     decimal(item.get("MntIgvItem")),
-                    item.getOrDefault("CodigoTipoIgv", "")
-            ));
+                    item.getOrDefault("CodigoTipoIgv", "")));
         }
 
         return detalles;
@@ -83,14 +101,14 @@ public class SeccionesToCanonicoMapper {
      */
     private DocumentoRelacionadoCanonico mapRelacionado(Map<String, Map<String, String>> campos) {
         Map<String, String> d = campos.getOrDefault("D", Map.of());
-        if (d.isEmpty()) return null;
+        if (d.isEmpty())
+            return null;
         return new DocumentoRelacionadoCanonico(
                 d.getOrDefault("TipDocAfectado", ""),
                 d.getOrDefault("SerieDocAfectado", ""),
                 d.getOrDefault("CorrelativoDocAfectado", ""),
                 d.getOrDefault("CodMotivo", ""),
-                d.getOrDefault("DesMotivo", "")
-        );
+                d.getOrDefault("DesMotivo", ""));
     }
 
     /**
@@ -101,7 +119,8 @@ public class SeccionesToCanonicoMapper {
      */
     private ParteTrasladoCanonico mapTraslado(Map<String, Map<String, String>> campos) {
         Map<String, String> g = campos.getOrDefault("G", Map.of());
-        if (g.isEmpty()) return null;
+        if (g.isEmpty())
+            return null;
         return new ParteTrasladoCanonico(
                 g.getOrDefault("MotivoTraslado", ""),
                 g.getOrDefault("ModalidadTraslado", ""),
@@ -109,8 +128,7 @@ public class SeccionesToCanonicoMapper {
                 g.getOrDefault("PuntoLlegada", ""),
                 null, null, null, null, null, null,
                 null, null, null, null, null, null,
-                null, null, null, null, null
-        );
+                null, null, null, null, null);
     }
 
     /**
@@ -120,7 +138,8 @@ public class SeccionesToCanonicoMapper {
      * @return valor numérico o cero si es inválido
      */
     private BigDecimal decimal(String value) {
-        if (value == null || value.isBlank()) return BigDecimal.ZERO;
+        if (value == null || value.isBlank())
+            return BigDecimal.ZERO;
         try {
             return new BigDecimal(value.trim());
         } catch (NumberFormatException ex) {

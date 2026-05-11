@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<Invoice xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+         xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateCompon
+ents-2"
+         xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents
+-2"
+         xmlns:ccts="urn:un:unece:uncefact:documentation:2"
+         xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+         xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionCompon
+ents-2"
+         xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2"
+         xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchem
+aModule:2"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <ext:UBLExtensions>
+        <ext:UBLExtension>
+            <ext:ExtensionContent>
+                <ds:Signature Id="SignatureSP">
+                    <ds:SignedInfo>
+                        <ds:CanonicalizationMethod Algorithm="http://www.w3.org/TR/2001/REC-xmlc14n20010315"/>
+                        <ds:SignatureMethod Algorithm="http://www.w3.org/2000/09/xmldsig#rsasha1"/>
+                        <ds:Reference URI="">
+                            <ds:Transforms>
+                                <ds:Transform
+                                        Algorithm="http://www.w3.org/2000/09/xmldsig#envelopedsignature"/>
+                            </ds:Transforms>
+                            <ds:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"/>
+                            <ds:DigestValue>ryg5Vl+6zuSrAlgSQUYr WeaSQjk=</ds:DigestValue>
+                        </ds:Reference>
+                    </ds:SignedInfo>
+                    <ds:SignatureValue>SOiGQpmVz7hBg
+                        GjIOQNlcwyHkQLC4S7R2zBuNnOUj4KjZQb3//xNPJMRB67m8x1mpQE6pffiH85v
+                        MzYLJ9nt7MLLZXOfP+rPGfkJBmNbYxaGLj9v3qZWyyEzHFGKS+8OfVSgMsHNwZ3IqfuICzc/xo8L
+                        7sFj+aT16IHf5TYffb0=</ds:SignatureValue>
+                    <ds:KeyInfo>
+                        <ds:X509Data>
+                            <ds:X509SubjectName>1.2
+                                .840.113549.1.9.1=#161a4253554c434140534f55544845524e504552552e434f4d2e5045,C
+                                N=Juan
+                                Robles,OU=20100454523,O=SOPORTE TECNOLOGICOS EIRL,L=LIMA,ST=LIMA,
+                                C=PE</ds:X509SubjectName>
+                            <ds:X509Certificate>MIIESTCCAzGgAwIBAgIKWOC
+                                RzgAAAAAAIjANBgkqhkiG9w0BAQUFADAnMRUwEwYKCZImiZPyLGQB
+                                GRYFU1VOQVQxDjAMBgNVBAMTBVNVTkFUMB4XDTEwMTIyODE5NTExMFoXDTExMTIyODIwMDExMFow
+                                gZUxCzAJBgNVBAYTAlBFMQ0wCwYDVQQIEwRMSU1BMQ0wCwYDVQQHEwRMSU1BMREwDwYDVQQKEwhT
+                                T1VUSEVSTjEUMBIGA1UECxMLMjAxMDAxNDc1MTQxFDASBgNVBAMTC0JvcmlzIFN1bGNhMSkwJwYJ
+                                Q2VydEVucm9sbC9wY2IyMjZfU1VOQVQuY3J0MDcGCCsGAQUFBzAChitmaWxlOi8vXFxwY2IyMjZc
+                                Q2VydEVucm9sbFxwY2IyMjZfU1VOQVQuY3J0MA0GCSqGSIb3DQEBBQUAA4IBAQBI6wJ/QmRpz3C3
+                                rorBflOvA9DOa3GNiiB7rtPIjF4mPmtgfo2pK9gvnxmV2pST3ovfu0nbG2kpjzzaaelRjEodHvkc
+                                M3abGsOE53wfxqQF5uf/jkzZA9hbLHtE1aLKBD0Mhzc6cvI072alnE6QU3RZ16ie9CYsHmMrs+sP
+                                HMy8DJU5YrdnqHdSn2D3nhKBi4QfT/WURPOuo6DF4iWgrCyMf3eJgmGKSUN3At5fK4HSpfyURT0k
+                                boaJKNBgQwy0HhGh5BLM7DsTi/KwfdUYkoFgrY71Pm23+ra+xTow1Vk9gj5NqrlpMY5gAVQXEIo1
+                                ++GxDtaK/5EiVKSqzJ6geIfz</ds:X509Certificate>
+                        </ds:X509Data>
+                    </ds:KeyInfo>
+                </ds:Signature>
+            </ext:ExtensionContent>
+        </ext:UBLExtension>
+    </ext:UBLExtensions>
+    <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+    <cbc:CustomizationID>2.0</cbc:CustomizationID>
+    <cbc:ProfileID schemeName="SUNAT:Identificador de Tipo de Operación"
+                   schemeAgencyName="PE:SUNAT"
+                   schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo17">0101</cbc:Prof
+            ileID>
+    <cbc:ID>F001-4355</cbc:ID>
+    <cbc:IssueDate>2017-05-14</cbc:IssueDate>
+    <cbc:IssueTime>13:25:51</cbc:IssueTime>
+    <cbc:InvoiceTypeCode listAgencyName="PE:SUNAT" listName="SUNAT:Identificador
+de Tipo de Documento"
+                         listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01">01</cbc:InvoiceT
+            ypeCode>
+    <cbc:Note languageLocaleID="1000">CUATROCIENTOS VEINTITRES MIL DOSCIENTOS
+        VEINTICINCO Y 00/100</cbc:Note>
+    <cbc:Note languageLocaleID="3000">0501002017051400452</cbc:Note>
+    <cbc:DocumentCurrencyCode listID="ISO 4217 Alpha" listName="Currency"
+                              listAgencyName=" United Nations Economic Commission for
+Europe">PEN</cbc:DocumentCurrencyCode>
+    <cbc:LineCountNumeric>5</cbc:LineCountNumeric>
+    <cac:OrderReference>
+        <cbc:ID>7852166</cbc:ID>
+    </cac:OrderReference>
+    <cac:Signature>
+        <cbc:ID>IDSignSP</cbc:ID>
+        <cac:SignatoryParty>
+            <cac:PartyIdentification>
+                <cbc:ID>20100454523</cbc:ID>
+            </cac:PartyIdentification>
+            <cac:PartyName>
+                <cbc:Name>SOPORTE TECNOLOGICO EIRL</cbc:Name>
+            </cac:PartyName>
+        </cac:SignatoryParty>
+        <cac:DigitalSignatureAttachment>
+            <cac:ExternalReference>
+                <cbc:URI>#SignatureSP</cbc:URI>
+            </cac:ExternalReference>
+        </cac:DigitalSignatureAttachment>
+    </cac:Signature>
+    <cac:AccountingSupplierParty>
+        <cac:Party>
+            <cac:PartyName>
+                <cbc:Name>Tu Soporte</cbc:Name>
+            </cac:PartyName>
+            <cac:PartyTaxScheme>
+                <cbc:RegistrationName>
+                    <![CDATA[Soporte Tecnológicos EIRL]]></cbc:RegistrationName>
+                <CompanyID schemeID="6" schemeName="SUNAT:Identificador de Documento de
+Identidad" schemeAgencyName="PE:SUNAT"
+                           schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06">20100454523</C
+                        ompanyID>
+                <cac:RegistrationAddress>
+                    <cbc:AddressTypeCode>0000</cbc:AddressTypeCode>
+                </cac:RegistrationAddress>
+                <cac:TaxScheme>
+                    <cbc:ID>-</cbc:ID>
+                </cac:TaxScheme>
+            </cac:PartyTaxScheme>
+        </cac:Party>
+    </cac:AccountingSupplierParty>
