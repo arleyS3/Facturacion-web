@@ -57,3 +57,6 @@ build/
 
 ### Graphify
 graphify-out/**
+
+### Obsidian
+.obsidian/
