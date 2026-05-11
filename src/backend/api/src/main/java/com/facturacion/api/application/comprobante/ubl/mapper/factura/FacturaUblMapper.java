@@ -96,7 +96,7 @@ public class FacturaUblMapper {
     private FacturaLineaUblData mapLinea(DetalleCanonico detalle) {
         return new FacturaLineaUblData(
             null,                         // numero
-            null,                        // codigoProducto (no existe en canonico)
+            detalle.codigoProducto(),    // codigoProducto
             null,                         // codigoProductoSUNAT
             detalle.descripcion(),        // descripcion
             detalle.cantidad(),          // cantidad
