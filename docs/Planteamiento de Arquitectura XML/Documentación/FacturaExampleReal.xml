@@ -178,13 +178,13 @@
     >PEN</cbc:DocumentCurrencyCode>
 
   <!-- ====================================================================== -->
-  <!-- CAMPO ADICIONAL: CANTIDAD DE LÍNEAS                          -->
+  <!-- CAMPO ADICIONAL: CANTIDAD DE LÍNEAS - Ya aplica                         -->
   <!-- ====================================================================== -->
   <!-- Número total de líneas de detalle del comprobante -->
   <cbc:LineCountNumeric>5</cbc:LineCountNumeric>
 
   <!-- ====================================================================== -->
-  <!-- CAMPO 12: ORDEN DE REFERENCIA (Opcional)                      -->
+  <!-- CAMPO 12: ORDEN DE REFERENCIA (Opcional) - Ya aplica                     -->
   <!-- ====================================================================== -->
   <!-- Referencia a orden de compra/venta vinculada -->
   <cac:OrderReference>
@@ -254,7 +254,7 @@
   </cac:AccountingSupplierParty>
 
   <!-- ====================================================================== -->
-  <!-- CAMPO 18-19: CLIENTE / ADQUIRENTE                             -->
+  <!-- CAMPO 18-19: CLIENTE / ADQUIRENTE - YA APLICA                           -->
   <!-- ====================================================================== -->
   <!-- Datos del cliente/receptor del comprobante -->
   <cac:AccountingCustomerParty>
@@ -280,7 +280,7 @@
   </cac:AccountingCustomerParty>
 
   <!-- ====================================================================== -->
-  <!-- CAMPO 21: DESCUENTOS GLOBALES                                -->
+  <!-- CAMPO 21: DESCUENTOS GLOBALES - YA APLICA                                -->
   <!-- ====================================================================== -->
   <!-- Descuentos aplicados a nivel total del comprobante -->
   <cac:AllowanceCharge>
@@ -301,25 +301,25 @@
   <!-- ====================================================================== -->
   <!-- Resumen de todos los impuestos del comprobante -->
   <cac:TaxTotal>
-    <!-- CAMPO 22: Monto total de impuestos -->
+    <!-- CAMPO 22: Monto total de impuestos YA APLICA -->
     <cbc:TaxAmount currencyID="PEN">62675.85</cbc:TaxAmount>
 
     <!-- ========== Subtotal: Operaciones GRAVADAS (IGV 18%) ========== -->
     <!-- CAMPO 23: Monto de operaciones gravadas -->
     <cac:TaxSubtotal>
-      <!-- Base imponible -->
+      <!-- Base imponible - YA APLICA -->
       <cbc:TaxableAmount currencyID="PEN">348199.15</cbc:TaxableAmount>
-      <!-- Monto del IGV -->
+      <!-- Monto del IGV - YA APLICA -->
       <cbc:TaxAmount currencyID="PEN">62675.85</cbc:TaxAmount>
       <cac:TaxCategory>
-        <!-- Código de categoría: S = Gravado -->
+        <!-- Código de categoría: S = Gravado - YA APLICA -->
         <cbc:ID
                     schemeID="UN/ECE 5305"
                     schemeName="Tax Category Identifier"
                     schemeAgencyName="United Nations Economic Commission for Europe"
                 >S</cbc:ID>
         <cac:TaxScheme>
-          <!-- Código del tributo: 1000 = IGV -->
+          <!-- Código del tributo: 1000 = IGV - -->
           <cbc:ID schemeID="UN/ECE 5153" schemeAgencyID="6">1000</cbc:ID>
           <!-- Nombre del tributo -->
           <cbc:Name>IGV</cbc:Name>
