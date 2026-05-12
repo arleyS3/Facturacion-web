@@ -1,14 +1,16 @@
 import { Building2, HelpCircle, Settings } from "lucide-react";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Checkbox } from "../ui/checkbox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
-import { Button } from "../ui/button";
-import { useEffect, useRef, useState } from "react";
-import { useCatalog } from "../../hooks/useCatalog";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+
+import { useCatalog } from "@/hooks/useCatalog";
+
+import { fetchRuc } from "@/lib/sunat";
 import { useFormContext } from "react-hook-form";
-import { fetchRuc } from "../../lib/sunat";
+import { useEffect, useRef, useState } from "react";
 
 interface IssuerDataProps {
   showAnexo?: boolean;

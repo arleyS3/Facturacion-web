@@ -1,13 +1,14 @@
-import { FileText, Truck } from "lucide-react";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Checkbox } from "../ui/checkbox";
-import { useEffect, useRef, useState } from "react";
-import { useCatalog } from "../../hooks/useCatalog";
-import { useCatalogQuery } from "../../hooks/useCatalogQuery";
+
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
+import { useCatalog } from "@/hooks/useCatalog";
+import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
+import { useEffect, useRef, useState } from "react";
 
 interface DocumentHeaderProps {
   type: "sales" | "shipping";
