@@ -13,6 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import logoTransparente from "@/assets/logo-transparente.png";
 
 /** Gets initials from an email like "arley@gmail.com" → "AR" */
 function getInitials(email: string): string {
@@ -79,21 +80,29 @@ function NavigationLoader() {
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className="flex flex-col items-center gap-6"
           >
-            {/* Logo */}
-            <motion.div
-              animate={{
-                scale: [1, 1.05, 1],
-                boxShadow: [
-                  "0 4px 6px -1px rgb(0 0 0 / 0.1)",
-                  "0 10px 15px -3px rgb(0 0 0 / 0.1)",
-                  "0 4px 6px -1px rgb(0 0 0 / 0.1)"
-                ]
-              }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="size-20 rounded-2xl bg-primary flex items-center justify-center"
-            >
-              <span className="text-primary-foreground text-2xl font-bold">AF</span>
-            </motion.div>
+            {/* Logo con efecto glow */}
+            <div className="relative">
+              {/* Glow effect */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/30 via-primary/10 to-transparent blur-2xl scale-150" />
+              
+              <motion.div
+                animate={{
+                  scale: [1, 1.02, 1],
+                  rotate: [0, 1, 0, -1, 0],
+                }}
+                transition={{ 
+                  scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                  rotate: { duration: 8, repeat: Infinity, ease: "linear" }
+                }}
+                className="relative flex items-center justify-center"
+              >
+                <img 
+                  src={logoTransparente} 
+                  alt="Logo" 
+                  className="w-28 h-28 object-contain drop-shadow-lg"
+                />
+              </motion.div>
+            </div>
 
             {/* Loading text */}
             <div className="flex flex-col items-center gap-3">

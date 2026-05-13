@@ -1,11 +1,10 @@
-import { Save, X, FileText, ArrowLeft } from "lucide-react";
+import { Save, X, FileText, ArrowLeft, Download, FileCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceiverSection } from "@/features/ventas/components/ReceiverSection";
 import { DocumentSection } from "@/features/ventas/components/DocumentSection";
 import { ProductsTable } from "@/features/ventas/components/ProductsTable";
-import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { EmitDocumentDialog } from "@/components/EmitDocumentDialog";
 import { useState } from "react";
@@ -22,6 +21,30 @@ import {
   notifyRequestError,
   showServerValidationErrors,
 } from "../../../lib/emitErrorNotification";
+import { documentoSchema, type DocumentoFormData } from "@/lib/schemas/documento.schema";
+import { generarYDescargarXml } from "@/lib/xmlService";
+
+type ZodIssue = { path: (string | number)[]; message: string; code?: string };
+
+const toRHFErrors = (issues: ZodIssue[]): Record<string, any> => {
+  const errors: Record<string, any> = {};
+  for (const issue of issues) {
+    const key = (issue.path?.[0] ?? "root") as string;
+    if (!errors[key]) {
+      errors[key] = { type: issue.code ?? "custom", message: issue.message };
+    }
+  }
+  return errors;
+};
+
+const documentoResolver = (values: DocumentoFormData) => {
+  const result = documentoSchema.safeParse(values);
+  if (result.success) return { values, errors: {} };
+  return {
+    values: {} as DocumentoFormData,
+    errors: toRHFErrors(result.error.issues as ZodIssue[]),
+  };
+};
 
 /**
  * Componente del formulario de documentos de venta. Maneja el flujo de
@@ -34,7 +57,68 @@ export function InvoiceForm() {
     window.location.assign("/");
   };
   const methods = useForm({
+    resolver: documentoResolver,
+    mode: "onChange",
+    reValidateMode: "onChange",
     defaultValues: {
+      // =================================================================
+      // DATOS DEL DOCUMENTO (nuevos nombres en español)
+      // =================================================================
+      tipoDocumento: "",
+      serie: "F001",
+      correlativo: "",
+      fechaEmision: "",
+      horaEmision: "",
+      fechaVencimiento: "",
+      tipoOperacion: "",
+      moneda: "PEN",
+      
+      // =================================================================
+      // DATOS DEL EMISOR (nuevos nombres en español)
+      // =================================================================
+      emisorRuc: "",
+      emisorRazonSocial: "",
+      emisorNombreComercial: "",
+      emisorDireccion: "",
+      emisorUrbanizacion: "",
+      emisorDepartamento: "",
+      emisorProvincia: "",
+      emisorDistrito: "",
+      emisorUbigeo: "",
+      emisorCodigoDomicilio: "0001",
+      
+      // =================================================================
+      // DATOS DEL RECEPTOR (nuevos nombres en español)
+      // =================================================================
+      receptorDocumento: "",
+      receptorRazonSocial: "",
+      receptorDireccion: "",
+      receptorUbigeo: "",
+      
+      // =================================================================
+      // PRODUCTOS / DETALLES
+      // =================================================================
+      detalles: [],
+      
+      // =================================================================
+      // LEYENDAS
+      // =================================================================
+      leyendas: [],
+      
+      // =================================================================
+      // DOCUMENTO RELACIONADO (para notas)
+      // =================================================================
+      documentoRelacionado: undefined,
+      
+      // =================================================================
+      // CAMPOS ADICIONALES
+      // =================================================================
+      montoPendiente: "",
+      
+      // =================================================================
+      // CAMPOS LEGACY (para compatibilidad con buildPayload/TXT)
+      // =================================================================
+      // Estos campos mantienen los nombres old para que buildPayload funcione
       docType: "",
       docTypeCode: "",
       issuerDocType: "",
@@ -46,18 +130,10 @@ export function InvoiceForm() {
       issuerNoDet: false,
       receiverDocType: "",
       receiverDocNumber: "",
-      receiverSocialName: "",
-      receiverAddress: "",
       receiverDepartment: "",
       receiverProvince: "",
       receiverDistrict: "",
-      receiverUbigeo: "",
-      moneda: "",
-      serie: "F001",
-      correlativo: "",
-      fechaEmision: "",
-      horaEmision: "",
-      products: [],
+      products: [], // alias para detalles
     },
   });
 
@@ -110,6 +186,23 @@ export function InvoiceForm() {
     } catch (error) {
       console.error("[InvoiceForm] Error al emitir/descargar trama ->", error);
       notifyRequestError(error, "No se pudo emitir el documento");
+    }
+  };
+
+  /**
+   * Genera y descarga el XML del comprobante.
+   */
+  const generarXml = async () => {
+    console.log("[InvoiceForm] generarXml fired");
+    const values = methods.getValues();
+    console.log("[InvoiceForm] Generando XML con valores:", values);
+
+    try {
+      const filename = await generarYDescargarXml(values);
+      console.log(`[InvoiceForm] XML descargado correctamente: ${filename}`);
+    } catch (error) {
+      console.error("[InvoiceForm] Error al generar XML ->", error);
+      notifyRequestError(error, "No se pudo generar el XML");
     }
   };
 
@@ -209,13 +302,26 @@ export function InvoiceForm() {
                 <X className="size-4 mr-2" />
                 Cancelar
               </Button>
+              
+              {/* Botón para generar TXT */}
+              <Button 
+                variant="outline"
+                size="lg" 
+                className="min-w-[140px]"
+                onClick={() => setShowEmitDialog(true)}
+              >
+                <FileText className="size-4 mr-2" />
+                Generar TXT
+              </Button>
+              
+              {/* Botón para generar XML */}
               <Button 
                 size="lg" 
                 className="min-w-[140px] bg-blue-600 hover:bg-blue-700"
-                onClick={() => setShowEmitDialog(true)}
+                onClick={generarXml}
               >
-                <Save className="size-4 mr-2" />
-                Emitir Documento
+                <FileCode className="size-4 mr-2" />
+                Generar XML
               </Button>
             </div>
           </div>
