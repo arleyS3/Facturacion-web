@@ -5,6 +5,7 @@ import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
 import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Component;
 
@@ -38,7 +39,7 @@ public class FacturaUblMapper {
 
         List<FacturaLineaUblData> lineas =
             canonico.detalles() != null
-                ? canonico.detalles().stream().map(this::mapLinea).toList()
+                ? mapLineas(canonico.detalles())
                 : List.of();
 
         // Calcular totales desde las líneas
@@ -191,12 +192,39 @@ public class FacturaUblMapper {
     }
 
     /**
+     * Mapea las líneas canónicas a líneas UBL de factura con número secuencial.
+     *
+     * @param detalles lista de detalles canónicos
+     * @return lista de líneas UBL con número secuencial
+     */
+    private List<FacturaLineaUblData> mapLineas(List<DetalleCanonico> detalles) {
+        List<FacturaLineaUblData> lineas = new ArrayList<>();
+        int numeroLinea = 1;
+        for (DetalleCanonico detalle : detalles) {
+            lineas.add(mapLinea(detalle, numeroLinea));
+            numeroLinea++;
+        }
+        return lineas;
+    }
+
+    /**
      * Mapea una línea canónica a línea UBL de factura.
      *
      * @param detalle detalle canónico
      * @return línea UBL
      */
     private FacturaLineaUblData mapLinea(DetalleCanonico detalle) {
+        return mapLinea(detalle, null);
+    }
+
+    /**
+     * Mapea una línea canónica a línea UBL de factura con número de línea.
+     *
+     * @param detalle detalle canónico
+     * @param numeroLinea número de línea (1, 2, 3...)
+     * @return línea UBL
+     */
+    private FacturaLineaUblData mapLinea(DetalleCanonico detalle, Integer numeroLinea) {
         BigDecimal cantidad = detalle.cantidad();
         BigDecimal valorUnitario = detalle.valorUnitario();
         BigDecimal valorVenta = cantidad.multiply(valorUnitario);
@@ -208,12 +236,12 @@ public class FacturaUblMapper {
             : valorVenta;
 
         return new FacturaLineaUblData(
-            null,                         // numero
+            numeroLinea,                    // numero
             detalle.codigoProducto(),    // codigoProducto
             null,                         // codigoProductoSUNAT
             detalle.descripcion(),        // descripcion
             cantidad,                    // cantidad
-            "NIU",                       // unidadMedida
+            detalle.unidadMedida() != null ? detalle.unidadMedida() : "NIU", // unidadMedida
             valorUnitario,               // precioUnitario
             null,                        // precioReferencia
             null,                        // descuentoLinea

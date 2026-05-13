@@ -60,7 +60,8 @@ public class SeccionesToCanonicoMapper {
                 mapDetalles(secciones),
                 mapRelacionado(campos),
                 mapTraslado(campos),
-                List.of()
+                List.of(),
+                null  // firmar - por defecto null = true (se firma si hay certificado)
         );
     }
 
@@ -87,7 +88,8 @@ public class SeccionesToCanonicoMapper {
                     decimal(item.get("QtyItem")),
                     decimal(item.get("VlrCodItem")),
                     decimal(item.get("MntIgvItem")),
-                    item.getOrDefault("CodigoTipoIgv", "")));
+                    item.getOrDefault("CodigoTipoIgv", ""),
+                    item.getOrDefault("UnidadMedida", "NIU"))); // unidad de medida
         }
 
         return detalles;
@@ -103,10 +105,15 @@ public class SeccionesToCanonicoMapper {
         Map<String, String> d = campos.getOrDefault("D", Map.of());
         if (d.isEmpty())
             return null;
+        
+        // Combinar serie y correlativo para numeroDocumento
+        String serie = d.getOrDefault("SerieDocAfectado", "");
+        String correlativo = d.getOrDefault("CorrelativoDocAfectado", "");
+        String numeroDocumento = serie.isEmpty() ? correlativo : serie + "-" + correlativo;
+        
         return new DocumentoRelacionadoCanonico(
                 d.getOrDefault("TipDocAfectado", ""),
-                d.getOrDefault("SerieDocAfectado", ""),
-                d.getOrDefault("CorrelativoDocAfectado", ""),
+                numeroDocumento,
                 d.getOrDefault("CodMotivo", ""),
                 d.getOrDefault("DesMotivo", ""));
     }
@@ -121,14 +128,31 @@ public class SeccionesToCanonicoMapper {
         Map<String, String> g = campos.getOrDefault("G", Map.of());
         if (g.isEmpty())
             return null;
+        
+        // Mapeo de campos al nuevo formato snake_case
         return new ParteTrasladoCanonico(
-                g.getOrDefault("MotivoTraslado", ""),
-                g.getOrDefault("ModalidadTraslado", ""),
-                g.getOrDefault("PuntoPartida", ""),
-                g.getOrDefault("PuntoLlegada", ""),
-                null, null, null, null, null, null,
-                null, null, null, null, null, null,
-                null, null, null, null, null);
+                g.getOrDefault("TipoTraslado", ""),           // tipo_traslado
+                g.getOrDefault("ModalidadTraslado", ""),      // modalidad_traslado
+                g.getOrDefault("PuntoPartida", ""),           // punto_partida
+                g.getOrDefault("PuntoLlegada", ""),           // punto_llegada
+                g.getOrDefault("UbigeoPtoPartida", ""),        // punto_partida_ubigeo
+                g.getOrDefault("DireccionPtoPartida", ""),    // punto_partida_direccion
+                g.getOrDefault("UrbanizacionPtoPartida", ""),  // punto_partida_urbanizacion
+                g.getOrDefault("UbigeoPtoLlegada", ""),       // punto_llegada_ubigeo
+                g.getOrDefault("DireccionPtoLlegada", ""),    // punto_llegada_direccion
+                g.getOrDefault("UrbanizacionPtoLlegada", ""),  // punto_llegada_urbanizacion
+                g.getOrDefault("NroDocTransportista", ""),    // transportista_nro_documento
+                g.getOrDefault("RznSocTransportista", ""),     // transportista_razonSocial
+                g.getOrDefault("TipoDocTransportista", ""),  // transportista_tipo_documento
+                g.getOrDefault("PlacaVehiculo", ""),         // placa_vehiculo
+                g.getOrDefault("MarcaVehiculo", ""),          // marca_vehiculo
+                g.getOrDefault("NroDocConductor", ""),        // conductor_nro_documento
+                g.getOrDefault("TipoDocConductor", ""),       // conductor_tipo_documento
+                decimal(g.getOrDefault("PesoBrutoTotal", "0")), // peso_bruto_total
+                g.getOrDefault("UndPesoTotal", ""),          // und_peso_total
+                Integer.parseInt(g.getOrDefault("NroBultos", "0")), // numero_bultos
+                g.getOrDefault("FecTraslado", "")             // fecha_traslado
+        );
     }
 
     /**
