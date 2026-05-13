@@ -3,6 +3,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { AlertCircle } from "lucide-react";
 
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
@@ -17,9 +18,12 @@ interface DocumentHeaderProps {
     setValue?: (name: string, value: any) => void;
     getValues?: (name: string) => any;
   };
+  formState?: {
+    errors?: Record<string, { message?: string }>;
+  };
 }
 
-export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
+export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps) {
   const [useFechaActual, setUseFechaActual] = useState(true);
   const [useHoraActual, setUseHoraActual] = useState(true);
   const [selectedSerie, setSelectedSerie] = useState<string>("");
@@ -32,12 +36,12 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
   );
   const setValue = methods?.setValue;
   const isSales = type === "sales";
-  const [companyCodeLocal, setCompanyCodeLocal] = useState(
-    () => methods?.getValues?.("companyCode") ?? "1",
+  const [codigoEmpresaLocal, setCompanyCodeLocal] = useState(
+    () => methods?.getValues?.("codigoEmpresa") ?? "1",
   );
   const [shippingDocType, setShippingDocType] = useState("09");
-  const watchedDocType = methods?.watch?.("docType");
-  const watchedCompanyCode = methods?.watch?.("companyCode");
+  const watchedDocType = methods?.watch?.("tipoDocumento");
+  const watchedCompanyCode = methods?.watch?.("codigoEmpresa");
   const watchedCorrelativo = methods?.watch?.("correlativo");
 
 
@@ -55,10 +59,10 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
   };
 
   const currentDocType = isSales
-    ? (watchedDocType ?? tiposDocumento?.[0]?.label ?? "")
+    ? (watchedDocType ?? methods?.watch?.("docType") ?? tiposDocumento?.[0]?.label ?? "")
     : "Guía de Remisión";
 
-  const currentShippingDocType = methods?.watch?.("docType") ?? shippingDocType;
+  const currentShippingDocType = methods?.watch?.("docType") ?? methods?.watch?.("tipoDocumento") ?? shippingDocType;
   const currentSeriesDocType = isSales
     ? normalizeSeriesDocType(currentDocType)
     : currentShippingDocType;
@@ -120,13 +124,17 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
   const [correlativo, setCorrelativo] = useState<string>(() => {
     return methods?.getValues?.("correlativo") ?? watchedCorrelativo ?? "";
   });
+  const [montoPendiente, setMontoPendiente] = useState<string>(() => {
+    return methods?.getValues?.("montoPendiente") ?? "";
+  });
   const formatTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const formatCorrelativo = (value?: string) => {
     const v = value ?? correlativo;
     const digits = v.replace(/\D/g, "");
     if (digits.length === 0) return;
-    const formatted = digits.length < 8 ? digits.padStart(8, "0") : digits;
+    // Solo pad a 8 dígitos si tiene menos de 8, no truncar si tiene más
+    const formatted = digits.padStart(8, "0");
     if (formatted !== v) {
       setCorrelativo(formatted);
       if (setValue) setValue("correlativo", formatted);
@@ -140,12 +148,13 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
     }
     if (!correlativo) return;
     const digits = correlativo.replace(/\D/g, "");
-    if (digits.length >= 8 && digits === correlativo) return;
-
-    formatTimeout.current = setTimeout(() => {
-      formatCorrelativo();
-      formatTimeout.current = null;
-    }, 1000);
+    // Solo formatear si tiene menos de 8 dígitos (pad), no truncar si tiene más de 8
+    if (digits.length < 8 && digits !== correlativo) {
+      formatTimeout.current = setTimeout(() => {
+        formatCorrelativo();
+        formatTimeout.current = null;
+      }, 1000);
+    }
 
     return () => {
       if (formatTimeout.current) {
@@ -189,11 +198,24 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
     { code: "USD", label: "Dólares" },
     { code: "EUR", label: "Euros" },
   ];
-  const opcionesMoneda = monedas && monedas.length ? monedas : defaultMonedas;
+  
+  // Combinar monedas de API con defaults, eliminando duplicados por código
+  const opcionesMoneda = (() => {
+    if (!monedas || !monedas.length) return defaultMonedas;
+    // Crear Map para eliminar duplicados usando el código como clave
+    const mapa = new Map(defaultMonedas.map(m => [m.code, m]));
+    monedas.forEach(m => {
+      if (m.code && m.label && !mapa.has(m.code)) {
+        mapa.set(m.code, m);
+      }
+    });
+    return Array.from(mapa.values());
+  })();
+  
   const monedaValue = methods?.watch?.("moneda") || "";
   const selectedMoneda = opcionesMoneda.find((m) => m.code === monedaValue) || null;
   const showTipoPago = isSales && currentDocType === "Factura";
-  const companyCodeValue = watchedCompanyCode ?? companyCodeLocal;
+  const codigoEmpresaValue = watchedCompanyCode ?? codigoEmpresaLocal;
 
   return (
     <div className="space-y-6">
@@ -206,11 +228,11 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
             <Input
               placeholder="Ej: EMP001"
               className="h-9 font-mono"
-              value={companyCodeValue}
+              value={codigoEmpresaValue}
               onChange={(e) => {
                 const value = e.target.value;
                 if (setValue) {
-                  setValue("companyCode", value);
+                  setValue("codigoEmpresa", value);
                 } else {
                   setCompanyCodeLocal(value);
                 }
@@ -226,12 +248,15 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               value={isSales ? currentDocType : currentShippingDocType}
               onValueChange={(v) => {
                 if (isSales) {
+                  // Actualizar tanto el campo legacy como el nuevo
                   setValue?.("docType", v);
+                  setValue?.("tipoDocumento", v);
                   return;
                 }
 
                 if (methods?.setValue) {
                   methods.setValue("docType", v);
+                  methods.setValue("tipoDocumento", v);
                 } else {
                   setShippingDocType(v);
                 }
@@ -295,15 +320,27 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
             <Label className="text-xs font-medium">Correlativo</Label>
             <Input
               placeholder="00000001"
-              className="h-9 font-mono"
+              className={`h-9 font-mono ${formState?.errors?.correlativo ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
               value={correlativo}
               onChange={(e) => {
-                const val = e.target.value;
+                const val = e.target.value.replace(/\D/g, ""); // Solo dígitos
                 setCorrelativo(val);
                 if (setValue) setValue("correlativo", val);
               }}
               onBlur={() => formatCorrelativo()}
+              aria-invalid={!!formState?.errors?.correlativo}
+              aria-describedby={formState?.errors?.correlativo ? "correlativo-error" : undefined}
             />
+            {formState?.errors?.correlativo && (
+              <p
+                id="correlativo-error"
+                role="alert"
+                className="text-xs text-destructive flex items-center gap-1"
+              >
+                <AlertCircle className="size-3" />
+                {formState.errors.correlativo.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -456,10 +493,26 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               <Input
                 id="monto-pendiente"
                 placeholder="0.00"
-                className="font-mono"
-                value={methods?.watch?.("montoPendiente") ?? ""}
-                onChange={(e) => setValue?.("montoPendiente", e.target.value)}
+                className={`font-mono ${formState?.errors?.montoPendiente ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
+                value={montoPendiente}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, ""); // Solo dígitos y punto
+                  setMontoPendiente(val);
+                  if (setValue) setValue("montoPendiente", val);
+                }}
+                aria-invalid={!!formState?.errors?.montoPendiente}
+                aria-describedby={formState?.errors?.montoPendiente ? "monto-pendiente-error" : undefined}
               />
+              {formState?.errors?.montoPendiente && (
+                <p
+                  id="monto-pendiente-error"
+                  role="alert"
+                  className="text-xs text-destructive flex items-center gap-1"
+                >
+                  <AlertCircle className="size-3" />
+                  {formState.errors.montoPendiente.message}
+                </p>
+              )}
             </div>
           </div>
         </div>

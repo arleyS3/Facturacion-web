@@ -92,13 +92,24 @@ export function ProductsTable() {
     "/catalogos/codigos-tipo-tributo",
   );
 
+  // =================================================================
+  // CAMPOS NUEVOS EN ESPAÑOL + LEGACY
+  // =================================================================
   const [productsLocal, setProductsLocal] = useState<Product[]>([]);
+  
+  // Primero busca los nuevos nombres en español, luego los legacy
   const products = methods
-    ? ((methods.watch("products") as Product[]) ?? [])
+    ? ((methods.watch("detalles") as Product[]) ?? (methods.watch("products") as Product[]) ?? [])
     : productsLocal;
 
   const setProducts = (next: Product[]) => {
     if (methods?.setValue) {
+      // Nuevo nombre en español
+      methods.setValue("detalles", next, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
+      // Legacy (para buildPayload)
       methods.setValue("products", next, {
         shouldDirty: true,
         shouldTouch: true,
@@ -110,8 +121,10 @@ export function ProductsTable() {
 
   useEffect(() => {
     if (!methods?.getValues || !methods?.setValue) return;
-    const current = methods.getValues("products");
+    // Primero verifica los nuevos nombres, luego los legacy
+    const current = methods.getValues("detalles") || methods.getValues("products");
     if (!Array.isArray(current)) {
+      methods.setValue("detalles", []);
       methods.setValue("products", []);
     }
   }, [methods]);
