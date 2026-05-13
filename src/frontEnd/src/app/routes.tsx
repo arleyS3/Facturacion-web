@@ -1,22 +1,22 @@
 import { createBrowserRouter, Navigate } from "react-router";
-import { Login } from "./pages/Login";
-import { Registro } from "./pages/Registro";
-import { Home } from "./pages/Home";
-import { SalesDocuments } from "./pages/SalesDocuments";
-import { ShippingGuide } from "./pages/ShippingGuide";
-import { NotFound } from "./pages/NotFound";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-
+import { Login } from "@/features/autenticacion/pages/Login";
+import { Registro } from "@/features/autenticacion/pages/Registro";
+import { Home } from "@/features/shared/pages/Home";
+import { SalesDocuments } from "@/features/ventas/pages/SalesDocuments";
+import { ShippingGuide } from "@/features/guias-remision/pages/ShippingGuide";
+import { NotFound } from "@/features/shared/pages/NotFound";
+import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem('token');
+  const token = localStorage.getItem("token");
   return token ? <Navigate to="/home" replace /> : <>{children}</>;
 };
 
 export const router = createBrowserRouter([
-  // --- RUTAS PÚBLICAS (Con redirección si ya está logueado) ---
+  // --- RUTAS PÚBLICAS ---
   {
-    path: "/",
+    path: "/login",
     element: (
       <PublicRoute>
         <Login />
@@ -32,33 +32,23 @@ export const router = createBrowserRouter([
     ),
   },
 
-  // --- RUTAS PROTEGIDAS (Requieren autenticación) ---
+  // --- RUTAS PROTEGIDAS (todas bajo AppLayout) ---
   {
-    path: "/home",
+    path: "/",
     element: (
       <ProtectedRoute>
-        <Home />
+        <AppLayout />
       </ProtectedRoute>
     ),
-  },
-  {
-    path: "/sales-documents",
-    element: (
-      <ProtectedRoute>
-        <SalesDocuments />
-      </ProtectedRoute>
-    ),
-  },
-  {
-    path: "/shipping-guide",
-    element: (
-      <ProtectedRoute>
-        <ShippingGuide />
-      </ProtectedRoute>
-    ),
+    children: [
+      { index: true, element: <Navigate to="/home" replace /> },
+      { path: "home", element: <Home /> },
+      { path: "sales-documents", element: <SalesDocuments /> },
+      { path: "shipping-guide", element: <ShippingGuide /> },
+    ],
   },
 
-  // --- RUTA 404 (No encontrada) ---
+  // --- RUTA 404 ---
   {
     path: "*",
     element: <NotFound />,

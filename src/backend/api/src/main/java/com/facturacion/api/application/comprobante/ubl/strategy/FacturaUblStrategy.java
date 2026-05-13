@@ -35,13 +35,15 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
         var data = mapper.fromCanonico(canonico);
         String xml = builder.construirXml(data);
 
-        // 2. Firmar XML con certificado del emisor
-        String rucEmisor = canonico.emisorRuc();
-        if (rucEmisor != null && !rucEmisor.isBlank()) {
-            try {
-                xml = signatureService.signXml(xml, rucEmisor);
-            } catch (Exception e) {
-                throw new RuntimeException("Error al firmar XML: " + e.getMessage(), e);
+        // 2. Firmar XML solo si se indica y hay certificado configurado
+        if (canonico.debeFirmar()) {
+            String rucEmisor = canonico.emisorRuc();
+            if (rucEmisor != null && !rucEmisor.isBlank()) {
+                try {
+                    xml = signatureService.signXml(xml, rucEmisor);
+                } catch (Exception e) {
+                    throw new RuntimeException("Error al firmar XML: " + e.getMessage(), e);
+                }
             }
         }
 

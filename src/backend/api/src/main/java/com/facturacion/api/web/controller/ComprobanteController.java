@@ -183,13 +183,15 @@ public class ComprobanteController {
             // 1. Generar XML UBL
             String xml = estrategia.generarXml(canonico);
             
-            // 2. Firmar digitalmente el XML
-            String xmlFirmado = xmlSignatureService.signXml(xml, canonico.emisorRuc());
+            // 2. Firmar digitalmente el XML solo si se indica (por defecto true)
+            String xmlResult = canonico.debeFirmar()
+                ? xmlSignatureService.signXml(xml, canonico.emisorRuc())
+                : xml;
             
             return Map.of(
                     "success", true,
                     "tipoDocumento", codigoSunat,
-                    "xml", xmlFirmado);
+                    "xml", xmlResult);
         } catch (Exception e) {
             log.error("Error al generar XML: {}", e.getMessage(), e);
             return Map.of(
