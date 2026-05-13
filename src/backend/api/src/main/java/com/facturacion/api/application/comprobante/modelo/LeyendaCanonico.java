@@ -1,5 +1,6 @@
 package com.facturacion.api.application.comprobante.modelo;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -11,6 +12,16 @@ import jakarta.validation.constraints.Size;
  * Cada leyenda tiene un código local que indica el tipo de leyenda (catálogo 52).
  * Ejemplos: monto en letras, información adicional, etc.
  * </p>
+ * 
+ * <p>
+ * Ejemplo JSON con snake_case:
+ * </p>
+ * <pre>
+ * {
+ *   "codigo_local": "1000",
+ *   "leyenda": "MIL PESOS 00/100"
+ * }
+ * </pre>
  *
  * @param codigoLocal código de leyenda según catálogo SUNAT 52
  * @param leyenda texto de la leyenda
@@ -19,6 +30,7 @@ import jakarta.validation.constraints.Size;
 public record LeyendaCanonico(
         @NotBlank(message = "Código de leyenda es requerido")
         @Size(max = 4, message = "Código de leyenda máximo 4 caracteres")
+        @JsonProperty("codigo_local")
         String codigoLocal,
 
         @NotBlank(message = "Leyenda es requerida")
