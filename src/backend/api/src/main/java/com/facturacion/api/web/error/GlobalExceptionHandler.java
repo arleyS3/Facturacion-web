@@ -63,6 +63,15 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Maneja errores de construcción/procesamiento interno (ej. generación XML).
+     */
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalState(IllegalStateException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ErrorResponse.of(ex.getMessage(), List.of()));
+    }
+
+    /**
      * Manejador por defecto para cualquier otra excepción no controlada.
      */
     @ExceptionHandler(Exception.class)

@@ -19,7 +19,8 @@ interface EmitDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentType: "sales" | "shipping";
-  onEmit?: () => Promise<void> | void;
+  isNotaCredito?: boolean;
+  onEmit?: (formats: { xml: boolean; txt: boolean }) => Promise<void> | void;
 }
 
 /**
@@ -30,7 +31,7 @@ interface EmitDocumentDialogProps {
  * @param props.documentType tipo de documento (sales | shipping)
  * @param props.onEmit función que ejecuta la emisión
  */
-export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }: EmitDocumentDialogProps) {
+export function EmitDocumentDialog({ open, onOpenChange, documentType, isNotaCredito, onEmit }: EmitDocumentDialogProps) {
   const methods = useFormContext();
   const [isEmitting, setIsEmitting] = useState(false);
   const [formats, setFormats] = useState({
@@ -38,6 +39,12 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
     json: false,
     txt: true,
   });
+
+  // Habilitar XML solo para Nota de Crédito
+  const xmlEnabled = isNotaCredito ?? false;
+
+  // Para documentos que no son NC, TXT siempre debe estar marcado
+  const txtRequired = !xmlEnabled;
 
   const docTypeValue = (methods.watch("docType") as string) || "";
   const docTypeCodeValue = (methods.watch("docTypeCode") as string) || "";
@@ -62,6 +69,8 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
     new Date().toLocaleDateString("es-PE");
 
   const handleFormatChange = (format: keyof typeof formats, checked: boolean) => {
+    // No permitir desmarcar TXT si es obligatorio (Factura/Boleta)
+    if (format === 'txt' && txtRequired && !checked) return;
     setFormats(prev => ({ ...prev, [format]: checked }));
   };
 
@@ -73,7 +82,7 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
     onOpenChange(false);
 
     try {
-      await onEmit?.();
+      await onEmit?.({ xml: formats.xml, txt: formats.txt });
     } finally {
       setIsEmitting(false);
     }
@@ -122,13 +131,13 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
             </div>
 
             <div className="space-y-3">
-              {/* XML - Obligatorio */}
+              {/* XML */}
               <div className="flex items-start space-x-3 p-3 border rounded-lg bg-blue-50 border-blue-200">
                 <Checkbox
                   id="format-xml"
                   checked={formats.xml}
                   onCheckedChange={(checked) => handleFormatChange('xml', checked as boolean)}
-                  disabled
+                  disabled={!xmlEnabled}
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -190,7 +199,7 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
           </Button>
           <Button 
             onClick={handleEmit}
-            disabled={!formats.txt || isEmitting}
+            disabled={isEmitting}
             className={documentType === "sales" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
           >
             {isEmitting ? "Emitiendo..." : "Emitir Documento"}

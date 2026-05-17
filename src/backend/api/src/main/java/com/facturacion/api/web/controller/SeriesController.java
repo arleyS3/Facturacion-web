@@ -22,7 +22,7 @@ public class SeriesController {
      */
     public List<String> series(@PathVariable String tipoDocumento) {
         return switch (tipoDocumento) {
-            case "Factura", "Nota de débito", "Nota de crédito" -> List.of("F001", "F002", "F003", "F004", "F005");
+            case "Factura", "Nota de débito", "Nota de Débito", "Nota de crédito", "Nota de Crédito" -> List.of("F001", "F002", "F003", "F004", "F005");
             case "Boleta" -> List.of("B001", "B002", "B003", "B004", "B005");
             case "Guía Remitente","09" -> List.of("T001", "T002", "T003", "T004", "T005");
             case "Guía Transportista","31" -> List.of("G001", "G002", "G003", "G004", "G005");

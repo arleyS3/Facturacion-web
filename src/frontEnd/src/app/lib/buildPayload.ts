@@ -127,6 +127,12 @@ class MainFieldsSectionBuilder {
       MntNeto: NumberFormatter.toFixed2(totals.mntNeto),
       MntExe: NumberFormatter.toFixed2(totals.mntExe),
       MntExo: NumberFormatter.toFixed2(totals.mntExo),
+      // Referencia Nota de Crédito/Débito
+      ...(values.refTipoDocumento ? { TipoDocRef: values.refTipoDocumento } : {}),
+      ...(values.refSerie        ? { SerieRef: values.refSerie }           : {}),
+      ...(values.refCorrelativo  ? { CorrelativoRef: values.refCorrelativo }: {}),
+      ...(values.refCodMotivo    ? { CodMotivo: values.refCodMotivo }       : {}),
+      ...(values.refDescMotivo   ? { DescMotivo: values.refDescMotivo }     : {}),
     };
   }
 }
