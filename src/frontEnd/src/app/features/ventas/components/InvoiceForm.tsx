@@ -1,4 +1,4 @@
-import { Save, X, FileText, ArrowLeft, Download, FileCode } from "lucide-react";
+import { X, FileText, ArrowLeft, FileCode, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -7,8 +7,9 @@ import { DocumentSection } from "@/features/ventas/components/DocumentSection";
 import { ProductsTable } from "@/features/ventas/components/ProductsTable";
 import { Separator } from "@/components/ui/separator";
 import { EmitDocumentDialog } from "@/components/EmitDocumentDialog";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import { useNavigate } from "react-router";
 import buildPayload from "@/lib/buildPayload";
 import { api } from "@/lib/api";
 import { IssuerSection } from "@/features/ventas/components/IssuerSection";
@@ -51,10 +52,12 @@ const documentoResolver = (values: DocumentoFormData) => {
  * armado del payload, llamada a /tramas/generar y descarga de TXT.
  */
 export function InvoiceForm() {
+  const navigate = useNavigate();
   const [showEmitDialog, setShowEmitDialog] = useState(false);
+  const [isGeneratingTxt, setIsGeneratingTxt] = useState(false);
+  const [isGeneratingXml, setIsGeneratingXml] = useState(false);
   const goHome = () => {
-    // Regreso confiable: recarga Home para evitar quedarse en vista previa con URL cambiada.
-    window.location.assign("/");
+    navigate("/");
   };
   const methods = useForm({
     resolver: documentoResolver,
@@ -166,6 +169,7 @@ export function InvoiceForm() {
 
   const emitirDocumento = async () => {
     console.log("[InvoiceForm] onEmit fired");
+    setIsGeneratingTxt(true);
     const values = methods.getValues();
     const payload = buildPayload(values);
     console.log("[InvoiceForm] PAYLOAD enviado ->", payload);
@@ -186,6 +190,8 @@ export function InvoiceForm() {
     } catch (error) {
       console.error("[InvoiceForm] Error al emitir/descargar trama ->", error);
       notifyRequestError(error, "No se pudo emitir el documento");
+    } finally {
+      setIsGeneratingTxt(false);
     }
   };
 
@@ -194,6 +200,7 @@ export function InvoiceForm() {
    */
   const generarXml = async () => {
     console.log("[InvoiceForm] generarXml fired");
+    setIsGeneratingXml(true);
     const values = methods.getValues();
     console.log("[InvoiceForm] Generando XML con valores:", values);
 
@@ -203,8 +210,21 @@ export function InvoiceForm() {
     } catch (error) {
       console.error("[InvoiceForm] Error al generar XML ->", error);
       notifyRequestError(error, "No se pudo generar el XML");
+    } finally {
+      setIsGeneratingXml(false);
     }
   };
+
+  // Guardar cambios no guardados al navegar/recargar
+  useEffect(() => {
+    if (!methods.formState.isDirty) return;
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [methods.formState.isDirty]);
 
   return (
     <FormProvider {...methods}>
@@ -220,13 +240,13 @@ export function InvoiceForm() {
                 onClick={goHome}
                 className="shrink-0"
               >
-                <ArrowLeft className="size-4 mr-2" />
+                <ArrowLeft className="size-4 mr-2" aria-hidden="true" />
                 Volver
               </Button>
               <Separator orientation="vertical" className="h-8" />
               <div className="flex items-center gap-3">
                 <div className="bg-blue-600 p-2 rounded-lg">
-                  <FileText className="size-6 text-white" />
+                  <FileText className="size-6 text-white" aria-hidden="true" />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-slate-900">Documentos de Venta</h1>
@@ -298,8 +318,8 @@ export function InvoiceForm() {
               <p className="font-medium">Complete todos los campos requeridos</p>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" size="lg" className="min-w-[120px]" onClick={goHome}>
-                <X className="size-4 mr-2" />
+              <Button variant="outline" size="lg" className="min-w-[120px]" onClick={goHome} disabled={isGeneratingTxt || isGeneratingXml}>
+                <X className="size-4 mr-2" aria-hidden="true" />
                 Cancelar
               </Button>
               
@@ -309,9 +329,14 @@ export function InvoiceForm() {
                 size="lg" 
                 className="min-w-[140px]"
                 onClick={() => setShowEmitDialog(true)}
+                disabled={isGeneratingTxt || isGeneratingXml}
               >
-                <FileText className="size-4 mr-2" />
-                Generar TXT
+                {isGeneratingTxt ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" aria-hidden="true" />
+                ) : (
+                  <FileText className="size-4 mr-2" aria-hidden="true" />
+                )}
+                {isGeneratingTxt ? "Generando…" : "Generar TXT"}
               </Button>
               
               {/* Botón para generar XML */}
@@ -319,9 +344,14 @@ export function InvoiceForm() {
                 size="lg" 
                 className="min-w-[140px] bg-blue-600 hover:bg-blue-700"
                 onClick={generarXml}
+                disabled={isGeneratingTxt || isGeneratingXml}
               >
-                <FileCode className="size-4 mr-2" />
-                Generar XML
+                {isGeneratingXml ? (
+                  <Loader2 className="size-4 mr-2 animate-spin" aria-hidden="true" />
+                ) : (
+                  <FileCode className="size-4 mr-2" aria-hidden="true" />
+                )}
+                {isGeneratingXml ? "Generando…" : "Generar XML"}
               </Button>
             </div>
           </div>
