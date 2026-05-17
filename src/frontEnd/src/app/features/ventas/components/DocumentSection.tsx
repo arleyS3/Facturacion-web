@@ -141,7 +141,7 @@ export function DocumentSection() {
       {/* Header de sección */}
       <div className="flex items-center gap-3">
         <div className="p-2.5 rounded-lg bg-primary/10">
-          <FileText className="size-5 text-primary" />
+          <FileText className="size-5 text-primary" aria-hidden="true" />
         </div>
         <div>
           <h3 className="font-semibold text-lg text-foreground">Información del Documento</h3>
@@ -157,7 +157,7 @@ export function DocumentSection() {
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Calendar className="size-4 text-muted-foreground" />
+              <Calendar className="size-4 text-muted-foreground" aria-hidden="true" />
               <CardTitle className="text-sm font-medium">Datos Adicionales</CardTitle>
               <span className="text-xs text-muted-foreground">(Opcional)</span>
             </div>
@@ -220,6 +220,7 @@ export function DocumentSection() {
                         type="button"
                         onClick={() => toggleLeyenda(codigo)}
                         className="ml-1 hover:text-primary/60 transition-colors"
+                        aria-label={`Remover leyenda ${codigo}`}
                       >
                         ×
                       </button>
@@ -264,7 +265,7 @@ export function DocumentSection() {
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <HelpCircle className="size-4 text-muted-foreground shrink-0" />
+                                  <HelpCircle className="size-4 text-muted-foreground shrink-0" aria-hidden="true" />
                                 </TooltipTrigger>
                                 <TooltipContent side="top" className="max-w-xs">
                                   <p className="text-xs">{leyenda.helper}</p>

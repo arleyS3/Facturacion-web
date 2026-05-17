@@ -456,7 +456,7 @@ export function ReceiverSection() {
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="p-2 rounded-lg bg-primary/10">
-          <Users className="size-5 text-primary" />
+          <Users className="size-5 text-primary" aria-hidden="true" />
         </div>
         <div>
           <h3 className="font-semibold text-lg text-foreground">Datos del Receptor</h3>
@@ -486,7 +486,7 @@ export function ReceiverSection() {
               disabled={soloRucReceptor}
             >
               <SelectTrigger id="receiver-doc-type" className="h-10">
-                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
+                <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
               </SelectTrigger>
               <SelectContent>
                 {opcionesFiltradas && opcionesFiltradas.length ? (
@@ -508,7 +508,7 @@ export function ReceiverSection() {
           ) : (
             <Select defaultValue={opcionesFiltradas?.[0]?.code} disabled={soloRucReceptor}>
               <SelectTrigger id="receiver-doc-type" className="h-10">
-                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
+                <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
               </SelectTrigger>
               <SelectContent>
                 {opcionesFiltradas && opcionesFiltradas.length ? (
@@ -541,6 +541,8 @@ export function ReceiverSection() {
               id="receiver-doc-number"
               placeholder="20545990998"
               className="font-mono h-10 pr-10"
+              autoComplete="off"
+              inputMode="numeric"
               value={receptorDocumento || numeroDocumento}
               onChange={(e) => {
                 const val = e.target.value.trim();
@@ -561,9 +563,9 @@ export function ReceiverSection() {
             )}
           </div>
           {cargandoRuc && (
-            <p id="doc-loading" className="text-xs text-muted-foreground flex items-center gap-1">
-              <Loader2 className="size-3 animate-spin" />
-              Consultando RUC en SUNAT...
+            <p id="doc-loading" className="text-xs text-muted-foreground flex items-center gap-1" aria-live="polite">
+              <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+              Consultando RUC en SUNAT…
             </p>
           )}
           {errorRuc && (
@@ -628,7 +630,7 @@ export function ReceiverSection() {
             }}
           >
             <SelectTrigger id="receiver-department" className="h-10">
-              <SelectValue placeholder={depsLoading ? "Cargando..." : "Seleccione departamento"} />
+              <SelectValue placeholder={depsLoading ? "Cargando…" : "Seleccione departamento"} />
             </SelectTrigger>
             <SelectContent>
               {departments && departments.length
@@ -668,7 +670,7 @@ export function ReceiverSection() {
             disabled={!receiverDepartment}
           >
             <SelectTrigger id="receiver-province" className="h-10">
-              <SelectValue placeholder={provLoading ? "Cargando..." : "Seleccione provincia"} />
+              <SelectValue placeholder={provLoading ? "Cargando…" : "Seleccione provincia"} />
             </SelectTrigger>
             <SelectContent>
               {provinces && provinces.length
@@ -698,7 +700,7 @@ export function ReceiverSection() {
             disabled={!receiverProvince}
           >
             <SelectTrigger id="receiver-district" className="h-10">
-              <SelectValue placeholder={distLoading ? "Cargando..." : "Seleccione distrito"} />
+              <SelectValue placeholder={distLoading ? "Cargando…" : "Seleccione distrito"} />
             </SelectTrigger>
             <SelectContent>
               {(districts && districts.length
@@ -767,6 +769,7 @@ export function ReceiverSection() {
               <Input 
                 className="flex-1 h-10" 
                 placeholder="Código de autorización" 
+                autoComplete="off"
               />
               <div className="flex items-center gap-2">
                 <Checkbox id="mas-cod" />
@@ -805,7 +808,7 @@ export function ReceiverSection() {
                 disabled={tiposNotaLoading}
               >
                 <SelectTrigger id="tipo-nota" className="h-10">
-                  <SelectValue placeholder={tiposNotaLoading ? "Cargando..." : "Seleccione tipo"} />
+                  <SelectValue placeholder={tiposNotaLoading ? "Cargando…" : "Seleccione tipo"} />
                 </SelectTrigger>
                 <SelectContent>
                   {tiposNota && tiposNota.length

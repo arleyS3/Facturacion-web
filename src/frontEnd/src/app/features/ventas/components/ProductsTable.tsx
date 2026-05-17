@@ -168,6 +168,9 @@ export function ProductsTable() {
   };
 
   const removeProduct = (id: string) => {
+    const product = products.find((p) => p.id === id);
+    if (!product) return;
+    if (!window.confirm(`¿Eliminar producto "${product.descripcion || `#${product.correlativo}`}"?`)) return;
     const filtered = products.filter((p) => p.id !== id);
     // Recalcular correlativos
     const reindexed = filtered.map((p, index) => ({
@@ -313,6 +316,12 @@ export function ProductsTable() {
 
   const totals = calculateTotals();
 
+  const formatNumber = (n: number) =>
+    new Intl.NumberFormat("es-PE", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(n);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
@@ -320,7 +329,7 @@ export function ProductsTable() {
           Productos / Servicios
         </h3>
         <Button onClick={addProduct} size="sm">
-          <Plus className="size-4 mr-2" />
+          <Plus className="size-4 mr-2" aria-hidden="true" />
           Agregar Producto
         </Button>
       </div>
@@ -416,6 +425,8 @@ export function ProductsTable() {
                           placeholder="0"
                           type="number"
                           step="0.01"
+                          autoComplete="off"
+                          inputMode="decimal"
                         />
                       </TableCell>
                       <TableCell>
@@ -454,16 +465,18 @@ export function ProductsTable() {
                           placeholder="0.00"
                           type="number"
                           step="0.01"
+                          autoComplete="off"
+                          inputMode="decimal"
                         />
                       </TableCell>
                       <TableCell>
                         <div className="font-mono text-sm text-slate-700 bg-slate-50 px-2 py-1.5 rounded border">
-                          {product.valorVenta.toFixed(2)}
+                          {formatNumber(product.valorVenta)}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="font-mono text-sm font-semibold text-blue-700 bg-blue-50 px-2 py-1.5 rounded border border-blue-200">
-                          {product.total.toFixed(2)}
+                          {formatNumber(product.total)}
                         </div>
                       </TableCell>
                       <TableCell>
@@ -475,11 +488,12 @@ export function ProductsTable() {
                             onClick={() =>
                               toggleRow(product.id)
                             }
+                            aria-label={expandedRows.has(product.id) ? "Colapsar fila" : "Expandir fila"}
                           >
                             {expandedRows.has(product.id) ? (
-                              <ChevronUp className="size-4" />
+                              <ChevronUp className="size-4" aria-hidden="true" />
                             ) : (
-                              <ChevronDown className="size-4" />
+                              <ChevronDown className="size-4" aria-hidden="true" />
                             )}
                           </Button>
                           <Button
@@ -489,8 +503,9 @@ export function ProductsTable() {
                             onClick={() =>
                               removeProduct(product.id)
                             }
+                            aria-label={`Eliminar producto ${product.correlativo}`}
                           >
-                            <Trash2 className="size-4" />
+                            <Trash2 className="size-4" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>
@@ -565,6 +580,8 @@ export function ProductsTable() {
                                       placeholder="0.00"
                                       type="number"
                                       step="0.01"
+                                      autoComplete="off"
+                                      inputMode="decimal"
                                     />
                                   </div>
                                   <div className="space-y-2">
@@ -580,9 +597,7 @@ export function ProductsTable() {
                                       Descuento Total
                                     </Label>
                                     <div className="font-mono text-sm font-bold px-3 py-2 bg-orange-100 text-orange-700 rounded border border-orange-300">
-                                      {product.descuentoMonto.toFixed(
-                                        2,
-                                      )}
+                                      {formatNumber(product.descuentoMonto)}
                                     </div>
                                   </div>
                                 </div>
@@ -694,8 +709,9 @@ export function ProductsTable() {
                                         <button
                                           type="button"
                                           className="text-slate-400"
+                                          aria-label="Información sobre tasa IGV"
                                         >
-                                          <Info className="size-3" />
+                                          <Info className="size-3" aria-hidden="true" />
                                         </button>
                                       </TooltipTrigger>
                                       <TooltipContent>
@@ -719,6 +735,8 @@ export function ProductsTable() {
                                     placeholder="0"
                                     type="number"
                                     step="0.01"
+                                    autoComplete="off"
+                                    inputMode="decimal"
                                     disabled={
                                       product.codigoTributo !==
                                       "1000"
@@ -731,10 +749,8 @@ export function ProductsTable() {
                                     Impuesto IGV
                                   </Label>
                                   <div className="font-mono text-sm font-bold px-3 py-2 bg-blue-100 text-blue-700 rounded border border-blue-300">
-                                    {product.impuestoIGV.toFixed(
-                                      2,
-                                    )}
-                                  </div>
+                                      {formatNumber(product.impuestoIGV)}
+                                    </div>
                                 </div>
                               </div>
                             </div>
@@ -753,9 +769,7 @@ export function ProductsTable() {
                                   product.iscData && (
                                     <div className="text-sm font-mono font-bold text-purple-700 bg-purple-100 px-3 py-1 rounded">
                                       Monto ISC:{" "}
-                                      {product.iscData.montoISC.toFixed(
-                                        2,
-                                      )}
+                                      {formatNumber(product.iscData.montoISC)}
                                     </div>
                                   )}
                               </div>
@@ -812,7 +826,7 @@ export function ProductsTable() {
                                     }
                                     className="border-purple-300 text-purple-700 hover:bg-purple-50"
                                   >
-                                    <Settings2 className="size-4 mr-2" />
+                                    <Settings2 className="size-4 mr-2" aria-hidden="true" />
                                     Configurar detalles de ISC
                                   </Button>
 
@@ -852,9 +866,7 @@ export function ProductsTable() {
                                           Monto Base
                                         </div>
                                         <div className="font-medium font-mono">
-                                          {product.valorVenta.toFixed(
-                                            2,
-                                          )}
+                                          {formatNumber(product.valorVenta)}
                                         </div>
                                       </div>
                                     </div>
@@ -882,7 +894,7 @@ export function ProductsTable() {
               Subtotal (Valor Venta):
             </span>
             <span className="font-mono font-medium">
-              {totals.subtotal.toFixed(2)}
+              {formatNumber(totals.subtotal)}
             </span>
           </div>
           {totals.descuentoTotal > 0 && (
@@ -891,7 +903,7 @@ export function ProductsTable() {
                 Total Descuentos:
               </span>
               <span className="font-mono font-medium text-orange-700">
-                -{totals.descuentoTotal.toFixed(2)}
+                -{formatNumber(totals.descuentoTotal)}
               </span>
             </div>
           )}
@@ -900,7 +912,7 @@ export function ProductsTable() {
               Total IGV (18%):
             </span>
             <span className="font-mono font-medium">
-              {totals.igvTotal.toFixed(2)}
+              {formatNumber(totals.igvTotal)}
             </span>
           </div>
           {totals.iscTotal > 0 && (
@@ -909,7 +921,7 @@ export function ProductsTable() {
                 Total ISC:
               </span>
               <span className="font-mono font-medium text-purple-700">
-                {totals.iscTotal.toFixed(2)}
+                {formatNumber(totals.iscTotal)}
               </span>
             </div>
           )}
@@ -918,7 +930,7 @@ export function ProductsTable() {
               Total a Pagar:
             </span>
             <span className="font-mono font-bold text-2xl text-blue-700">
-              {totals.total.toFixed(2)}
+              {formatNumber(totals.total)}
             </span>
           </div>
         </div>
@@ -929,11 +941,11 @@ export function ProductsTable() {
         open={iscModalOpen}
         onOpenChange={setIscModalOpen}
       >
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl" style={{ overscrollBehavior: "contain" }}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="size-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                <Settings2 className="size-5 text-purple-700" />
+                <Settings2 className="size-5 text-purple-700" aria-hidden="true" />
               </div>
               Configuración de ISC
             </DialogTitle>
@@ -946,7 +958,7 @@ export function ProductsTable() {
           <div className="space-y-4 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Código ISC</Label>
+                <Label htmlFor="isc-codigo">Código ISC</Label>
                 <Select
                   value={tempISCData.codigoISC}
                   onValueChange={(value) =>
@@ -956,7 +968,7 @@ export function ProductsTable() {
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="isc-codigo">
                     <SelectValue placeholder="Seleccione código" />
                   </SelectTrigger>
                   <SelectContent>
@@ -980,7 +992,7 @@ export function ProductsTable() {
               </div>
 
               <div className="space-y-2">
-                <Label>Sistema de ISC</Label>
+                <Label htmlFor="isc-sistema">Sistema de ISC</Label>
                 <Select
                   value={tempISCData.codigoTipoISC}
                   onValueChange={(value) =>
@@ -990,7 +1002,7 @@ export function ProductsTable() {
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="isc-sistema">
                     <SelectValue placeholder="Seleccione sistema" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1009,7 +1021,7 @@ export function ProductsTable() {
               </div>
 
               <div className="space-y-2">
-                <Label>Tasa ISC (%)</Label>
+                <Label htmlFor="isc-tasa">Tasa ISC (%)</Label>
                 <Select
                   value={tempISCData.tasa}
                   onValueChange={(value) =>
@@ -1019,7 +1031,7 @@ export function ProductsTable() {
                     })
                   }
                 >
-                  <SelectTrigger>
+                  <SelectTrigger id="isc-tasa">
                     <SelectValue placeholder="Seleccione tasa" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1047,9 +1059,9 @@ export function ProductsTable() {
                         parseFloat(tempISCData.tasa) || 0;
                       const monto =
                         product.valorVenta * (tasa / 100);
-                      return monto.toFixed(2);
+                      return formatNumber(monto);
                     }
-                    return "0.00";
+                    return formatNumber(0);
                   })()}
                 </div>
               </div>
