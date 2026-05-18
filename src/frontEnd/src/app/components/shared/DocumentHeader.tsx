@@ -1,13 +1,24 @@
-import { FileText, Truck } from "lucide-react";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
-import { Checkbox } from "../ui/checkbox";
-import { useEffect, useRef, useState } from "react";
-import { useCatalog } from "../../hooks/useCatalog";
-import { useCatalogQuery } from "../../hooks/useCatalogQuery";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { AlertCircle, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/components/ui/utils";
+
+import { useCatalog } from "@/hooks/useCatalog";
+import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
+import { useEffect, useRef, useState } from "react";
 
 interface DocumentHeaderProps {
   type: "sales" | "shipping";
@@ -16,9 +27,16 @@ interface DocumentHeaderProps {
     setValue?: (name: string, value: any) => void;
     getValues?: (name: string) => any;
   };
+  formState?: {
+    errors?: Record<string, { message?: string }>;
+  };
 }
 
-export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
+export function DocumentHeader({
+  type,
+  methods,
+  formState,
+}: DocumentHeaderProps) {
   const [useFechaActual, setUseFechaActual] = useState(true);
   const [useHoraActual, setUseHoraActual] = useState(true);
   const [selectedSerie, setSelectedSerie] = useState<string>("");
@@ -31,33 +49,43 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
   );
   const setValue = methods?.setValue;
   const isSales = type === "sales";
-  const [companyCodeLocal, setCompanyCodeLocal] = useState(
-    () => methods?.getValues?.("companyCode") ?? "1",
+  const [codigoEmpresaLocal, setCompanyCodeLocal] = useState(
+    () => methods?.getValues?.("codigoEmpresa") ?? "1",
   );
   const [shippingDocType, setShippingDocType] = useState("09");
-  const watchedDocType = methods?.watch?.("docType");
-  const watchedCompanyCode = methods?.watch?.("companyCode");
+  const watchedDocType = methods?.watch?.("tipoDocumento");
+  const watchedCompanyCode = methods?.watch?.("codigoEmpresa");
   const watchedCorrelativo = methods?.watch?.("correlativo");
-
-
 
   const { data: tiposDocumento, loading: loadingTiposDocumento } = useCatalog(
     isSales ? "/catalogos/tipos-documento" : "",
   );
-  const { data: monedas, isLoading: monedasLoading } = useCatalogQuery("/catalogos/monedas");
+  const { data: tiposOperacion, loading: loadingTiposOperacion } = useCatalog(
+    isSales ? "/catalogos/tipos-operacion" : "",
+  );
+  const { data: monedas, isLoading: monedasLoading } =
+    useCatalogQuery("/catalogos/monedas");
 
   const normalizeSeriesDocType = (value?: string) => {
     if (!value) return "";
-    if (value === "Nota de Débito" || value === "Nota de débito") return "Nota de Débito";
-    if (value === "Nota de Crédito" || value === "Nota de crédito") return "Nota de Crédito";
+    if (value === "Nota de Débito" || value === "Nota de débito")
+      return "Nota de Débito";
+    if (value === "Nota de Crédito" || value === "Nota de crédito")
+      return "Nota de Crédito";
     return value;
   };
 
   const currentDocType = isSales
-    ? (watchedDocType ?? tiposDocumento?.[0]?.label ?? "")
+    ? (watchedDocType ??
+      methods?.watch?.("docType") ??
+      tiposDocumento?.[0]?.label ??
+      "")
     : "Guía de Remisión";
 
-  const currentShippingDocType = methods?.watch?.("docType") ?? shippingDocType;
+  const currentShippingDocType =
+    methods?.watch?.("docType") ??
+    methods?.watch?.("tipoDocumento") ??
+    shippingDocType;
   const currentSeriesDocType = isSales
     ? normalizeSeriesDocType(currentDocType)
     : currentShippingDocType;
@@ -114,10 +142,20 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
       if (setValue) setValue("serie", "");
       setSelectedSerie("");
     }
-  }, [series, setValue, methods, selectedSerie, seriesLoading, currentSeriesDocType]);
+  }, [
+    series,
+    setValue,
+    methods,
+    selectedSerie,
+    seriesLoading,
+    currentSeriesDocType,
+  ]);
 
   const [correlativo, setCorrelativo] = useState<string>(() => {
     return methods?.getValues?.("correlativo") ?? watchedCorrelativo ?? "";
+  });
+  const [montoPendiente, setMontoPendiente] = useState<string>(() => {
+    return methods?.getValues?.("montoPendiente") ?? "";
   });
   const formatTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -125,7 +163,8 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
     const v = value ?? correlativo;
     const digits = v.replace(/\D/g, "");
     if (digits.length === 0) return;
-    const formatted = digits.length < 8 ? digits.padStart(8, "0") : digits;
+    // Solo pad a 8 dígitos si tiene menos de 8, no truncar si tiene más
+    const formatted = digits.padStart(8, "0");
     if (formatted !== v) {
       setCorrelativo(formatted);
       if (setValue) setValue("correlativo", formatted);
@@ -139,12 +178,13 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
     }
     if (!correlativo) return;
     const digits = correlativo.replace(/\D/g, "");
-    if (digits.length >= 8 && digits === correlativo) return;
-
-    formatTimeout.current = setTimeout(() => {
-      formatCorrelativo();
-      formatTimeout.current = null;
-    }, 1000);
+    // Solo formatear si tiene menos de 8 dígitos (pad), no truncar si tiene más de 8
+    if (digits.length < 8 && digits !== correlativo) {
+      formatTimeout.current = setTimeout(() => {
+        formatCorrelativo();
+        formatTimeout.current = null;
+      }, 1000);
+    }
 
     return () => {
       if (formatTimeout.current) {
@@ -188,28 +228,49 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
     { code: "USD", label: "Dólares" },
     { code: "EUR", label: "Euros" },
   ];
-  const opcionesMoneda = monedas && monedas.length ? monedas : defaultMonedas;
+
+  // Combinar monedas de API con defaults, eliminando duplicados por código
+  const opcionesMoneda = (() => {
+    if (!monedas || !monedas.length) return defaultMonedas;
+    // Crear Map para eliminar duplicados usando el código como clave
+    const mapa = new Map(defaultMonedas.map((m) => [m.code, m]));
+    monedas.forEach((m) => {
+      if (m.code && m.label && !mapa.has(m.code)) {
+        mapa.set(m.code, m);
+      }
+    });
+    return Array.from(mapa.values());
+  })();
+
   const monedaValue = methods?.watch?.("moneda") || "";
-  const selectedMoneda = opcionesMoneda.find((m) => m.code === monedaValue) || null;
+  const selectedMoneda =
+    opcionesMoneda.find((m) => m.code === monedaValue) || null;
   const showTipoPago = isSales && currentDocType === "Factura";
-  const companyCodeValue = watchedCompanyCode ?? companyCodeLocal;
+  const codigoEmpresaValue = watchedCompanyCode ?? codigoEmpresaLocal;
+  const [fechaVencimiento, setFechaVencimiento] = useState<Date | undefined>(
+    () => {
+      const raw = methods?.getValues?.("fechaVencimiento");
+      return raw ? new Date(raw + "T00:00:00") : undefined;
+    },
+  );
+  const tipoPago = methods?.watch?.("tipoPago") ?? "contado";
+  const showFechaVencimiento = showTipoPago && tipoPago === "credito";
 
   return (
     <div className="space-y-6">
       {/* Identificación Visual */}
       <div className="rounded-lg p-0">
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label className="text-xs font-medium">Código de Empresa</Label>
             <Input
               placeholder="Ej: EMP001"
               className="h-9 font-mono"
-              value={companyCodeValue}
+              value={codigoEmpresaValue}
               onChange={(e) => {
                 const value = e.target.value;
                 if (setValue) {
-                  setValue("companyCode", value);
+                  setValue("codigoEmpresa", value);
                 } else {
                   setCompanyCodeLocal(value);
                 }
@@ -225,20 +286,29 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               value={isSales ? currentDocType : currentShippingDocType}
               onValueChange={(v) => {
                 if (isSales) {
+                  // Actualizar tanto el campo legacy como el nuevo
                   setValue?.("docType", v);
+                  setValue?.("tipoDocumento", v);
                   return;
                 }
 
                 if (methods?.setValue) {
                   methods.setValue("docType", v);
+                  methods.setValue("tipoDocumento", v);
                 } else {
                   setShippingDocType(v);
                 }
               }}
-              defaultValue={isSales ? tiposDocumento?.[0]?.label ?? "" : "09"}
+              defaultValue={isSales ? (tiposDocumento?.[0]?.label ?? "") : "09"}
             >
               <SelectTrigger className="h-9" id="doc-type">
-                <SelectValue placeholder={loadingTiposDocumento ? "Cargando..." : "Selecione un Tipo de Documento"} />
+                <SelectValue
+                  placeholder={
+                    loadingTiposDocumento
+                      ? "Cargando..."
+                      : "Selecione un Tipo de Documento"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {isSales ? (
@@ -252,8 +322,12 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
                     <>
                       <SelectItem value="Factura">Factura</SelectItem>
                       <SelectItem value="Boleta">Boleta</SelectItem>
-                      <SelectItem value="Nota de Crédito">Nota de Crédito</SelectItem>
-                      <SelectItem value="Nota de Débito">Nota de Débito</SelectItem>
+                      <SelectItem value="Nota de Crédito">
+                        Nota de Crédito
+                      </SelectItem>
+                      <SelectItem value="Nota de Débito">
+                        Nota de Débito
+                      </SelectItem>
                     </>
                   )
                 ) : (
@@ -274,7 +348,15 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               disabled={seriesLoading || !series.length}
             >
               <SelectTrigger id="serie" className="h-9">
-                <SelectValue placeholder={seriesLoading ? "Cargando..." : (!series.length ? "Sin series disponibles" : "Seleccione serie")} />
+                <SelectValue
+                  placeholder={
+                    seriesLoading
+                      ? "Cargando..."
+                      : !series.length
+                        ? "Sin series disponibles"
+                        : "Seleccione serie"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {seriesLoading ? (
@@ -294,15 +376,29 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
             <Label className="text-xs font-medium">Correlativo</Label>
             <Input
               placeholder="00000001"
-              className="h-9 font-mono"
+              className={`h-9 font-mono ${formState?.errors?.correlativo ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
               value={correlativo}
               onChange={(e) => {
-                const val = e.target.value;
+                const val = e.target.value.replace(/\D/g, ""); // Solo dígitos
                 setCorrelativo(val);
                 if (setValue) setValue("correlativo", val);
               }}
               onBlur={() => formatCorrelativo()}
+              aria-invalid={!!formState?.errors?.correlativo}
+              aria-describedby={
+                formState?.errors?.correlativo ? "correlativo-error" : undefined
+              }
             />
+            {formState?.errors?.correlativo && (
+              <p
+                id="correlativo-error"
+                role="alert"
+                className="text-xs text-destructive flex items-center gap-1"
+              >
+                <AlertCircle className="size-3" />
+                {formState.errors.correlativo.message}
+              </p>
+            )}
           </div>
         </div>
 
@@ -312,9 +408,14 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               <Checkbox
                 id="fecha-actual"
                 checked={useFechaActual}
-                onCheckedChange={(checked) => setUseFechaActual(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setUseFechaActual(checked as boolean)
+                }
               />
-              <Label htmlFor="fecha-actual" className="text-xs font-medium cursor-pointer">
+              <Label
+                htmlFor="fecha-actual"
+                className="text-xs font-medium cursor-pointer"
+              >
                 Usar fecha actual automáticamente
               </Label>
             </div>
@@ -336,9 +437,14 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               <Checkbox
                 id="hora-actual"
                 checked={useHoraActual}
-                onCheckedChange={(checked) => setUseHoraActual(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setUseHoraActual(checked as boolean)
+                }
               />
-              <Label htmlFor="hora-actual" className="text-xs font-medium cursor-pointer">
+              <Label
+                htmlFor="hora-actual"
+                className="text-xs font-medium cursor-pointer"
+              >
                 Usar hora actual automáticamente
               </Label>
             </div>
@@ -360,22 +466,39 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
 
       {isSales ? (
         <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <h4 className="font-medium text-sm text-slate-900 mb-3">Información Comercial</h4>
+          <h4 className="font-medium text-sm text-slate-900 mb-3">
+            Información Comercial
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Leyenda</Label>
+              <Label htmlFor="tipo-operacion">Tipo de Operación</Label>
               <Select
-                value={methods?.watch?.("leyendaTipo") ?? "venta-interna"}
-                onValueChange={(v) => setValue?.("leyendaTipo", v)}
-                defaultValue="venta-interna"
-                disabled
+                value={methods?.watch?.("tipoOperacion") ?? ""}
+                onValueChange={(v) => setValue?.("tipoOperacion", v)}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger id="tipo-operacion" className="h-9">
+                  <SelectValue
+                    placeholder={
+                      loadingTiposOperacion
+                        ? "Cargando..."
+                        : "Seleccione tipo de operación"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="venta-interna">Venta interna</SelectItem>
-                  <SelectItem value="exportacion">Exportación</SelectItem>
+                  {tiposOperacion && tiposOperacion.length ? (
+                    tiposOperacion.map((opt) => (
+                      <SelectItem key={opt.code} value={opt.code}>
+                        {opt.label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      {loadingTiposOperacion
+                        ? "Cargando..."
+                        : "Sin opciones disponibles"}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -390,7 +513,9 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
                 onChange={(_e, newValue) => {
                   setValue?.("moneda", newValue ? newValue.code : "");
                 }}
-                isOptionEqualToValue={(option, value) => option.code === value.code}
+                isOptionEqualToValue={(option, value) =>
+                  option.code === value.code
+                }
                 loading={monedasLoading}
                 disabled={monedasLoading}
                 size="small"
@@ -423,7 +548,9 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder={monedasLoading ? "Cargando..." : "Seleccione moneda"}
+                    placeholder={
+                      monedasLoading ? "Cargando..." : "Seleccione moneda"
+                    }
                     label=""
                     InputLabelProps={{ shrink: false }}
                     className="bg-white border border-slate-200 rounded-lg focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-200 text-base"
@@ -455,12 +582,72 @@ export function DocumentHeader({ type, methods }: DocumentHeaderProps) {
               <Input
                 id="monto-pendiente"
                 placeholder="0.00"
-                className="font-mono"
-                value={methods?.watch?.("montoPendiente") ?? ""}
-                onChange={(e) => setValue?.("montoPendiente", e.target.value)}
+                className={`font-mono ${formState?.errors?.montoPendiente ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
+                value={montoPendiente}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9.]/g, ""); // Solo dígitos y punto
+                  setMontoPendiente(val);
+                  if (setValue) setValue("montoPendiente", val);
+                }}
+                aria-invalid={!!formState?.errors?.montoPendiente}
+                aria-describedby={
+                  formState?.errors?.montoPendiente
+                    ? "monto-pendiente-error"
+                    : undefined
+                }
               />
+              {formState?.errors?.montoPendiente && (
+                <p
+                  id="monto-pendiente-error"
+                  role="alert"
+                  className="text-xs text-destructive flex items-center gap-1"
+                >
+                  <AlertCircle className="size-3" />
+                  {formState.errors.montoPendiente.message}
+                </p>
+              )}
             </div>
           </div>
+
+          {showFechaVencimiento && (
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fecha-vencimiento">
+                    Fecha de Vencimiento
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        data-empty={!fechaVencimiento}
+                        className="w-full justify-start text-left font-normal data-[empty=true]:text-muted-foreground"
+                      >
+                        <CalendarIcon />
+                        {fechaVencimiento ? (
+                          format(fechaVencimiento, "PPP", { locale: es })
+                        ) : (
+                          <span>Seleccionar fecha</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={fechaVencimiento}
+                        onSelect={(date) => {
+                          setFechaVencimiento(date);
+                          setValue?.("fechaVencimiento", date ? format(date, "yyyy-MM-dd") : "");
+                        }}
+                        locale={es}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
     </div>

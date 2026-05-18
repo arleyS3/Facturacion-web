@@ -1,0 +1,792 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no" ?>
+<!--
+    ============================================================
+    FACTURA ELECTRÓNICA UBL 2.1 - EJEMPLO REAL SUNAT
+    ============================================================
+    Este archivo contiene una factura electrónica completa con todos los elementos
+    requeridos por SUNAT para la facturación electrónica en Perú.
+
+    Referencias:
+    - UBL 2.1: Estándar OASIS
+    - SUNAT: Normativa de Comprobantes de Pago Electrónicos
+-->
+<Invoice
+    xmlns="urn:oasis:names:specification:ubl:schema:xsd:Invoice-2"
+    xmlns:cac="urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2"
+    xmlns:cbc="urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2"
+    xmlns:ccts="urn:un:unece:uncefact:documentation:2"
+    xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
+    xmlns:ext="urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2"
+    xmlns:qdt="urn:oasis:names:specification:ubl:schema:xsd:QualifiedDatatypes-2"
+    xmlns:udt="urn:un:unece:uncefact:data:specification:UnqualifiedDataTypesSchemaModule:2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 1: FIRMA DIGITAL (UBLExtensions)                              -->
+  <!-- ====================================================================== -->
+  <!--
+      Extensiones del documento - contiene la firma digital XMLDSIG
+      que valida la integridad y autoría del documento.
+      Esta firma se genera con un certificado digital (.pfx)
+  -->
+  <ext:UBLExtensions>
+    <ext:UBLExtension>
+      <ext:ExtensionContent>
+        <!-- Firma Digital -->
+        <ds:Signature Id="SignatureSP">
+          <!-- Información firmante -->
+          <ds:SignedInfo>
+            <!-- Método de canonicalización -->
+            <ds:CanonicalizationMethod
+                            Algorithm="http://www.w3.org/TR/2001/REC-xml-c14n20010315"
+                        />
+            <!-- Algoritmo de firma -->
+            <ds:SignatureMethod
+                            Algorithm="http://www.w3.org/2000/09/xmldsig#rsa-sha1"
+                        />
+            <!-- Referencia al documento -->
+            <ds:Reference URI="">
+              <!-- Transformaciones aplicadas -->
+              <ds:Transforms>
+                <ds:Transform
+                                    Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"
+                                />
+              </ds:Transforms>
+              <!-- Método de hash -->
+              <ds:DigestMethod
+                                Algorithm="http://www.w3.org/2000/09/xmldsig#sha1"
+                            />
+              <!-- Valor del hash -->
+              <ds:DigestValue>ryg5Vl+6zuSrAlgSQUYrWeaSQjk=</ds:DigestValue>
+            </ds:Reference>
+          </ds:SignedInfo>
+          <!-- Valor de la firma digital -->
+          <ds:SignatureValue
+                    >SOiGQpmVz7hBgGjIOQNlcwyHkQLC4S7R2zBuNnOUj4KjZQb3//xNPJMRB67m8x1mpQE6pffiH85vMzYLJ9nt7MLLZXOfP+rPGfkJBmNbYxaGLj9v3qZWyyEzHFGKS+8OfVSgMsHNwZ3IqfuICzc/xo8L7sFj+aT16IHf5TYffb0=</ds:SignatureValue>
+          <!-- Información del certificado -->
+          <ds:KeyInfo>
+            <ds:X509Data>
+              <!-- Nombre sujeto del certificado -->
+              <ds:X509SubjectName
+                            >1.2.840.113549.1.9.1=#161a4253554c434140534f55544845524e504552552e434f4d2e5045,CN=JuanRobles,OU=20100454523,O=SOPORTE TECNOLOGICOS EIRL,L=LIMA,ST=LIMA,C=PE</ds:X509SubjectName>
+              <!-- Certificado X509 codificado en Base64 -->
+              <ds:X509Certificate
+                            >MIIESTCCAzGgAwIBAgIKWOCRzgAAAAAAIjANBgkqhkiG9w0BAQUFADAnMRUwEwYKCZImiZPyLGQBGRYFU1VOQVQxDjAMBgNVBAMTBVNVTkFUMB4XDTEwMTIyODE5NTExMFoXDTExMTIyODIwMDExMFowgZUxCzAJBgNVBAYTAlBFMQ0wCwYDVQQIEwRMSU1BMQ0wCwYDVQQHEwRMSU1BMREwDwYDVQQKEwhTT1VUSEVSTjEUMBIGA1UECxMLMjAxMDAxNDc1MTQxFDASBgNVBAMTC0JvcmlzIFN1bGNhMSkwJwYJQ2VydEVucm9sbC9wY2IyMjZfU1VOQVQuY3J0MDcGCCsGAQUFBzAChitmaWxlOi8vXFxwY2IyMjZcQ2VydEVucm9sbFxwY2IyMjZfU1VOQVQuY3J0MA0GCSqGSIb3DQEBBQUAA4IBAQBI6wJ/QmRpz3C3rorBflOvA9DOa3GNiiB7rtPIjF4mPmtgfo2pK9gvnxmV2pST3ovfu0nbG2kpjzzaaelRjEodHvk cM3abGsOE53wfxqQF5uf/jkzZA9hbLHtE1aLKBD0Mhzc6cvI072alnE6QU3RZ16ie9CYsHmMrs+sPHMy8DJU5YrdnqHdSn2D3nhKBi4QfT/WURPOuo6DF4iWgrCyMf3eJgmGKSUN3At5fK4HSpfyURT0kboaJKNBgQwy0HhGh5BLM7DsTi/KwfdUYkoFgrY71Pm23+ra+xTow1Vk9gj5NqrlpMY5gAVQXEIo1++GxDtaK/5EiVKSqzJ6geIfz</ds:X509Certificate>
+            </ds:X509Data>
+          </ds:KeyInfo>
+        </ds:Signature>
+      </ext:ExtensionContent>
+    </ext:UBLExtension>
+  </ext:UBLExtensions>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 2: VERSIÓN DEL UBL - YA APLICA                                          -->
+  <!-- ====================================================================== -->
+  <!-- Versión del estándar UBL usado (2.1) -->
+  <cbc:UBLVersionID>2.1</cbc:UBLVersionID>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 3: VERSIÓN DE PERSONALIZACIÓN - YA APLICA                           -->
+  <!-- ====================================================================== -->
+  <!-- Versión de personalización/reglas locales de SUNAT (2.0) -->
+  <cbc:CustomizationID>2.0</cbc:CustomizationID>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 4: CÓDIGO DE TIPO DE OPERACIÓN - YA APLICA                           -->
+  <!-- ====================================================================== -->
+  <!--
+      Identifica el tipo de operación SUNAT
+      Valores comunes:
+      - 0101: Venta interna
+      - 0102: Venta interna - anticipos
+      - 0110: Venta interna - servicios profesionales
+      Catálogo 17: https://cpe.sunat.gob.pe/guias/operaciones
+  -->
+  <cbc:ProfileID
+        schemeName="SUNAT:Identificador de Tipo de Operación"
+        schemeAgencyName="PE:SUNAT"
+        schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo17"
+    >0101</cbc:ProfileID>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 5: NUMERACIÓN (SERIE + CORRELATIVO) - YA APLICA                   -->
+  <!-- ====================================================================== -->
+  <!-- Código único visible del comprobante (serie-correlativo) -->
+  <cbc:ID>F001-4355</cbc:ID>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 6: FECHA DE EMISIÓN - YA APLICA                                     -->
+  <!-- ====================================================================== -->
+  <!-- Fecha oficial de emisión del comprobante (AAAA-MM-DD) -->
+  <cbc:IssueDate>2017-05-14</cbc:IssueDate>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 7: HORA DE EMISIÓN - YA APLICA                                      -->
+  <!-- ====================================================================== -->
+  <!-- Hora de emisión del comprobante (HH:MM:SS) -->
+  <cbc:IssueTime>13:25:51</cbc:IssueTime>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 9: TIPO DE DOCUMENTO - YA APLICA                                   -->
+  <!-- ====================================================================== -->
+  <!--
+      Código del tipo de comprobante según catálogo SUNAT
+      Valores comunes:
+      - 01: Factura
+      - 03: Boleta de venta
+      - 07: Nota de crédito
+      - 08: Nota de débito
+      Catálogo 01
+  -->
+  <cbc:InvoiceTypeCode
+        listAgencyName="PE:SUNAT"
+        listName="SUNAT:Identificador de Tipo de Documento"
+        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01"
+    >01</cbc:InvoiceTypeCode>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 10: LEYENDAS - YA APLICA                                          -->
+  <!-- ====================================================================== -->
+  <!--
+      Textos adicionales obligatorios y/u opcionales
+      languageLocaleID:
+      - 1000: Monto en letras (obligatorio para facturas/boletas)
+      - 3000: Código interno del emisor
+      - 2000 a 2999: Otros textos libre
+  -->
+  <!-- Leyenda: Monto en letras -->
+  <cbc:Note
+        languageLocaleID="1000"
+    >CUATROCIENTOS VEINTITRES MIL DOSCIENTOS VEINTICINCO Y 00/100</cbc:Note>
+  <!-- Leyenda: Código interno -->
+  <cbc:Note languageLocaleID="3000">0501002017051400452</cbc:Note>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 11: MONEDA DEL COMPROBANTE - YA APLICA                             -->
+  <!-- ====================================================================== -->
+  <!--
+      Código de moneda según ISO 4217
+      - PEN: Sol peruano
+      - USD: Dólar estadounidense
+      - EUR: Euro
+  -->
+  <cbc:DocumentCurrencyCode
+        listID="ISO 4217 Alpha"
+        listName="Currency"
+        listAgencyName="United Nations Economic Commission for Europe"
+    >PEN</cbc:DocumentCurrencyCode>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO ADICIONAL: CANTIDAD DE LÍNEAS - Ya aplica                         -->
+  <!-- ====================================================================== -->
+  <!-- Número total de líneas de detalle del comprobante -->
+  <cbc:LineCountNumeric>5</cbc:LineCountNumeric>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 12: ORDEN DE REFERENCIA (Opcional) - Ya aplica                     -->
+  <!-- ====================================================================== -->
+  <!-- Referencia a orden de compra/venta vinculada -->
+  <cac:OrderReference>
+    <cbc:ID>7852166</cbc:ID>
+  </cac:OrderReference>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO ADICIONAL: FIRMA DEL EMISOR                            -->
+  <!-- ====================================================================== -->
+  <!-- Firma digital del comprobante (obligatoria para SUNAT) -->
+  <cac:Signature>
+    <cbc:ID>IDSignSP</cbc:ID>
+    <cac:SignatoryParty>
+      <cac:PartyIdentification>
+        <cbc:ID>20100454523</cbc:ID>
+      </cac:PartyIdentification>
+      <cac:PartyName>
+        <cbc:Name>SOPORTE TECNOLOGICO EIRL</cbc:Name>
+      </cac:PartyName>
+    </cac:SignatoryParty>
+    <cac:DigitalSignatureAttachment>
+      <cac:ExternalReference>
+        <cbc:URI>#SignatureSP</cbc:URI>
+      </cac:ExternalReference>
+    </cac:DigitalSignatureAttachment>
+  </cac:Signature>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 14-17: EMISOR / PROVEEDOR - YA APLICA                              -->
+  <!-- ====================================================================== -->
+  <!-- Datos del emisor del comprobante -->
+  <cac:AccountingSupplierParty>
+    <cac:Party>
+      <!-- CAMPO 14: Nombre comercial del emisor - YA APLICA  -->
+      <cac:PartyName>
+        <cbc:Name>Tu Soporte</cbc:Name>
+      </cac:PartyName>
+
+      <!-- Datos tributarios del emisor -->
+      <cac:PartyTaxScheme>
+        <!-- CAMPO 15: Razón social del emisor - YA APLICA -->
+        <cbc:RegistrationName
+                ><![CDATA[Soporte Tecnológicos EIRL]]></cbc:RegistrationName>
+
+        <!-- CAMPO 16: Tipo y número de documento del emisor - YA APLICA -->
+        <!-- schemeID="6" = RUC -->
+        <CompanyID
+                    schemeID="6"
+                    schemeName="SUNAT:Identificador de Documento de Identidad"
+                    schemeAgencyName="PE:SUNAT"
+                    schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                >20100454523</CompanyID>
+
+        <!-- CAMPO 17: Código de domicilio fiscal - YA APLICA -->
+        <!-- 0000 = Domicilio fiscal principal -->
+        <cac:RegistrationAddress>
+          <cbc:AddressTypeCode>0000</cbc:AddressTypeCode>
+        </cac:RegistrationAddress>
+
+        <!-- TaxScheme del emisor (obligatorio) - YA APLICA PERO FALTA QUE RECIBA EL VALOR POR EL RECORD DE DATA -->
+        <cac:TaxScheme>
+          <!-- "-" indica que no hay código de régimen especial -->
+          <cbc:ID>-</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingSupplierParty>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 18-19: CLIENTE / ADQUIRENTE - YA APLICA                           -->
+  <!-- ====================================================================== -->
+  <!-- Datos del cliente/receptor del comprobante -->
+  <cac:AccountingCustomerParty>
+    <cac:Party>
+      <cac:PartyTaxScheme>
+        <!-- CAMPO 19: Razón social del adquirente - YA APLICA  -->
+        <cbc:RegistrationName>SERVICABINAS S.A.</cbc:RegistrationName>
+
+        <!-- CAMPO 18: Tipo y número de documento del adquirente - YA APLICA  -->
+        <CompanyID
+                    schemeID="6"
+                    schemeName="SUNAT:Identificador de Documento de Identidad"
+                    schemeAgencyName="PE:SUNAT"
+                    schemeURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06"
+                >20587896411</CompanyID>
+
+        <!-- TaxScheme del cliente - YA APLICA -->
+        <cac:TaxScheme>
+          <cbc:ID>-</cbc:ID>
+        </cac:TaxScheme>
+      </cac:PartyTaxScheme>
+    </cac:Party>
+  </cac:AccountingCustomerParty>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 21: DESCUENTOS GLOBALES - YA APLICA                                -->
+  <!-- ====================================================================== -->
+  <!-- Descuentos aplicados a nivel total del comprobante -->
+  <cac:AllowanceCharge>
+    <!-- false = descuento, true = cargo -->
+    <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+    <!-- Código del motivo del descuento (catálogo 53) -->
+    <cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+    <!-- Porcentaje del descuento -->
+    <cbc:MultiplierFactorNumeric>0.05</cbc:MultiplierFactorNumeric>
+    <!-- Monto del descuento -->
+    <cbc:Amount currencyID="PEN">18976.27</cbc:Amount>
+    <!-- Monto base sobre el que se aplica el descuento -->
+    <cbc:BaseAmount currencyID="PEN">379525.42</cbc:BaseAmount>
+  </cac:AllowanceCharge>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 22-29: TOTAL DE IMPUESTOS                             -->
+  <!-- ====================================================================== -->
+  <!-- Resumen de todos los impuestos del comprobante -->
+  <cac:TaxTotal>
+    <!-- CAMPO 22: Monto total de impuestos YA APLICA -->
+    <cbc:TaxAmount currencyID="PEN">62675.85</cbc:TaxAmount>
+
+    <!-- ========== Subtotal: Operaciones GRAVADAS (IGV 18%) ========== -->
+    <!-- CAMPO 23: Monto de operaciones gravadas -->
+    <cac:TaxSubtotal>
+      <!-- Base imponible - YA APLICA -->
+      <cbc:TaxableAmount currencyID="PEN">348199.15</cbc:TaxableAmount>
+      <!-- Monto del IGV - YA APLICA -->
+      <cbc:TaxAmount currencyID="PEN">62675.85</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <!-- Código de categoría: S = Gravado - YA APLICA -->
+        <cbc:ID
+                    schemeID="UN/ECE 5305"
+                    schemeName="Tax Category Identifier"
+                    schemeAgencyName="United Nations Economic Commission for Europe"
+                >S</cbc:ID>
+        <cac:TaxScheme>
+          <!-- Código del tributo: 1000 = IGV - -->
+          <cbc:ID schemeID="UN/ECE 5153" schemeAgencyID="6">1000</cbc:ID>
+          <!-- Nombre del tributo -->
+          <cbc:Name>IGV</cbc:Name>
+          <!-- Código del tipo de tributo -->
+          <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+
+    <!-- ========== Subtotal: Operaciones EXONERADAS ========== -->
+    <!-- CAMPO 24: Monto de operaciones exoneradas -->
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="PEN">12350.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="PEN">0.00</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <!-- Código de categoría: E = Exonerado -->
+        <cbc:ID
+                    schemeID="UN/ECE 5305"
+                    schemeName="Tax Category Identifier"
+                    schemeAgencyName="United Nations Economic Commission for Europe"
+                >E</cbc:ID>
+        <cac:TaxScheme>
+          <!-- Código exonerado: 9997 -->
+          <cbc:ID schemeID="UN/ECE 5153" schemeAgencyID="6">9997</cbc:ID>
+          <cbc:Name>EXONERADO</cbc:Name>
+          <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+
+    <!-- ========== Subtotal: Operaciones INAFECTAS ========== -->
+    <!-- CAMPO 25: Monto de operaciones inafectas -->
+    <cac:TaxSubtotal>
+      <cbc:TaxableAmount currencyID="PEN">30.00</cbc:TaxableAmount>
+      <cbc:TaxAmount currencyID="PEN">0.00</cbc:TaxAmount>
+      <cac:TaxCategory>
+        <!-- Código de categoría: O = Inafecto -->
+        <cbc:ID
+                    schemeID="UN/ECE 5305"
+                    schemeName="Tax Category Identifier"
+                    schemeAgencyName="United Nations Economic Commission for Europe"
+                >O</cbc:ID>
+        <cac:TaxScheme>
+          <!-- Código inafecto: 9998 -->
+          <cbc:ID schemeID="UN/ECE 5153" schemeAgencyID="6">9998</cbc:ID>
+          <cbc:Name>INAFECTO</cbc:Name>
+          <cbc:TaxTypeCode>FRE</cbc:TaxTypeCode>
+        </cac:TaxScheme>
+      </cac:TaxCategory>
+    </cac:TaxSubtotal>
+  </cac:TaxTotal>
+
+  <!-- ====================================================================== -->
+  <!-- CAMPO 30-34: TOTALES MONETARIOS                            -->
+  <!-- ====================================================================== -->
+  <cac:LegalMonetaryTotal>
+    <!-- CAMPO 30: Total valor de venta (sin impuestos) -->
+    <cbc:LineExtensionAmount
+            currencyID="PEN"
+        >419779.66</cbc:LineExtensionAmount>
+    <!-- CAMPO 31: Total precio de venta (incluye impuestos) -->
+    <cbc:TaxInclusiveAmount currencyID="PEN">423225.00</cbc:TaxInclusiveAmount>
+    <!-- CAMPO 32: Total de descuentos del comprobante -->
+    <cbc:AllowanceTotalAmount
+            currencyID="PEN"
+        >59230.51</cbc:AllowanceTotalAmount>
+    <!-- CAMPO 34: Importe total por pagar -->
+    <cbc:PayableAmount currencyID="PEN">423225.00</cbc:PayableAmount>
+  </cac:LegalMonetaryTotal>
+
+  <!-- ====================================================================== -->
+  <!-- LÍNEAS DE DETALLE (CAMPO 35-48)                              -->
+  <!-- ====================================================================== -->
+
+  <!-- ===================== LÍNEA 1 ===================== -->
+  <!--
+      Línea de detalle con:
+      - Operaciones gravadas (IGV 18%)
+      - Descuento por línea
+  -->
+  <cac:InvoiceLine>
+    <!-- CAMPO 35: Número de orden del ítem -->
+    <cbc:ID>1</cbc:ID>
+
+    <!-- CAMPO 36: Cantidad y unidad de medida -->
+    <!-- unitCode="NIU" = Unidades -->
+    <cbc:InvoicedQuantity
+            unitCode="NIU"
+            unitCodeListID="UN/ECE rec 20"
+            unitCodeListAgencyName="United Nations Economic Commission for Europe"
+        >2000</cbc:InvoicedQuantity>
+
+    <!-- CAMPO 37: Valor de venta del ítem (sin impuestos) -->
+    <cbc:LineExtensionAmount
+            currencyID="PEN"
+        >149491.53</cbc:LineExtensionAmount>
+
+    <!-- CAMPO 38: Precio de venta unitario -->
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <!-- Precio unitario con IGV -->
+        <cbc:PriceAmount currencyID="PEN">98.00</cbc:PriceAmount>
+        <!--
+            CAMPO 38: Código de tipo de precio
+            - 01: Precio unitario (incluye IGV)
+            - 02: Valor referencial (operaciones no onerosas)
+        -->
+        <cbc:PriceTypeCode
+                    listName="SUNAT:Indicador de Tipo de Precio"
+                    listAgencyName="PE:SUNAT"
+                    listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                >01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+
+    <!-- CAMPO 40: Descuentos por ítem -->
+    <cac:AllowanceCharge>
+      <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+      <cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+      <cbc:MultiplierFactorNumeric>0.10</cbc:MultiplierFactorNumeric>
+      <cbc:Amount currencyID="PEN">16610.17</cbc:Amount>
+      <cbc:BaseAmount currencyID="PEN">166101.69</cbc:BaseAmount>
+    </cac:AllowanceCharge>
+
+    <!-- CAMPO 42: Afectación al IGV por ítem -->
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">26908.47</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">149491.53</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">26908.47</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <!-- Código de categoría: S = Gravado -->
+          <cbc:ID
+                        schemeID="UN/ECE 5305"
+                        schemeName="Tax Category Identifier"
+                        schemeAgencyName="United Nations Economic Commission for Europe"
+                    >S</cbc:ID>
+          <cbc:Percent>18.00</cbc:Percent>
+          <!--
+              CAMPO 42: Código de afectación IGV
+              - 10: Gravado - Operación onerosa
+              - 20: Exonerado - Operación onerosa
+              - 30: Inafecto - Operación onerosa
+              - 31: Inafecto - Operación gratuita
+              Catálogo 07
+          -->
+          <cbc:TaxExemptionReasonCode
+                        listAgencyName="PE:SUNAT"
+                        listName="SUNAT:Codigo de Tipo de Afectación del IGV"
+                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                    >10</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID
+                            schemeID="UN/ECE 5153"
+                            schemeName="Tax Scheme Identifier"
+                            schemeAgencyName="United Nations Economic Commission for Europe"
+                        >1000</cbc:ID>
+            <cbc:Name>IGV</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+
+    <!-- CAMPO 44: Descripción del producto -->
+    <cac:Item>
+      <cbc:Description>Grabadora LG Externo Modelo: GE20LU10</cbc:Description>
+
+      <!-- CAMPO 45: Código de producto (interno) -->
+      <cac:SellersItemIdentification>
+        <cbc:ID>GLG199</cbc:ID>
+      </cac:SellersItemIdentification>
+
+      <!-- CAMPO 46: Código de producto SUNAT/UNSPSC -->
+      <cac:CommodityClassification>
+        <cbc:ItemClassificationCode
+                    listID="UNSPSC"
+                    listAgencyName="GS1 US"
+                    listName="Item Classification"
+                >52161515</cbc:ItemClassificationCode>
+      </cac:CommodityClassification>
+    </cac:Item>
+
+    <!-- CAMPO 48: Valor unitario del ítem -->
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">83.05</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+
+  <!-- ===================== LÍNEA 2 ===================== -->
+  <cac:InvoiceLine>
+    <cbc:ID>2</cbc:ID>
+    <cbc:InvoicedQuantity
+            unitCode="NIU"
+            unitCodeListID="UN/ECE rec 20"
+            unitCodeListAgencyName="United Nations Economic Commission for Europe"
+        >300</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount
+            currencyID="PEN"
+        >133983.05</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">620.00</cbc:PriceAmount>
+        <cbc:PriceTypeCode
+                    listName="SUNAT:Indicador de Tipo de Precio"
+                    listAgencyName="PE:SUNAT"
+                    listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                >01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:AllowanceCharge>
+      <cbc:ChargeIndicator>false</cbc:ChargeIndicator>
+      <cbc:AllowanceChargeReasonCode>00</cbc:AllowanceChargeReasonCode>
+      <cbc:MultiplierFactorNumeric>0.15</cbc:MultiplierFactorNumeric>
+      <cbc:Amount currencyID="PEN">23644.07</cbc:Amount>
+      <cbc:BaseAmount currencyID="PEN">157627.12</cbc:BaseAmount>
+    </cac:AllowanceCharge>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">24116.95</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">133983.05</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">24116.95</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:ID
+                        schemeID="UN/ECE 5305"
+                        schemeName="Tax Category Identifier"
+                        schemeAgencyName="United Nations Economic Commission for Europe"
+                    >S</cbc:ID>
+          <cbc:Percent>18.00</cbc:Percent>
+          <cbc:TaxExemptionReasonCode
+                        listAgencyName="PE:SUNAT"
+                        listName="SUNAT:Codigo de Tipo de Afectación del IGV"
+                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                    >10</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID
+                            schemeID="UN/ECE 5153"
+                            schemeName="Tax Scheme Identifier"
+                            schemeAgencyName="United Nations Economic Commission for Europe"
+                        >1000</cbc:ID>
+            <cbc:Name>IGV</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Monitor LCD ViewSonic VG2028WM 20</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>MVS546</cbc:ID>
+      </cac:SellersItemIdentification>
+      <cac:CommodityClassification>
+        <cbc:ItemClassificationCode
+                    listID="UNSPSC"
+                    listAgencyName="GS1 US"
+                    listName="Item Classification"
+                >43211902</cbc:ItemClassificationCode>
+      </cac:CommodityClassification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">525.42</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+
+  <!-- ===================== LÍNEA 3 ===================== -->
+  <!-- Línea con operación EXONERADA -->
+  <cac:InvoiceLine>
+    <cbc:ID>3</cbc:ID>
+    <cbc:InvoicedQuantity
+            unitCode="NIU"
+            unitCodeListID="UN/ECE rec 20"
+            unitCodeListAgencyName="United Nations Economic Commission for Europe"
+        >250</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">13000.00</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">52.00</cbc:PriceAmount>
+        <cbc:PriceTypeCode
+                    listName="SUNAT:Indicador de Tipo de Precio"
+                    listAgencyName="PE:SUNAT"
+                    listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                >01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">0.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">0.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">13000.00</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <!-- E = Exonerado -->
+          <cbc:ID
+                        schemeID="UN/ECE 5305"
+                        schemeName="Tax Category Identifier"
+                        schemeAgencyName="United Nations Economic Commission for Europe"
+                    >E</cbc:ID>
+          <cbc:Percent>18.00</cbc:Percent>
+          <!-- 20 = Exonerado por resolución -->
+          <cbc:TaxExemptionReasonCode
+                        listAgencyName="PE:SUNAT"
+                        listName="SUNAT:Codigo de Tipo de Afectación del IGV"
+                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                    >20</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID
+                            schemeID="UN/ECE 5153"
+                            schemeName="Tax Scheme Identifier"
+                            schemeAgencyName="United Nations Economic Commission for Europe"
+                        >9997</cbc:ID>
+            <cbc:Name>EXONERADO</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Memoria DDR-3 B1333 Kingston</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>MPC35</cbc:ID>
+      </cac:SellersItemIdentification>
+      <cac:CommodityClassification>
+        <cbc:ItemClassificationCode
+                    listID="UNSPSC"
+                    listAgencyName="GS1 US"
+                    listName="Item Classification"
+                >43202010</cbc:ItemClassificationCode>
+      </cac:CommodityClassification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">52.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+
+  <!-- ===================== LÍNEA 4 ===================== -->
+  <cac:InvoiceLine>
+    <cbc:ID>4</cbc:ID>
+    <cbc:InvoicedQuantity
+            unitCode="NIU"
+            unitCodeListID="UN/ECE rec 20"
+            unitCodeListAgencyName="United Nations Economic Commission for Europe"
+        >500</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">83050.85</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <cbc:PriceAmount currencyID="PEN">196.00</cbc:PriceAmount>
+        <cbc:PriceTypeCode
+                    listName="SUNAT:Indicador de Tipo de Precio"
+                    listAgencyName="PE:SUNAT"
+                    listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                >01</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">14949.15</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">83050.85</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">14949.15</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <cbc:ID
+                        schemeID="UN/ECE 5305"
+                        schemeName="Tax Category Identifier"
+                        schemeAgencyName="United Nations Economic Commission for Europe"
+                    >S</cbc:ID>
+          <cbc:Percent>18.00</cbc:Percent>
+          <cbc:TaxExemptionReasonCode
+                        listAgencyName="PE:SUNAT"
+                        listName="SUNAT:Codigo de Tipo de Afectación del IGV"
+                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                    >10</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID
+                            schemeID="UN/ECE 5153"
+                            schemeName="Tax Scheme Identifier"
+                            schemeAgencyName="United Nations Economic Commission for Europe"
+                        >1000</cbc:ID>
+            <cbc:Name>IGV</cbc:Name>
+            <cbc:TaxTypeCode>VAT</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Teclado Microsoft SideWinder X6</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>TMS22</cbc:ID>
+      </cac:SellersItemIdentification>
+      <cac:CommodityClassification>
+        <cbc:ItemClassificationCode
+                    listID="UNSPSC"
+                    listAgencyName="GS1 US"
+                    listName="Item Classification"
+                >43211706</cbc:ItemClassificationCode>
+      </cac:CommodityClassification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">166.10</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+
+  <!-- ===================== LÍNEA 5 ===================== -->
+  <!-- Línea con operación INAFECTA (operación gratuita) -->
+  <cac:InvoiceLine>
+    <cbc:ID>5</cbc:ID>
+    <cbc:InvoicedQuantity
+            unitCode="NIU"
+            unitCodeListID="UN/ECE rec 20"
+            unitCodeListAgencyName="United Nations Economic Commission for Europe"
+        >1</cbc:InvoicedQuantity>
+    <cbc:LineExtensionAmount currencyID="PEN">0.00</cbc:LineExtensionAmount>
+    <cac:PricingReference>
+      <cac:AlternativeConditionPrice>
+        <!-- CAMPO 39: Valor referencial unitario -->
+        <!-- priceTypeCode="02" = Valor referencial -->
+        <cbc:PriceAmount currencyID="PEN">30.00</cbc:PriceAmount>
+        <cbc:PriceTypeCode
+                    listName="SUNAT:Indicador de Tipo de Precio"
+                    listAgencyName="PE:SUNAT"
+                    listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16"
+                >02</cbc:PriceTypeCode>
+      </cac:AlternativeConditionPrice>
+    </cac:PricingReference>
+    <cac:TaxTotal>
+      <cbc:TaxAmount currencyID="PEN">0.00</cbc:TaxAmount>
+      <cac:TaxSubtotal>
+        <cbc:TaxableAmount currencyID="PEN">0.00</cbc:TaxableAmount>
+        <cbc:TaxAmount currencyID="PEN">0.00</cbc:TaxAmount>
+        <cac:TaxCategory>
+          <!-- O = Inafecto -->
+          <cbc:ID
+                        schemeID="UN/ECE 5305"
+                        schemeName="Tax Category Identifier"
+                        schemeAgencyName="United Nations Economic Commission for Europe"
+                    >O</cbc:ID>
+          <cbc:Percent>18.00</cbc:Percent>
+          <!-- 31 = Inafecto - Operaciones gratuitas -->
+          <cbc:TaxExemptionReasonCode
+                        listAgencyName="PE:SUNAT"
+                        listName="SUNAT:Codigo de Tipo de Afectación del IGV"
+                        listURI="urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo07"
+                    >31</cbc:TaxExemptionReasonCode>
+          <cac:TaxScheme>
+            <cbc:ID
+                            schemeID="UN/ECE 5153"
+                            schemeName="Tax Scheme Identifier"
+                            schemeAgencyName="United Nations Economic Commission for Europe"
+                        >9998</cbc:ID>
+            <cbc:Name>INAFECTO</cbc:Name>
+            <cbc:TaxTypeCode>FRE</cbc:TaxTypeCode>
+          </cac:TaxScheme>
+        </cac:TaxCategory>
+      </cac:TaxSubtotal>
+    </cac:TaxTotal>
+    <cac:Item>
+      <cbc:Description>Web cam Genius iSlim 310VVU</cbc:Description>
+      <cac:SellersItemIdentification>
+        <cbc:ID>WCG01</cbc:ID>
+      </cac:SellersItemIdentification>
+      <cac:CommodityClassification>
+        <cbc:ItemClassificationCode
+                    listID="UNSPSC"
+                    listAgencyName="GS1 US"
+                    listName="Item Classification"
+                >45121520</cbc:ItemClassificationCode>
+      </cac:CommodityClassification>
+    </cac:Item>
+    <cac:Price>
+      <cbc:PriceAmount currencyID="PEN">0.00</cbc:PriceAmount>
+    </cac:Price>
+  </cac:InvoiceLine>
+</Invoice>

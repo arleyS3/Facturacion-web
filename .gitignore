@@ -4,6 +4,7 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+resultado/
 
 ### STS ###
 .apt_generated
@@ -44,6 +45,12 @@ build/
 /.env.test.local
 /.env.production.local
 
+### Package Managers ###
+# pnpm (si el equipo usa npm)
+pnpm-lock.yaml
+# npm (si el equipo usa pnpm)
+package-lock.json
+
 ### Monorepo (any level) ###
 **/node_modules/
 **/dist/
@@ -54,3 +61,9 @@ build/
 ### IDEs in subfolders ###
 **/.vscode/
 **/.idea/
+
+### Graphify
+graphify-out/**
+
+### Obsidian
+.obsidian/

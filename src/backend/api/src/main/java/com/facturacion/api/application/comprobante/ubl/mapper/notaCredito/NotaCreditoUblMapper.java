@@ -32,12 +32,18 @@ public class NotaCreditoUblMapper {
         String tipoAfectado = canonico.documentoRelacionado() != null 
             ? canonico.documentoRelacionado().tipoDocumento() 
             : null;
-        String serieAfectada = canonico.documentoRelacionado() != null 
-            ? canonico.documentoRelacionado().serie() 
+        String documentoAfectadoNumero = canonico.documentoRelacionado() != null 
+            ? canonico.documentoRelacionado().numeroDocumento() 
             : null;
-        String numeroAfectado = canonico.documentoRelacionado() != null 
-            ? canonico.documentoRelacionado().correlativo() 
-            : null;
+        
+        // Splitear numeroDocumento (ej: "F001-00000001") en serie y correlativo
+        String documentoAfectadoSerie = "";
+        String documentoAfectadoCorrelativo = documentoAfectadoNumero;
+        if (documentoAfectadoNumero != null && documentoAfectadoNumero.contains("-")) {
+            String[] partes = documentoAfectadoNumero.split("-", 2);
+            documentoAfectadoSerie = partes[0];
+            documentoAfectadoCorrelativo = partes.length > 1 ? partes[1] : "";
+        }
 
         return new NotaCreditoUblData(
             serie,
@@ -50,10 +56,10 @@ public class NotaCreditoUblMapper {
             canonico.receptorDocumento(),
             null,
             tipoAfectado,
-            serieAfectada,
-            numeroAfectado,
-            null,
-            null,
+            documentoAfectadoSerie,
+            documentoAfectadoCorrelativo,
+            canonico.documentoRelacionado() != null ? canonico.documentoRelacionado().motivoCodigo() : null,
+            canonico.documentoRelacionado() != null ? canonico.documentoRelacionado().motivoDescripcion() : null,
             null,
             null,
             null,
