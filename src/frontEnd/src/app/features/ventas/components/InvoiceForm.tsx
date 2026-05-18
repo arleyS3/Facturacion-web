@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReceiverSection } from "@/features/ventas/components/ReceiverSection";
 import { DocumentSection } from "@/features/ventas/components/DocumentSection";
 import { ProductsTable } from "@/features/ventas/components/ProductsTable";
+import { DescuentosGlobalesSection } from "@/features/ventas/components/DescuentosGlobalesSection";
 import { Separator } from "@/components/ui/separator";
 import { EmitDocumentDialog } from "@/components/EmitDocumentDialog";
 import { useState, useEffect } from "react";
@@ -102,6 +103,11 @@ export function InvoiceForm() {
       // PRODUCTOS / DETALLES
       // =================================================================
       detalles: [],
+      
+      // =================================================================
+      // DESCUENTOS GLOBALES
+      // =================================================================
+      descuentosGlobales: [],
       
       // =================================================================
       // LEYENDAS
@@ -305,6 +311,13 @@ export function InvoiceForm() {
           <Card className="shadow-lg">
             <CardContent className="p-6">
               <ProductsTable />
+            </CardContent>
+          </Card>
+
+          {/* Descuentos Globales */}
+          <Card className="shadow-lg">
+            <CardContent className="p-6">
+              <DescuentosGlobalesSection />
             </CardContent>
           </Card>
         </div>

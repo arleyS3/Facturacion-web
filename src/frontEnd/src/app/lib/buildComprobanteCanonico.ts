@@ -5,7 +5,7 @@
  * @module lib/buildComprobanteCanonico
  */
 
-import type { ComprobanteFormData, DetalleFormData } from "./schemas/comprobante.schema";
+import type { ComprobanteFormData, DetalleFormData, DescuentoGlobalFormData } from "./schemas/comprobante.schema";
 
 /**
  * Interface para el payload del comprobante canónico.
@@ -68,6 +68,9 @@ interface ComprobanteCanonicoPayload {
   // Detalles
   detalles: DetallePayload[];
   
+  // Descuentos globales
+  descuentos_globales?: DescuentoGlobalPayload[];
+  
   // Adicionales
   leyendas?: LeyendaPayload[];
   documento_relacionado?: DocumentoRelacionadoPayload;
@@ -122,6 +125,25 @@ interface DocumentoRelacionadoPayload {
   tipo_documento: string;
   numero_documento: string;
   codigo_motivo?: string;
+}
+
+/**
+ * Interface para un descuento global.
+ * Snake_case porque corresponde al backend (DescuentoGlobalCanonico).
+ * 
+ * @typedef {Object} DescuentoGlobalPayload
+ * @property {boolean} es_cargo - Indica si es cargo (true) o descuento (false)
+ * @property {string} codigo_motivo - Código del motivo según catálogo 53 SUNAT
+ * @property {number} porcentaje - Porcentaje del descuento
+ * @property {number} monto - Monto del descuento
+ * @property {number} monto_base - Base sobre la que se aplica el descuento
+ */
+interface DescuentoGlobalPayload {
+  es_cargo: boolean;
+  codigo_motivo: string;
+  porcentaje: number;
+  monto: number;
+  monto_base: number;
 }
 
 /**
@@ -216,6 +238,28 @@ function convertirDetalle(producto: DetalleFormData): DetallePayload {
     codigo_tipoIgv: tipoAfectacion,
     /** Código de unidad de medida (catálogo SUNAT, ej: NIU, KG, ZZ) */
     unidad_medida: producto.unidadMedida || "NIU",
+  };
+}
+
+/**
+ * Convierte un descuento global del formulario al formato de payload para el backend.
+ * Convierte strings a números y camelCase → snake_case.
+ * 
+ * @param descuento - Datos del descuento global del formulario
+ * @returns Objeto descuento global con nombres en español (snake_case)
+ */
+function convertirDescuentoGlobal(descuento: DescuentoGlobalFormData): DescuentoGlobalPayload {
+  return {
+    /** Indica si es cargo (true) o descuento (false) */
+    es_cargo: descuento.esCargo ?? false,
+    /** Código del motivo según catálogo 53 SUNAT */
+    codigo_motivo: descuento.codigoMotivo || "00",
+    /** Porcentaje del descuento en formato decimal (5% → 0.05 para MultiplierFactorNumeric UBL) */
+    porcentaje: (parseFloat(descuento.porcentaje) || 0) / 100,
+    /** Monto del descuento (número) */
+    monto: parseFloat(descuento.monto) || 0,
+    /** Base sobre la que se aplica el descuento (número) */
+    monto_base: parseFloat(descuento.montoBase) || 0,
   };
 }
 
@@ -345,6 +389,14 @@ export function buildComprobanteCanonico(values: ComprobanteFormData): Comproban
     detalles: detalles,
   };
 
+  // Agregar descuentos globales si existen
+  if (values.descuentosGlobales && values.descuentosGlobales.length > 0) {
+    /** Lista de descuentos globales (AllowanceCharge) */
+    canonico.descuentos_globales = values.descuentosGlobales
+      .filter((dg) => dg.codigoMotivo || dg.monto)
+      .map(convertirDescuentoGlobal);
+  }
+
   // Agregar leyendas si existen
   if (values.leyendas && values.leyendas.length > 0) {
     /** Lista de leyendas adicionales */
@@ -381,6 +433,7 @@ export default buildComprobanteCanonico;
 export type { 
   ComprobanteCanonicoPayload, 
   DetallePayload, 
+  DescuentoGlobalPayload,
   LeyendaPayload, 
   DocumentoRelacionadoPayload 
 };
