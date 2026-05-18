@@ -107,22 +107,29 @@ class ProductsSectionBuilder {
 
 class MainFieldsSectionBuilder {
   build(values: Values, tipoDocumento: string, totals: Totals): Record<string, any> {
+    // Usar el mismo patrón que buildComprobanteCanonico.ts
+    const emisorRuc = values.emisorRuc || values.issuerDocNumber || values.emitterDocNumber || "";
+    const emisorRazonSocial = values.emisorRazonSocial || values.issuerSocialName || values.emitterSocialName || "";
+    const receptorDocumento = values.receptorDocumento || values.receiverDocNumber || "";
+    const receptorRazonSocial = values.receptorRazonSocial || values.receiverSocialName || "";
+    const receptorDireccion = values.receptorDireccion || values.receiverAddress || "";
+    
     return {
       CODI_EMPR: values.companyCode ?? values.companyId ?? "1",
       TipoDTE: tipoDocumento,
       Serie: values.serie ?? "",
-      Correlativo: values.correlativo ?? "",
+      Correlativo: values.correlativo ?? values.numeroDocumento ?? "",
       FchEmis: values.fechaEmision ?? values.emissionDate ?? "",
       HoraEmision: values.horaEmision ?? values.emissionTime ?? "",
       TipoMoneda: values.moneda ?? "PEN",
-      TipoRucEmis: values.issuerDocType ?? values.emitterDocType ?? "",
-      RUTEmis: values.issuerDocNumber ?? values.emitterDocNumber ?? "",
-      RznSocEmis: values.issuerSocialName ?? values.emitterSocialName ?? "",
-      CodigoLocalAnexo: values.localCode ?? "0000",
-      TipoRutReceptor: values.receiverDocType ?? "",
-      RUTRecep: values.receiverDocNumber ?? "",
-      RznSocRecep: values.receiverSocialName ?? "",
-      DirRecep: values.receiverAddress ?? "",
+      TipoRucEmis: values.emisorTipoDoc || values.issuerDocType || "",
+      RUTEmis: emisorRuc,
+      RznSocEmis: emisorRazonSocial,
+      CodigoLocalAnexo: values.emisorCodigoDomicilio ?? values.anexoEmisor ?? "0000",
+      TipoRutReceptor: values.receptorTipoDoc || values.receiverDocType || "",
+      RUTRecep: receptorDocumento,
+      RznSocRecep: receptorRazonSocial,
+      DirRecep: receptorDireccion,
       TipoOperacion: values.tipoOperacion ?? "",
       MntNeto: NumberFormatter.toFixed2(totals.mntNeto),
       MntExe: NumberFormatter.toFixed2(totals.mntExe),
