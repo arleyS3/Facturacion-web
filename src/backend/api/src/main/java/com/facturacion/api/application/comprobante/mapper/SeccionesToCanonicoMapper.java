@@ -61,6 +61,7 @@ public class SeccionesToCanonicoMapper {
                 mapRelacionado(campos),
                 mapTraslado(campos),
                 List.of(),
+                null, // descuentosGlobales — no se mapea desde trama antigua
                 null  // firmar - por defecto null = true (se firma si hay certificado)
         );
     }
