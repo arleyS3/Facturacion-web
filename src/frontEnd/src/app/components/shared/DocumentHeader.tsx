@@ -1,9 +1,18 @@
-
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { AlertCircle, CalendarIcon } from "lucide-react";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+import { cn } from "@/components/ui/utils";
 
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
@@ -23,7 +32,11 @@ interface DocumentHeaderProps {
   };
 }
 
-export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps) {
+export function DocumentHeader({
+  type,
+  methods,
+  formState,
+}: DocumentHeaderProps) {
   const [useFechaActual, setUseFechaActual] = useState(true);
   const [useHoraActual, setUseHoraActual] = useState(true);
   const [selectedSerie, setSelectedSerie] = useState<string>("");
@@ -44,25 +57,35 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
   const watchedCompanyCode = methods?.watch?.("codigoEmpresa");
   const watchedCorrelativo = methods?.watch?.("correlativo");
 
-
-
   const { data: tiposDocumento, loading: loadingTiposDocumento } = useCatalog(
     isSales ? "/catalogos/tipos-documento" : "",
   );
-  const { data: monedas, isLoading: monedasLoading } = useCatalogQuery("/catalogos/monedas");
+  const { data: tiposOperacion, loading: loadingTiposOperacion } = useCatalog(
+    isSales ? "/catalogos/tipos-operacion" : "",
+  );
+  const { data: monedas, isLoading: monedasLoading } =
+    useCatalogQuery("/catalogos/monedas");
 
   const normalizeSeriesDocType = (value?: string) => {
     if (!value) return "";
-    if (value === "Nota de Débito" || value === "Nota de débito") return "Nota de Débito";
-    if (value === "Nota de Crédito" || value === "Nota de crédito") return "Nota de Crédito";
+    if (value === "Nota de Débito" || value === "Nota de débito")
+      return "Nota de Débito";
+    if (value === "Nota de Crédito" || value === "Nota de crédito")
+      return "Nota de Crédito";
     return value;
   };
 
   const currentDocType = isSales
-    ? (watchedDocType ?? methods?.watch?.("docType") ?? tiposDocumento?.[0]?.label ?? "")
+    ? (watchedDocType ??
+      methods?.watch?.("docType") ??
+      tiposDocumento?.[0]?.label ??
+      "")
     : "Guía de Remisión";
 
-  const currentShippingDocType = methods?.watch?.("docType") ?? methods?.watch?.("tipoDocumento") ?? shippingDocType;
+  const currentShippingDocType =
+    methods?.watch?.("docType") ??
+    methods?.watch?.("tipoDocumento") ??
+    shippingDocType;
   const currentSeriesDocType = isSales
     ? normalizeSeriesDocType(currentDocType)
     : currentShippingDocType;
@@ -119,7 +142,14 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
       if (setValue) setValue("serie", "");
       setSelectedSerie("");
     }
-  }, [series, setValue, methods, selectedSerie, seriesLoading, currentSeriesDocType]);
+  }, [
+    series,
+    setValue,
+    methods,
+    selectedSerie,
+    seriesLoading,
+    currentSeriesDocType,
+  ]);
 
   const [correlativo, setCorrelativo] = useState<string>(() => {
     return methods?.getValues?.("correlativo") ?? watchedCorrelativo ?? "";
@@ -198,30 +228,38 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
     { code: "USD", label: "Dólares" },
     { code: "EUR", label: "Euros" },
   ];
-  
+
   // Combinar monedas de API con defaults, eliminando duplicados por código
   const opcionesMoneda = (() => {
     if (!monedas || !monedas.length) return defaultMonedas;
     // Crear Map para eliminar duplicados usando el código como clave
-    const mapa = new Map(defaultMonedas.map(m => [m.code, m]));
-    monedas.forEach(m => {
+    const mapa = new Map(defaultMonedas.map((m) => [m.code, m]));
+    monedas.forEach((m) => {
       if (m.code && m.label && !mapa.has(m.code)) {
         mapa.set(m.code, m);
       }
     });
     return Array.from(mapa.values());
   })();
-  
+
   const monedaValue = methods?.watch?.("moneda") || "";
-  const selectedMoneda = opcionesMoneda.find((m) => m.code === monedaValue) || null;
+  const selectedMoneda =
+    opcionesMoneda.find((m) => m.code === monedaValue) || null;
   const showTipoPago = isSales && currentDocType === "Factura";
   const codigoEmpresaValue = watchedCompanyCode ?? codigoEmpresaLocal;
+  const [fechaVencimiento, setFechaVencimiento] = useState<Date | undefined>(
+    () => {
+      const raw = methods?.getValues?.("fechaVencimiento");
+      return raw ? new Date(raw + "T00:00:00") : undefined;
+    },
+  );
+  const tipoPago = methods?.watch?.("tipoPago") ?? "contado";
+  const showFechaVencimiento = showTipoPago && tipoPago === "credito";
 
   return (
     <div className="space-y-6">
       {/* Identificación Visual */}
       <div className="rounded-lg p-0">
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="space-y-2">
             <Label className="text-xs font-medium">Código de Empresa</Label>
@@ -261,10 +299,16 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
                   setShippingDocType(v);
                 }
               }}
-              defaultValue={isSales ? tiposDocumento?.[0]?.label ?? "" : "09"}
+              defaultValue={isSales ? (tiposDocumento?.[0]?.label ?? "") : "09"}
             >
               <SelectTrigger className="h-9" id="doc-type">
-                <SelectValue placeholder={loadingTiposDocumento ? "Cargando..." : "Selecione un Tipo de Documento"} />
+                <SelectValue
+                  placeholder={
+                    loadingTiposDocumento
+                      ? "Cargando..."
+                      : "Selecione un Tipo de Documento"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {isSales ? (
@@ -278,8 +322,12 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
                     <>
                       <SelectItem value="Factura">Factura</SelectItem>
                       <SelectItem value="Boleta">Boleta</SelectItem>
-                      <SelectItem value="Nota de Crédito">Nota de Crédito</SelectItem>
-                      <SelectItem value="Nota de Débito">Nota de Débito</SelectItem>
+                      <SelectItem value="Nota de Crédito">
+                        Nota de Crédito
+                      </SelectItem>
+                      <SelectItem value="Nota de Débito">
+                        Nota de Débito
+                      </SelectItem>
                     </>
                   )
                 ) : (
@@ -300,7 +348,15 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
               disabled={seriesLoading || !series.length}
             >
               <SelectTrigger id="serie" className="h-9">
-                <SelectValue placeholder={seriesLoading ? "Cargando..." : (!series.length ? "Sin series disponibles" : "Seleccione serie")} />
+                <SelectValue
+                  placeholder={
+                    seriesLoading
+                      ? "Cargando..."
+                      : !series.length
+                        ? "Sin series disponibles"
+                        : "Seleccione serie"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
                 {seriesLoading ? (
@@ -329,7 +385,9 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
               }}
               onBlur={() => formatCorrelativo()}
               aria-invalid={!!formState?.errors?.correlativo}
-              aria-describedby={formState?.errors?.correlativo ? "correlativo-error" : undefined}
+              aria-describedby={
+                formState?.errors?.correlativo ? "correlativo-error" : undefined
+              }
             />
             {formState?.errors?.correlativo && (
               <p
@@ -350,9 +408,14 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
               <Checkbox
                 id="fecha-actual"
                 checked={useFechaActual}
-                onCheckedChange={(checked) => setUseFechaActual(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setUseFechaActual(checked as boolean)
+                }
               />
-              <Label htmlFor="fecha-actual" className="text-xs font-medium cursor-pointer">
+              <Label
+                htmlFor="fecha-actual"
+                className="text-xs font-medium cursor-pointer"
+              >
                 Usar fecha actual automáticamente
               </Label>
             </div>
@@ -374,9 +437,14 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
               <Checkbox
                 id="hora-actual"
                 checked={useHoraActual}
-                onCheckedChange={(checked) => setUseHoraActual(checked as boolean)}
+                onCheckedChange={(checked) =>
+                  setUseHoraActual(checked as boolean)
+                }
               />
-              <Label htmlFor="hora-actual" className="text-xs font-medium cursor-pointer">
+              <Label
+                htmlFor="hora-actual"
+                className="text-xs font-medium cursor-pointer"
+              >
                 Usar hora actual automáticamente
               </Label>
             </div>
@@ -398,22 +466,39 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
 
       {isSales ? (
         <div className="bg-white border border-slate-200 rounded-lg p-4">
-          <h4 className="font-medium text-sm text-slate-900 mb-3">Información Comercial</h4>
+          <h4 className="font-medium text-sm text-slate-900 mb-3">
+            Información Comercial
+          </h4>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="space-y-2">
-              <Label>Leyenda</Label>
+              <Label htmlFor="tipo-operacion">Tipo de Operación</Label>
               <Select
-                value={methods?.watch?.("leyendaTipo") ?? "venta-interna"}
-                onValueChange={(v) => setValue?.("leyendaTipo", v)}
-                defaultValue="venta-interna"
-                disabled
+                value={methods?.watch?.("tipoOperacion") ?? ""}
+                onValueChange={(v) => setValue?.("tipoOperacion", v)}
               >
-                <SelectTrigger>
-                  <SelectValue />
+                <SelectTrigger id="tipo-operacion" className="h-9">
+                  <SelectValue
+                    placeholder={
+                      loadingTiposOperacion
+                        ? "Cargando..."
+                        : "Seleccione tipo de operación"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="venta-interna">Venta interna</SelectItem>
-                  <SelectItem value="exportacion">Exportación</SelectItem>
+                  {tiposOperacion && tiposOperacion.length ? (
+                    tiposOperacion.map((opt) => (
+                      <SelectItem key={opt.code} value={opt.code}>
+                        {opt.label}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-sm text-muted-foreground">
+                      {loadingTiposOperacion
+                        ? "Cargando..."
+                        : "Sin opciones disponibles"}
+                    </div>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -428,7 +513,9 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
                 onChange={(_e, newValue) => {
                   setValue?.("moneda", newValue ? newValue.code : "");
                 }}
-                isOptionEqualToValue={(option, value) => option.code === value.code}
+                isOptionEqualToValue={(option, value) =>
+                  option.code === value.code
+                }
                 loading={monedasLoading}
                 disabled={monedasLoading}
                 size="small"
@@ -461,7 +548,9 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    placeholder={monedasLoading ? "Cargando..." : "Seleccione moneda"}
+                    placeholder={
+                      monedasLoading ? "Cargando..." : "Seleccione moneda"
+                    }
                     label=""
                     InputLabelProps={{ shrink: false }}
                     className="bg-white border border-slate-200 rounded-lg focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-200 text-base"
@@ -501,7 +590,11 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
                   if (setValue) setValue("montoPendiente", val);
                 }}
                 aria-invalid={!!formState?.errors?.montoPendiente}
-                aria-describedby={formState?.errors?.montoPendiente ? "monto-pendiente-error" : undefined}
+                aria-describedby={
+                  formState?.errors?.montoPendiente
+                    ? "monto-pendiente-error"
+                    : undefined
+                }
               />
               {formState?.errors?.montoPendiente && (
                 <p
@@ -515,6 +608,46 @@ export function DocumentHeader({ type, methods, formState }: DocumentHeaderProps
               )}
             </div>
           </div>
+
+          {showFechaVencimiento && (
+            <div className="mt-4 border-t border-slate-100 pt-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="fecha-vencimiento">
+                    Fecha de Vencimiento
+                  </Label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        data-empty={!fechaVencimiento}
+                        className="w-full justify-start text-left font-normal data-[empty=true]:text-muted-foreground"
+                      >
+                        <CalendarIcon />
+                        {fechaVencimiento ? (
+                          format(fechaVencimiento, "PPP", { locale: es })
+                        ) : (
+                          <span>Seleccionar fecha</span>
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={fechaVencimiento}
+                        onSelect={(date) => {
+                          setFechaVencimiento(date);
+                          setValue?.("fechaVencimiento", date ? format(date, "yyyy-MM-dd") : "");
+                        }}
+                        locale={es}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       ) : null}
     </div>

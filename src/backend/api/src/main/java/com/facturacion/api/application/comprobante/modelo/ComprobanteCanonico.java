@@ -49,6 +49,7 @@ import java.util.List;
  * @param documentoRelacionado documento relacionado (si aplica)
  * @param parteTraslado datos de traslado (si aplica)
  * @param leyendas leyendas del comprobante (catálogo 52)
+ * @param descuentosGlobales descuentos o cargos globales (opcional)
  */
 public record ComprobanteCanonico(
         @NotBlank(message = "Tipo de documento es requerido")
@@ -150,6 +151,9 @@ public record ComprobanteCanonico(
         ParteTrasladoCanonico parteTraslado,
 
         List<LeyendaCanonico> leyendas,
+
+        @JsonProperty("descuentos_globales")
+        List<DescuentoGlobalCanonico> descuentosGlobales,
 
         /**
          * Indica si se debe firmar digitalmente el XML.

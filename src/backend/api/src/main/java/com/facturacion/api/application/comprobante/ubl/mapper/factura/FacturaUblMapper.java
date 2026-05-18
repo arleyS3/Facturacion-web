@@ -1,6 +1,7 @@
 package com.facturacion.api.application.comprobante.ubl.mapper.factura;
 
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
+import com.facturacion.api.application.comprobante.modelo.DescuentoGlobalCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
 import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
 import java.math.BigDecimal;
@@ -42,10 +43,20 @@ public class FacturaUblMapper {
                 ? mapLineas(canonico.detalles())
                 : List.of();
 
+        // Mapear descuentos globales
+        List<DatosDescuentoGlobalFacturaUbl> descuentosGlobales =
+            mapDescuentosGlobales(canonico.descuentosGlobales());
+
         // Calcular totales desde las líneas
         DatosTotalesFacturaUbl totales = calcularTotales(lineas, canonico.moneda());
+
+        // Sumar montos de descuentos (esCargo == false) para restar de importe total
+        BigDecimal totalDescuentos = descuentosGlobales.stream()
+            .filter(d -> !d.esCargo())
+            .map(DatosDescuentoGlobalFacturaUbl::monto)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
         DatosTotalesMonetariosFacturaUbl totalesMonetarios = calcularTotalesMonetarios(
-            totales, canonico.moneda());
+            totales, canonico.moneda(), totalDescuentos);
 
         DatosEncabezadoFacturaUbl encabezado = new DatosEncabezadoFacturaUbl(
             serie,
@@ -89,7 +100,7 @@ public class FacturaUblMapper {
             null, // firma
             null, // referenciaOrden
             lineas.isEmpty() ? null : lineas.size(),
-            List.of(), // descuentos globales
+            descuentosGlobales,
             totales,
             null, // impuestosTotales (opcional)
             totalesMonetarios,
@@ -164,15 +175,50 @@ public class FacturaUblMapper {
      *
      * @param totales totales de impuestos
      * @param moneda código de moneda
+     * @param totalDescuentos suma de montos de descuentos globales (esCargo == false)
      * @return totales monetarios
      */
-    private DatosTotalesMonetariosFacturaUbl calcularTotalesMonetarios(
-            DatosTotalesFacturaUbl totales, String moneda) {
+    DatosTotalesMonetariosFacturaUbl calcularTotalesMonetarios(
+            DatosTotalesFacturaUbl totales, String moneda, BigDecimal totalDescuentos) {
+        BigDecimal descuentos = totalDescuentos != null ? totalDescuentos : BigDecimal.ZERO;
+        BigDecimal importeTotalPagar = totales.importeTotal().subtract(descuentos);
         return new DatosTotalesMonetariosFacturaUbl(
             totales.valorVenta(),
             totales.importeTotal(),
-            BigDecimal.ZERO, // descuentos globales
-            totales.importeTotal()
+            descuentos,
+            importeTotalPagar
+        );
+    }
+
+    /**
+     * Mapea la lista de descuentos globales canónicos a datos UBL.
+     *
+     * @param descuentos lista de descuentos canónicos (puede ser null)
+     * @return lista de descuentos UBL, nunca null
+     */
+    private List<DatosDescuentoGlobalFacturaUbl> mapDescuentosGlobales(
+            List<DescuentoGlobalCanonico> descuentos) {
+        if (descuentos == null) {
+            return List.of();
+        }
+        return descuentos.stream()
+                .map(this::toDatosDescuentoGlobal)
+                .toList();
+    }
+
+    /**
+     * Convierte un {@link DescuentoGlobalCanonico} a {@link DatosDescuentoGlobalFacturaUbl}.
+     *
+     * @param d descuento global canónico
+     * @return datos UBL de descuento global
+     */
+    public DatosDescuentoGlobalFacturaUbl toDatosDescuentoGlobal(DescuentoGlobalCanonico d) {
+        return new DatosDescuentoGlobalFacturaUbl(
+            d.esCargo() != null && d.esCargo(),
+            d.codigoMotivo(),
+            d.porcentaje(),
+            d.monto(),
+            d.montoBase()
         );
     }
 
