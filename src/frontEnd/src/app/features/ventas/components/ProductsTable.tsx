@@ -33,7 +33,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { useState, Fragment, useEffect } from "react";
+import { useState, Fragment, useEffect, useCallback } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   Tooltip,
   TooltipContent,
@@ -143,6 +153,30 @@ export function ProductsTable() {
     montoISC: 0,
   });
 
+  // Estado para el diálogo de confirmación de eliminación
+  const [deleteConfirmProduct, setDeleteConfirmProduct] = useState<{
+    id: string;
+    nombre: string;
+  } | null>(null);
+
+  const executeRemoveProduct = useCallback(() => {
+    if (!deleteConfirmProduct) return;
+    const { id } = deleteConfirmProduct;
+    const filtered = products.filter((p) => p.id !== id);
+    // Recalcular correlativos
+    const reindexed = filtered.map((p, index) => ({
+      ...p,
+      correlativo: index + 1,
+    }));
+    setProducts(reindexed);
+    setExpandedRows((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(id);
+      return newSet;
+    });
+    setDeleteConfirmProduct(null);
+  }, [deleteConfirmProduct, products, setProducts, setExpandedRows]);
+
   const addProduct = () => {
     const newProduct: Product = {
       id: Date.now().toString(),
@@ -170,18 +204,9 @@ export function ProductsTable() {
   const removeProduct = (id: string) => {
     const product = products.find((p) => p.id === id);
     if (!product) return;
-    if (!window.confirm(`¿Eliminar producto "${product.descripcion || `#${product.correlativo}`}"?`)) return;
-    const filtered = products.filter((p) => p.id !== id);
-    // Recalcular correlativos
-    const reindexed = filtered.map((p, index) => ({
-      ...p,
-      correlativo: index + 1,
-    }));
-    setProducts(reindexed);
-    setExpandedRows((prev) => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
+    setDeleteConfirmProduct({
+      id: product.id,
+      nombre: product.descripcion || `#${product.correlativo}`,
     });
   };
 
@@ -323,7 +348,30 @@ export function ProductsTable() {
     }).format(n);
 
   return (
-    <div className="space-y-4">
+    <>
+      <AlertDialog
+        open={deleteConfirmProduct !== null}
+        onOpenChange={(open) => {
+          if (!open) setDeleteConfirmProduct(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Eliminar producto</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Estás seguro de eliminar el producto "
+              {deleteConfirmProduct?.nombre}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={executeRemoveProduct}>
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="font-semibold text-lg">
           Productos / Servicios
@@ -1096,5 +1144,6 @@ export function ProductsTable() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }

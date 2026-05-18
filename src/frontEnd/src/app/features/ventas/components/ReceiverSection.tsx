@@ -90,6 +90,7 @@ export function ReceiverSection() {
   const [direccionLocal, setDireccionLocal] = useState("");
 
   const refIdRuc = useRef(0);
+  const lastFetchedRef = useRef<string>("");
 
   // When SUNAT is autocompleting ubigeo selects, avoid reset effects from user-driven changes.
   const suppressUbigeoResetsRef = useRef(false);
@@ -354,9 +355,16 @@ export function ReceiverSection() {
   }, []);
 
   useEffect(() => {
-    if (!numeroDocumento) return;
+    if (!numeroDocumento || numeroDocumento.length < 8) return;
+    
+    // Evitar llamada si ya tenemos los datos para este número
+    if (numeroDocumento === lastFetchedRef.current) return;
+    
     const handler = setTimeout(async () => {
-      if (numeroDocumento.length >= 8) {
+      // Verificar nuevamente antes de llamar (evita race conditions)
+      if (numeroDocumento !== lastFetchedRef.current) {
+        lastFetchedRef.current = numeroDocumento;
+        
         refIdRuc.current += 1;
         const reqId = refIdRuc.current;
         setCargandoRuc(true);

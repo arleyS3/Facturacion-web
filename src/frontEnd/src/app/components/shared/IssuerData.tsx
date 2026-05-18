@@ -45,6 +45,7 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
   const [razonSocialLocal, setRazonSocialLocal] = useState("");
   const [direccionLocal, setDireccionLocal] = useState("");
   const refIdRuc = useRef(0);
+  const lastFetchedRef = useRef<string>("");
 
   const anexo = methods ? anexoFromForm : anexoLocal;
 
@@ -94,10 +95,16 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
   }, []);
 
   useEffect(() => {
-    if (!numeroDocumento) return;
-
+    if (!numeroDocumento || numeroDocumento.length < 8) return;
+    
+    // Evitar llamada si ya tenemos los datos para este número
+    if (numeroDocumento === lastFetchedRef.current) return;
+    
     const handler = setTimeout(async () => {
-      if (numeroDocumento.length >= 8) {
+      // Verificar nuevamente antes de llamar (evita race conditions)
+      if (numeroDocumento !== lastFetchedRef.current) {
+        lastFetchedRef.current = numeroDocumento;
+        
         refIdRuc.current += 1;
         const reqId = refIdRuc.current;
         setCargandoRuc(true);
