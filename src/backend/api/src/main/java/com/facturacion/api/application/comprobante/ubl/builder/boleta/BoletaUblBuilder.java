@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Constructor de XML UBL 2.1 para Boleta Electrónica.
@@ -74,10 +75,15 @@ public class BoletaUblBuilder {
         currency.setListAgencyName("United Nations Economic Commission for Europe");
         currency.setValue(data.moneda());
         invoice.setDocumentCurrencyCode(currency);
+        configurarLeyendas(invoice, data);
+        configurarGuiaRemision(invoice, data);
+        configurarDocumentoAdicional(invoice, data);
+        configurarAnticipo(invoice, data);
 
         invoice.setAccountingSupplierParty(crearProveedor(data));
         invoice.setAccountingCustomerParty(crearCliente(data));
 
+        configurarDescuentoGlobal(invoice, data);
         crearImpuestoTotal(invoice, data);
 
         invoice.setLegalMonetaryTotal(crearTotales(data));
@@ -93,7 +99,17 @@ public class BoletaUblBuilder {
                 .setFormattedOutput(true)
                 .write(invoice, writer);
 
-        return writer.toString();
+        String xmlFinal = writer.toString();
+        if (data.leyendas() != null ) {
+            for (var leyenda : data.leyendas()) {
+                xmlFinal = xmlFinal.replace(
+                    "<cbc:Note>" + leyenda.leyenda() + "</cbc:Note>",
+                    "<cbc:Note languageLocaleID=\"" + leyenda.codigoLocal() + "\">" + leyenda.leyenda() + "</cbc:Note>"
+                    );
+            }
+        }
+
+        return xmlFinal;
     }
 
     /**
@@ -428,5 +444,111 @@ public class BoletaUblBuilder {
 
         cat.setTaxScheme(esquema);
         return cat;
+    }
+
+    private void configurarLeyendas(InvoiceType invoice, BoletaUblData data) {
+        if (data.leyendas() == null || data.leyendas().isEmpty()) {
+            return;
+        }
+        List<NoteType> notas = data.leyendas().stream()
+                .map(leyenda -> {
+                    NoteType nota = new NoteType();
+                    nota.setValue(leyenda.leyenda());
+                    nota.setLanguageLocaleID(leyenda.codigoLocal());
+                    return nota;
+                })
+                .toList();
+        invoice.setNote(notas);
+    }
+
+    private void configurarDescuentoGlobal(InvoiceType invoice, BoletaUblData data){
+        if (data.tieneDescuentoGlobal() == null || !data.tieneDescuentoGlobal()) {
+            return;
+        }
+        if (data.descuentoMonto() == null || data.descuentoMonto().compareTo(BigDecimal.ZERO) <= 0) {
+            return;
+        }
+
+        AllowanceChargeType descuento = new AllowanceChargeType();
+
+        descuento.setChargeIndicator(false);
+        descuento.setAllowanceChargeReasonCode("00");
+        descuento.setAmount(data.descuentoMonto()).setCurrencyID(data.moneda());
+        descuento.setBaseAmount(data.descuentoBase()).setCurrencyID(data.moneda());
+
+        invoice.addAllowanceCharge(descuento);
+    }
+
+    private void configurarGuiaRemision(InvoiceType invoice, BoletaUblData data) {
+        if (data.guiaRemisionId() == null || data.guiaRemisionId().isBlank()) {
+            return;
+        }
+        DocumentReferenceType ref = new DocumentReferenceType();
+
+        IDType id = new IDType();
+        id.setValue(data.guiaRemisionId());
+        ref.setID(id);
+
+        DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+        typeCode.setValue("09");
+        typeCode.setListAgencyName("PE:SUNAT");
+        typeCode.setListName("SUNAT:Identificador de guía relacionada");
+        typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01");
+        ref.setDocumentTypeCode(typeCode);
+
+        invoice.addDespatchDocumentReference(ref);
+    }
+
+    private void configurarDocumentoAdicional(InvoiceType invoice, BoletaUblData data) {
+        if (data.documentoAdicionalId() == null || data.documentoAdicionalId().isBlank()) {
+            return;
+        }
+        DocumentReferenceType ref = new DocumentReferenceType();
+
+        IDType id = new IDType();
+        id.setValue(data.documentoAdicionalId());
+        ref.setID(id);
+
+        DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+        typeCode.setValue(data.documentoAdicionalTipo() != null 
+                ? data.documentoAdicionalTipo() : "99");
+        typeCode.setListAgencyName("PE:SUNAT");
+        typeCode.setListName("SUNAT:Identificador de documento relacionado");
+        typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12");
+        ref.setDocumentTypeCode(typeCode);
+
+        invoice.addAdditionalDocumentReference(ref);
+    }
+
+    private void configurarAnticipo(InvoiceType invoice, BoletaUblData data) {
+        if (data.anticipoId() == null || data.anticipoId().isBlank()) {
+            return;
+        }
+
+        PaymentType anticipo = new PaymentType();
+
+        IDType id = new IDType();
+        id.setValue(data.anticipoId());
+        id.setSchemeID(data.anticipoTipoDoc() != null ? data.anticipoTipoDoc() : "02");
+        id.setSchemeName("SUNAT:Identificador de Documentos Relacionados");
+        id.setSchemeAgencyName("PE:SUNAT");
+        id.setSchemeURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12");
+        anticipo.setID(id);
+
+        if (data.anticipoMonto() != null) {
+            anticipo.setPaidAmount(data.anticipoMonto())
+                    .setCurrencyID(data.anticipoMoneda() != null 
+                            ? data.anticipoMoneda() 
+                            : data.moneda());
+        }
+
+        if (data.anticipoRucEmisor() != null) {
+            InstructionIDType instructionId = new InstructionIDType();
+            instructionId.setValue(data.anticipoRucEmisor());
+            instructionId.setSchemeID("6");
+            anticipo.setInstructionID(instructionId);
+        }
+
+        invoice.addPrepaidPayment(anticipo);
     }
 }

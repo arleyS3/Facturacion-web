@@ -2,6 +2,8 @@ package com.facturacion.api.application.comprobante.ubl.mapper.boleta;
 
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
+import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
+import com.facturacion.api.application.comprobante.ubl.mapper.factura.LeyendaUblData;
 
 import lombok.val;
 
@@ -95,7 +97,19 @@ public class BoletaUblMapper {
             totalImpuestos,
             importeTotal,
             valorVenta,
-            lineas
+            lineas,
+            mapLeyendas(canonico.leyendas()),
+            false,
+            BigDecimal.ZERO,
+            BigDecimal.ZERO,
+            null, 
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
         );
     }
 
@@ -146,5 +160,21 @@ public class BoletaUblMapper {
             detalle.valorUnitario(),
             valorVenta
         );
+    }
+
+    /**
+     * Mapea leyendas canónicas a leyendas UBL.
+     *
+     * @param leyendas lista de leyendas canónicas
+     * @return lista de leyendas UBL
+     */
+    private List<LeyendaUblData> mapLeyendas(List<LeyendaCanonico> leyendas) {
+        if (leyendas == null || leyendas.isEmpty()) {
+            return List.of();
+        }
+
+        return leyendas.stream()
+                .map(l -> new LeyendaUblData(l.codigoLocal(), l.leyenda()))
+                .toList();
     }
 }
