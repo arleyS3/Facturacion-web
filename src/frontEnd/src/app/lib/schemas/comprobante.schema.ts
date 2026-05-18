@@ -62,6 +62,19 @@ const detalleSchema = z.object({
 });
 
 /**
+ * Schema para un descuento global del comprobante.
+ * Corresponde a AllowanceCharge de SUNAT UBL 2.1.
+ */
+const descuentoGlobalSchema = z.object({
+  id: z.string(),
+  esCargo: z.boolean().default(false),
+  codigoMotivo: z.string(),
+  porcentaje: z.string(),
+  monto: z.string(),
+  montoBase: z.string(),
+});
+
+/**
  * Schema para una leyenda del comprobante.
  */
 const leyendaSchema = z.object({
@@ -134,6 +147,11 @@ export const comprobanteSchema = z.object({
   detalles: z.array(detalleSchema).min(1, { message: "Debe agregar al menos un producto" }),
 
   // =================================================================
+  // DESCUENTOS GLOBALES (opcional)
+  // =================================================================
+  descuentosGlobales: z.array(descuentoGlobalSchema).optional(),
+
+  // =================================================================
   // LEYENDAS (opcional)
   // =================================================================
   leyendas: z.array(leyendaSchema).optional(),
@@ -201,6 +219,7 @@ export const payloadLegacySchema = z.object({
 
 export type ComprobanteFormData = z.infer<typeof comprobanteSchema>;
 export type DetalleFormData = z.infer<typeof detalleSchema>;
+export type DescuentoGlobalFormData = z.infer<typeof descuentoGlobalSchema>;
 export type LeyendaFormData = z.infer<typeof leyendaSchema>;
 export type DocumentoRelacionadoFormData = z.infer<typeof documentoRelacionadoSchema>;
 export type PayloadLegacyFormData = z.infer<typeof payloadLegacySchema>;
