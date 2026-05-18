@@ -3,6 +3,8 @@ package com.facturacion.api.application.comprobante.ubl.mapper.boleta;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.facturacion.api.application.comprobante.ubl.mapper.factura.LeyendaUblData;
+
 /**
  * Datos UBL 2.1 para boleta electrónica.
  *
@@ -29,6 +31,7 @@ public record BoletaUblData(
         String serie,
         String correlativo,
         String fechaEmision,
+        String horaEmision,
         String moneda,
         String emisorNroDocumento,
         String emisorTipoDocumento,
@@ -43,6 +46,18 @@ public record BoletaUblData(
         BigDecimal totalImpuestos,
         BigDecimal importeTotal,
         BigDecimal valorVenta,
-        List<BoletaLineaUblData> lineas
+        List<BoletaLineaUblData> lineas,
+        List<LeyendaUblData> leyendas, 
+        Boolean tieneDescuentoGlobal,
+        BigDecimal descuentoMonto,
+        BigDecimal descuentoBase,
+        String guiaRemisionId,
+        String documentoAdicionalId,
+        String documentoAdicionalTipo,
+        String anticipoId,
+        String anticipoTipoDoc,
+        BigDecimal anticipoMonto,
+        String anticipoMoneda,
+        String anticipoRucEmisor
 ) {
 }
