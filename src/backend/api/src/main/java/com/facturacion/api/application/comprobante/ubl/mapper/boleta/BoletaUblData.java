@@ -29,6 +29,7 @@ public record BoletaUblData(
         String serie,
         String correlativo,
         String fechaEmision,
+        String horaEmision,
         String moneda,
         String emisorNroDocumento,
         String emisorTipoDocumento,
