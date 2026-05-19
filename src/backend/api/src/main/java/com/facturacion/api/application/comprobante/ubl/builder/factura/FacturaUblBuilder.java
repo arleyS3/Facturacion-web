@@ -107,6 +107,8 @@ public class FacturaUblBuilder {
         configurarDescuentosGlobalesSiExisten(facturaUbl, datosFactura.descuentosGlobales(),
                 datosFactura.encabezado());
         configurarLeyendasSiExisten(facturaUbl, datosFactura.leyendas());
+        configurarGuiaRemisionSiExiste(facturaUbl, datosFactura);
+        configurarDocumentosAdicionalesSiExisten(facturaUbl, datosFactura);
         configurarPartes(facturaUbl, datosFactura.emisor(), datosFactura.receptor());
         configurarImpuestosSiCorresponde(facturaUbl, datosFactura.totales(), datosFactura.encabezado());
         configurarImpuestosTotalesSiExisten(facturaUbl, datosFactura.impuestosTotales(),
@@ -334,6 +336,74 @@ public class FacturaUblBuilder {
             return;
         }
         facturaUbl.setNote(crearNotasLeyenda(leyendas));
+    }
+
+    /**
+     * Configura la guía de remisión relacionada si existe.
+     * <p>
+     * Genera el tag {@code cac:DespatchDocumentReference} con:
+     * <ul>
+     *   <li>{@code cbc:ID}: serie-numero de la guía</li>
+     *   <li>{@code cbc:DocumentTypeCode}: código del catálogo 01 (09=remitente, 31=transportista)</li>
+     * </ul>
+     * </p>
+     *
+     * @param facturaUbl factura UBL a completar
+     * @param data datos de factura
+     */
+    private void configurarGuiaRemisionSiExiste(InvoiceType facturaUbl, FacturaUblData data) {
+        if (data.guiaRemisionId() == null || data.guiaRemisionId().isBlank()) {
+            return;
+        }
+        DocumentReferenceType ref = new DocumentReferenceType();
+
+        IDType id = new IDType();
+        id.setValue(data.guiaRemisionId());
+        ref.setID(id);
+
+        DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+        typeCode.setValue(data.guiaRemisionCodigo() != null ? data.guiaRemisionCodigo() : "09");
+        typeCode.setListAgencyName("PE:SUNAT");
+        typeCode.setListName("SUNAT:Identificador de guía relacionada");
+        typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01");
+        ref.setDocumentTypeCode(typeCode);
+
+        facturaUbl.addDespatchDocumentReference(ref);
+    }
+
+    /**
+     * Configura los documentos adicionales relacionados si existen.
+     * <p>
+     * Genera los tags {@code cac:AdditionalDocumentReference} con:
+     * <ul>
+     *   <li>{@code cbc:ID}: identificador del documento</li>
+     *   <li>{@code cbc:DocumentTypeCode}: código del catálogo 12</li>
+     * </ul>
+     * </p>
+     *
+     * @param facturaUbl factura UBL a completar
+     * @param data datos de factura
+     */
+    private void configurarDocumentosAdicionalesSiExisten(InvoiceType facturaUbl, FacturaUblData data) {
+        if (data.documentosAdicionales() == null || data.documentosAdicionales().isEmpty()) {
+            return;
+        }
+        for (var doc : data.documentosAdicionales()) {
+            DocumentReferenceType ref = new DocumentReferenceType();
+
+            IDType id = new IDType();
+            id.setValue(doc.id() != null ? doc.id() : "");
+            ref.setID(id);
+
+            DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+            typeCode.setValue(doc.tipoDocumento() != null ? doc.tipoDocumento() : "99");
+            typeCode.setListAgencyName("PE:SUNAT");
+            typeCode.setListName("SUNAT:Identificador de documento relacionado");
+            typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12");
+            ref.setDocumentTypeCode(typeCode);
+
+            facturaUbl.addAdditionalDocumentReference(ref);
+        }
     }
 
     /**

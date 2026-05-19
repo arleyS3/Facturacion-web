@@ -3,6 +3,8 @@ package com.facturacion.api.application.comprobante.ubl.mapper.factura;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DescuentoGlobalCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
+import com.facturacion.api.application.comprobante.modelo.DocumentoAdicionalCanonico;
+import com.facturacion.api.application.comprobante.modelo.GuiaRemisionReferenciaCanonico;
 import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -93,6 +95,8 @@ public class FacturaUblMapper {
             "PE" // Código de país por defecto
         );
 
+        GuiaRemisionReferenciaCanonico guiaRemision = canonico.guiaRemision();
+
         return new FacturaUblData(
             encabezado,
             emisor,
@@ -106,7 +110,10 @@ public class FacturaUblMapper {
             totalesMonetarios,
             null, // percepcionDetraccion
             lineas,
-            mapLeyendas(canonico.leyendas())
+            mapLeyendas(canonico.leyendas()),
+            guiaRemision != null ? guiaRemision.id() : null,
+            guiaRemision != null ? guiaRemision.codigoDocumento() : null,
+            mapDocumentosAdicionales(canonico.documentosAdicionales())
         );
     }
 
@@ -234,6 +241,22 @@ public class FacturaUblMapper {
         }
         return leyendas.stream()
                 .map(l -> new LeyendaUblData(l.codigoLocal(), l.leyenda()))
+                .toList();
+    }
+
+    /**
+     * Mapea documentos adicionales canónicos a datos UBL.
+     *
+     * @param docs lista de documentos adicionales canónicos (puede ser null)
+     * @return lista de datos UBL, nunca null
+     */
+    private List<DocumentoAdicionalUblData> mapDocumentosAdicionales(
+            List<DocumentoAdicionalCanonico> docs) {
+        if (docs == null || docs.isEmpty()) {
+            return List.of();
+        }
+        return docs.stream()
+                .map(d -> new DocumentoAdicionalUblData(d.id(), d.tipoDocumento()))
                 .toList();
     }
 

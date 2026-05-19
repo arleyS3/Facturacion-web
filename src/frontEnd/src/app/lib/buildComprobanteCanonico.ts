@@ -5,7 +5,13 @@
  * @module lib/buildComprobanteCanonico
  */
 
-import type { ComprobanteFormData, DetalleFormData, DescuentoGlobalFormData } from "./schemas/comprobante.schema";
+import type {
+  ComprobanteFormData,
+  DetalleFormData,
+  DescuentoGlobalFormData,
+  GuiaRemisionFormData,
+  DocumentoAdicionalFormData,
+} from "./schemas/comprobante.schema";
 
 /**
  * Interface para el payload del comprobante canónico.
@@ -74,6 +80,12 @@ interface ComprobanteCanonicoPayload {
   // Adicionales
   leyendas?: LeyendaPayload[];
   documento_relacionado?: DocumentoRelacionadoPayload;
+  
+  // Guía de Remisión
+  guia_remision?: GuiaRemisionPayload;
+  
+  // Documentos Adicionales
+  documentos_adicionales?: DocumentoAdicionalPayload[];
   
   /** Indica si se debe firmar digitalmente el XML */
   firmar?: boolean;
@@ -144,6 +156,33 @@ interface DescuentoGlobalPayload {
   porcentaje: number;
   monto: number;
   monto_base: number;
+}
+
+/**
+ * Interface para una guía de remisión en el payload canónico.
+ * Snake_case porque corresponde al backend (GuiaRemisionReferenciaCanonico).
+ *
+ * @typedef {Object} GuiaRemisionPayload
+ * @property {string} serie - Serie de la guía (ej: T001)
+ * @property {string} numero - Número de la guía (ej: 00000001)
+ * @property {string} codigo_documento - Código SUNAT del tipo de documento (09=Remitente, 31=Transportista)
+ */
+interface GuiaRemisionPayload {
+  serie: string;
+  numero: string;
+  codigo_documento: string;
+}
+
+/**
+ * Interface para un documento adicional en el payload canónico.
+ *
+ * @typedef {Object} DocumentoAdicionalPayload
+ * @property {string} id - ID del documento relacionado (ej: F001-00000005)
+ * @property {string} tipo_documento - Tipo de documento relacionado (catálogo 12)
+ */
+interface DocumentoAdicionalPayload {
+  id: string;
+  tipo_documento: string;
 }
 
 /**
@@ -260,6 +299,40 @@ function convertirDescuentoGlobal(descuento: DescuentoGlobalFormData): Descuento
     monto: parseFloat(descuento.monto) || 0,
     /** Base sobre la que se aplica el descuento (número) */
     monto_base: parseFloat(descuento.montoBase) || 0,
+  };
+}
+
+/**
+ * Convierte una guía de remisión del formulario al formato de payload para el backend.
+ * Convierte camelCase → snake_case.
+ *
+ * @param guia - Datos de la guía de remisión del formulario
+ * @returns Objeto guía de remisión con nombres en español (snake_case)
+ */
+function convertirGuiaRemision(guia: GuiaRemisionFormData): GuiaRemisionPayload {
+  return {
+    /** Serie de la guía (ej: T001) */
+    serie: guia.serie,
+    /** Número de la guía (ej: 00000001) */
+    numero: guia.numero,
+    /** Código SUNAT del tipo de documento (09=Remitente, 31=Transportista) */
+    codigo_documento: guia.codigoDocumento,
+  };
+}
+
+/**
+ * Convierte un documento adicional del formulario al formato de payload para el backend.
+ * Convierte camelCase → snake_case.
+ *
+ * @param doc - Datos del documento adicional del formulario
+ * @returns Objeto documento adicional con nombres en español (snake_case)
+ */
+function convertirDocumentoAdicional(doc: DocumentoAdicionalFormData): DocumentoAdicionalPayload {
+  return {
+    /** ID del documento relacionado */
+    id: doc.id,
+    /** Tipo de documento relacionado (catálogo 12) */
+    tipo_documento: doc.tipoDocumento,
   };
 }
 
@@ -421,6 +494,20 @@ export function buildComprobanteCanonico(values: ComprobanteFormData): Comproban
     };
   }
 
+  // Agregar guía de remisión si existe
+  if (values.guiaRemision && values.guiaRemision.serie && values.guiaRemision.numero) {
+    /** Datos de la guía de remisión referenciada */
+    canonico.guia_remision = convertirGuiaRemision(values.guiaRemision);
+  }
+
+  // Agregar documentos adicionales si existen
+  if (values.documentosAdicionales && values.documentosAdicionales.length > 0) {
+    /** Lista de documentos adicionales referenciados */
+    canonico.documentos_adicionales = values.documentosAdicionales
+      .filter((doc) => doc.id && doc.tipoDocumento)
+      .map(convertirDocumentoAdicional);
+  }
+
   // Indicar que no se firme el XML (la firma se implementará después)
   canonico.firmar = false;
 
@@ -435,5 +522,7 @@ export type {
   DetallePayload, 
   DescuentoGlobalPayload,
   LeyendaPayload, 
-  DocumentoRelacionadoPayload 
+  DocumentoRelacionadoPayload,
+  GuiaRemisionPayload,
+  DocumentoAdicionalPayload,
 };

@@ -50,6 +50,9 @@ import java.util.List;
  * @param parteTraslado datos de traslado (si aplica)
  * @param leyendas leyendas del comprobante (catálogo 52)
  * @param descuentosGlobales descuentos o cargos globales (opcional)
+ * @param anticipos lista de anticipos aplicados (opcional)
+ * @param documentoAdicional documento adicional referenciado (opcional)
+ * @param guiaRemision guía de remisión relacionada (opcional)
  */
 public record ComprobanteCanonico(
         @NotBlank(message = "Tipo de documento es requerido")
@@ -154,6 +157,14 @@ public record ComprobanteCanonico(
 
         @JsonProperty("descuentos_globales")
         List<DescuentoGlobalCanonico> descuentosGlobales,
+
+        List<AnticipoCanonico> anticipos,
+
+        @JsonProperty("documentos_adicionales")
+        List<DocumentoAdicionalCanonico> documentosAdicionales,
+
+        @JsonProperty("guia_remision")
+        GuiaRemisionReferenciaCanonico guiaRemision,
 
         /**
          * Indica si se debe firmar digitalmente el XML.

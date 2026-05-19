@@ -3,6 +3,7 @@ package com.facturacion.api.application.comprobante.ubl.mapper.boleta;
 import java.math.BigDecimal;
 import java.util.List;
 
+import com.facturacion.api.application.comprobante.ubl.mapper.factura.DocumentoAdicionalUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.LeyendaUblData;
 
 /**
@@ -26,6 +27,8 @@ import com.facturacion.api.application.comprobante.ubl.mapper.factura.LeyendaUbl
  * @param importeTotal importe total
  * @param valorVenta valor de venta
  * @param lineas líneas de detalle
+ * @param guiaRemisionCodigo código de tipo de guía (catálogo 01)
+ * @param documentosAdicionales documentos adicionales referenciados (catálogo 12)
  */
 public record BoletaUblData(
         String serie,
@@ -52,8 +55,8 @@ public record BoletaUblData(
         BigDecimal descuentoMonto,
         BigDecimal descuentoBase,
         String guiaRemisionId,
-        String documentoAdicionalId,
-        String documentoAdicionalTipo,
+        String guiaRemisionCodigo,
+        List<DocumentoAdicionalUblData> documentosAdicionales,
         String anticipoId,
         String anticipoTipoDoc,
         BigDecimal anticipoMonto,

@@ -388,7 +388,10 @@ public class GeneradorFacturaTest {
             totalesMonetarios,
             percepcionDetraccion,
             lineas,
-            leyendas
+            leyendas,
+            null, // guiaRemisionId
+            null, // guiaRemisionCodigo
+            null  // documentosAdicionales
         );
     }
 }
