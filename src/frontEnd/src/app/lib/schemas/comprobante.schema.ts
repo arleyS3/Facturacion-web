@@ -102,6 +102,32 @@ const parteTrasladoSchema = z.object({
   numeroBultos: z.number().optional(),
 }).optional();
 
+/**
+ * Schema para una guía de remisión referenciada en el comprobante.
+ */
+export const guiaRemisionSchema = z.object({
+  serie: z.string().min(1, { message: "La serie es requerida" }),
+  numero: z.string().min(1, { message: "El número es requerido" }),
+  codigoDocumento: z
+    .string()
+    .min(1, { message: "El tipo de documento es requerido" }),
+});
+
+/**
+ * Schema para un documento adicional referenciado en el comprobante.
+ */
+export const documentoAdicionalSchema = z.object({
+  id: z.string().min(1, { message: "El ID del documento es requerido" }),
+  tipoDocumento: z
+    .string()
+    .min(1, { message: "El tipo de documento es requerido" }),
+});
+
+/**
+ * Schema para la lista de documentos adicionales.
+ */
+export const documentosAdicionalesSchema = z.array(documentoAdicionalSchema);
+
 // =============================================================================
 // SCHEMA PRINCIPAL
 // =============================================================================
@@ -160,6 +186,16 @@ export const comprobanteSchema = z.object({
   // DOCUMENTO RELACIONADO (para notas)
   // =================================================================
   documentoRelacionado: documentoRelacionadoSchema,
+
+  // =================================================================
+  // GUÍA DE REMISIÓN (opcional)
+  // =================================================================
+  guiaRemision: guiaRemisionSchema.optional(),
+
+  // =================================================================
+  // DOCUMENTOS ADICIONALES (opcional)
+  // =================================================================
+  documentosAdicionales: documentosAdicionalesSchema.optional(),
 
   // =================================================================
   // CAMPOS ADICIONALES
@@ -222,4 +258,6 @@ export type DetalleFormData = z.infer<typeof detalleSchema>;
 export type DescuentoGlobalFormData = z.infer<typeof descuentoGlobalSchema>;
 export type LeyendaFormData = z.infer<typeof leyendaSchema>;
 export type DocumentoRelacionadoFormData = z.infer<typeof documentoRelacionadoSchema>;
+export type GuiaRemisionFormData = z.infer<typeof guiaRemisionSchema>;
+export type DocumentoAdicionalFormData = z.infer<typeof documentoAdicionalSchema>;
 export type PayloadLegacyFormData = z.infer<typeof payloadLegacySchema>;

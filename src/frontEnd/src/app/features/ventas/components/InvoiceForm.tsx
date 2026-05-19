@@ -6,6 +6,8 @@ import { ReceiverSection } from "@/features/ventas/components/ReceiverSection";
 import { DocumentSection } from "@/features/ventas/components/DocumentSection";
 import { ProductsTable } from "@/features/ventas/components/ProductsTable";
 import { DescuentosGlobalesSection } from "@/features/ventas/components/DescuentosGlobalesSection";
+import { GuiaRemisionSection } from "@/features/ventas/components/GuiaRemisionSection";
+import { DocumentosAdicionalesSection } from "@/features/ventas/components/DocumentosAdicionalesSection";
 import { Separator } from "@/components/ui/separator";
 import { EmitDocumentDialog } from "@/components/EmitDocumentDialog";
 import { useState, useEffect } from "react";
@@ -108,6 +110,12 @@ export function InvoiceForm() {
       // DESCUENTOS GLOBALES
       // =================================================================
       descuentosGlobales: [],
+      
+      // =================================================================
+      // DOCUMENTOS RELACIONADOS (opcional)
+      // =================================================================
+      guiaRemision: undefined,
+      documentosAdicionales: [],
       
       // =================================================================
       // LEYENDAS
@@ -318,6 +326,27 @@ export function InvoiceForm() {
           <Card className="shadow-lg">
             <CardContent className="p-6">
               <DescuentosGlobalesSection />
+            </CardContent>
+          </Card>
+
+          {/* Documentos Relacionados */}
+          <Card className="shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2.5 rounded-lg bg-amber-100">
+                  <FileText className="size-5 text-amber-700" aria-hidden="true" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-slate-900">Documentos Relacionados</h2>
+                  <p className="text-sm text-slate-500">Guía de remisión y documentos adicionales (opcional)</p>
+                </div>
+              </div>
+              <Separator className="mb-6" />
+              <div className="space-y-6">
+                <GuiaRemisionSection />
+                <Separator />
+                <DocumentosAdicionalesSection />
+              </div>
             </CardContent>
           </Card>
         </div>
