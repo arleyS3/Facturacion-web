@@ -174,6 +174,9 @@ class FacturaUblMapperTest {
                 null,                   // parteTraslado
                 null,                   // leyendas
                 descuentosGlobales,     // descuentosGlobales
+                null,                   // anticipos
+                null,                   // documentosAdicionales
+                null,                   // guiaRemision
                 null                    // firmar
         );
     }
