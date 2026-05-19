@@ -71,7 +71,7 @@ public class RequestValidationService {
             Map<String, List<Map<String, String>>> listas
     ) {
         Map<String, String> g = campos != null ? campos.get("G") : null;
-        String motivoTraslado = get(g, "ModTras");
+        String motivoTraslado = get(g, "MotTras");
         if (!ValidationUtils.requerido(motivoTraslado)) {
             errores.add("G.MotTras: El motivo de traslado es obligatorio");
         }
@@ -132,6 +132,26 @@ public class RequestValidationService {
             String codPuertoAeropuerto = get(g2, "CodPueAer");
             if (!ValidationUtils.requerido(codPuertoAeropuerto)) {
                 errores.add("G2.CodPueAer: Requerido para motivo 08/09");
+            }
+        }
+
+        // G1: FecIniTras requerido para modalidad 02 (transporte público)
+        String modalidadTraslado = get(g, "ModTras");
+        if ("02".equalsIgnoreCase(modalidadTraslado)) {
+            Map<String, String> g1 = campos != null ? campos.get("G1") : null;
+            String fecIniTras = get(g1, "FecIniTras");
+            if (!ValidationUtils.requerido(fecIniTras)) {
+                errores.add("G1.FecIniTras: Requerido para modalidad 02");
+            }
+
+            // Conductor (G11) requerido si no hay indicador M1L
+            boolean tieneM1L = codigosIndicador.stream()
+                    .anyMatch(s -> "M1L".equalsIgnoreCase(s));
+            if (!tieneM1L) {
+                List<Map<String, String>> conductores = listas != null ? listas.get("G11") : null;
+                if (conductores == null || conductores.isEmpty()) {
+                    errores.add("G11: Requerido al menos un conductor para modalidad 02 (sin M1L)");
+                }
             }
         }
     }
