@@ -46,9 +46,9 @@ build/
 /.env.production.local
 
 ### Package Managers ###
-# pnpm (si el equipo usa npm)
-pnpm-lock.yaml
-# npm (si el equipo usa pnpm)
+# pnpm (usamos pnpm — lockfile trackeado para Vercel)
+# pnpm-lock.yaml
+# npm (no usamos npm)
 package-lock.json
 
 ### Monorepo (any level) ###
