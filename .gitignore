@@ -66,4 +66,7 @@ package-lock.json
 graphify-out/**
 
 ### Obsidian
-.obsidian/
+.obsidian
+
+### SDD / Skill Registry
+.atl//
