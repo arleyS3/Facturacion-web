@@ -18,6 +18,9 @@ import java.util.List;
  * @param percepcionDetraccion datos de percepción y detracción
  * @param lineas líneas de detalle
  * @param leyendas leyendas asociadas
+ * @param guiaRemisionId ID de guía de remisión (serie-numero)
+ * @param guiaRemisionCodigo código de tipo de guía (catálogo 01)
+ * @param documentosAdicionales documentos adicionales referenciados (catálogo 12)
  */
 public record FacturaUblData(
     DatosEncabezadoFacturaUbl encabezado,
@@ -32,5 +35,8 @@ public record FacturaUblData(
     DatosTotalesMonetariosFacturaUbl totalesMonetarios,
     DatosPercepcionDetraccionFacturaUbl percepcionDetraccion,
     List<FacturaLineaUblData> lineas,
-    List<LeyendaUblData> leyendas
+    List<LeyendaUblData> leyendas,
+    String guiaRemisionId,
+    String guiaRemisionCodigo,
+    List<DocumentoAdicionalUblData> documentosAdicionales
 ) {}

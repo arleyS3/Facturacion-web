@@ -1,11 +1,14 @@
 package com.facturacion.api.application.comprobante.ubl.mapper.boleta;
 
+import com.facturacion.api.application.comprobante.modelo.AnticipoCanonico;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
+import com.facturacion.api.application.comprobante.modelo.DescuentoGlobalCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
+import com.facturacion.api.application.comprobante.modelo.DocumentoAdicionalCanonico;
+import com.facturacion.api.application.comprobante.modelo.GuiaRemisionReferenciaCanonico;
 import com.facturacion.api.application.comprobante.modelo.LeyendaCanonico;
+import com.facturacion.api.application.comprobante.ubl.mapper.factura.DocumentoAdicionalUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.LeyendaUblData;
-
-import lombok.val;
 
 import org.springframework.stereotype.Component;
 
@@ -78,6 +81,13 @@ public class BoletaUblMapper {
             receptorNroDoc = "-";
         }
 
+        // Leer descuento global desde el canónico (soporta el primero si hay varios)
+        DescuentoGlobalCanonico primerDescuento = extraerPrimerDescuentoGlobal(canonico.descuentosGlobales());
+
+        // Leer guía de remisión, documentos adicionales y anticipo desde el canónico
+        GuiaRemisionReferenciaCanonico guiaRemision = canonico.guiaRemision();
+        AnticipoCanonico primerAnticipo = extraerPrimerAnticipo(canonico.anticipos());
+
         return new BoletaUblData(
             serie,
             correlativo,
@@ -99,17 +109,17 @@ public class BoletaUblMapper {
             valorVenta,
             lineas,
             mapLeyendas(canonico.leyendas()),
-            false,
-            BigDecimal.ZERO,
-            BigDecimal.ZERO,
-            null, 
-            null,
-            null,
-            null,
-            null,
-            null,
-            null,
-            null
+            primerDescuento != null,                                          // tieneDescuentoGlobal
+            primerDescuento != null ? primerDescuento.monto() : BigDecimal.ZERO,
+            primerDescuento != null ? primerDescuento.montoBase() : BigDecimal.ZERO,
+            guiaRemision != null ? guiaRemision.id() : null,
+            guiaRemision != null ? guiaRemision.codigoDocumento() : null,
+            mapDocumentosAdicionales(canonico.documentosAdicionales()),
+            primerAnticipo != null ? primerAnticipo.id() : null,
+            primerAnticipo != null ? primerAnticipo.tipoDocumento() : null,
+            primerAnticipo != null ? primerAnticipo.monto() : null,
+            primerAnticipo != null ? primerAnticipo.moneda() : null,
+            primerAnticipo != null ? primerAnticipo.rucEmisor() : null
         );
     }
 
@@ -160,6 +170,50 @@ public class BoletaUblMapper {
             detalle.valorUnitario(),
             valorVenta
         );
+    }
+
+    /**
+     * Extrae el primer descuento global de la lista, si existe.
+     * Boleta soporta un solo descuento global por ahora.
+     *
+     * @param descuentos lista de descuentos globales canónicos (puede ser null)
+     * @return el primer descuento o null si no hay
+     */
+    private DescuentoGlobalCanonico extraerPrimerDescuentoGlobal(List<DescuentoGlobalCanonico> descuentos) {
+        if (descuentos == null || descuentos.isEmpty()) {
+            return null;
+        }
+        return descuentos.get(0);
+    }
+
+    /**
+     * Extrae el primer anticipo de la lista, si existe.
+     * Boleta soporta un solo anticipo por ahora.
+     *
+     * @param anticipos lista de anticipos canónicos (puede ser null)
+     * @return el primer anticipo o null si no hay
+     */
+    private AnticipoCanonico extraerPrimerAnticipo(List<AnticipoCanonico> anticipos) {
+        if (anticipos == null || anticipos.isEmpty()) {
+            return null;
+        }
+        return anticipos.get(0);
+    }
+
+    /**
+     * Mapea documentos adicionales canónicos a datos UBL.
+     *
+     * @param docs lista de documentos adicionales canónicos (puede ser null)
+     * @return lista de datos UBL, nunca null
+     */
+    private List<DocumentoAdicionalUblData> mapDocumentosAdicionales(
+            List<DocumentoAdicionalCanonico> docs) {
+        if (docs == null || docs.isEmpty()) {
+            return List.of();
+        }
+        return docs.stream()
+                .map(d -> new DocumentoAdicionalUblData(d.id(), d.tipoDocumento()))
+                .toList();
     }
 
     /**

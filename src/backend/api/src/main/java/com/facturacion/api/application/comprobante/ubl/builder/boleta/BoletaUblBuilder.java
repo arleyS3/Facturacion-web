@@ -490,7 +490,7 @@ public class BoletaUblBuilder {
         ref.setID(id);
 
         DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
-        typeCode.setValue("09");
+        typeCode.setValue(data.guiaRemisionCodigo() != null ? data.guiaRemisionCodigo() : "09");
         typeCode.setListAgencyName("PE:SUNAT");
         typeCode.setListName("SUNAT:Identificador de guía relacionada");
         typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01");
@@ -500,24 +500,25 @@ public class BoletaUblBuilder {
     }
 
     private void configurarDocumentoAdicional(InvoiceType invoice, BoletaUblData data) {
-        if (data.documentoAdicionalId() == null || data.documentoAdicionalId().isBlank()) {
+        if (data.documentosAdicionales() == null || data.documentosAdicionales().isEmpty()) {
             return;
         }
-        DocumentReferenceType ref = new DocumentReferenceType();
+        for (var doc : data.documentosAdicionales()) {
+            DocumentReferenceType ref = new DocumentReferenceType();
 
-        IDType id = new IDType();
-        id.setValue(data.documentoAdicionalId());
-        ref.setID(id);
+            IDType id = new IDType();
+            id.setValue(doc.id() != null ? doc.id() : "");
+            ref.setID(id);
 
-        DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
-        typeCode.setValue(data.documentoAdicionalTipo() != null 
-                ? data.documentoAdicionalTipo() : "99");
-        typeCode.setListAgencyName("PE:SUNAT");
-        typeCode.setListName("SUNAT:Identificador de documento relacionado");
-        typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12");
-        ref.setDocumentTypeCode(typeCode);
+            DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+            typeCode.setValue(doc.tipoDocumento() != null ? doc.tipoDocumento() : "99");
+            typeCode.setListAgencyName("PE:SUNAT");
+            typeCode.setListName("SUNAT:Identificador de documento relacionado");
+            typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12");
+            ref.setDocumentTypeCode(typeCode);
 
-        invoice.addAdditionalDocumentReference(ref);
+            invoice.addAdditionalDocumentReference(ref);
+        }
     }
 
     private void configurarAnticipo(InvoiceType invoice, BoletaUblData data) {
