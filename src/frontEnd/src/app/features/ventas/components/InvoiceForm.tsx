@@ -27,6 +27,7 @@ import {
 } from "../../../lib/emitErrorNotification";
 import { documentoSchema, type DocumentoFormData } from "@/lib/schemas/documento.schema";
 import { generarYDescargarXml } from "@/lib/xmlService";
+import { CreditNoteReferenceSection } from "@/features/ventas/components/CreditNoteReferenceSection";
 
 type ZodIssue = { path: (string | number)[]; message: string; code?: string };
 
@@ -153,6 +154,10 @@ export function InvoiceForm() {
       products: [], // alias para detalles
     },
   });
+
+  const isNotaCredito = ["07", "Nota de Crédito"].includes(
+    methods.watch("tipoDocumento") || methods.watch("docType") || ""
+  );
 
   const descargarTxt = async (payload: any) => {
     const preferredName = buildFilenameFromPayload(payload, {
@@ -302,6 +307,11 @@ export function InvoiceForm() {
 
                 <TabsContent value="documento" className="mt-6">
                   <DocumentSection />
+                  {isNotaCredito && (
+                    <div className="mt-6">
+                      <CreditNoteReferenceSection />
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="emisor" className="mt-6">
