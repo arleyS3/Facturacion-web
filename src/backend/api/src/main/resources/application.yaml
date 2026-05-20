@@ -61,3 +61,8 @@ server:
 
 jwt:
   secret: ${JWT_SECRET:8sB0ug_A4Ur73UX5gtrGY1vaWeVvzCllXgV24g-pX78}
+
+# OSE (Operador de Servicios Electrónicos) - DBNet / eComprobantes
+ose:
+  endpoint:
+    url: https://pruebas.ecomprobantes.pe/wssCustomerETDLoadBDUBL21/CustomerETDLoadASP.asmx

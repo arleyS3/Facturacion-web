@@ -3,7 +3,7 @@
 import React from "react";
 import { useLocation, Outlet} from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight } from "lucide-react";
+import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload } from "lucide-react";
 
 import {
   DropdownMenu,
@@ -242,6 +242,13 @@ export function AppLayout() {
               <div className="px-2 py-1.5">
                 <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
               </div>
+              <DropdownMenuItem
+                onClick={() => handleNavigation("/ose-sender")}
+                className="cursor-pointer"
+              >
+                <Upload className="size-4" />
+                Enviar a OSE
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 variant="destructive"

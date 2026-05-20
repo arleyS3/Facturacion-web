@@ -4,6 +4,7 @@ import { Registro } from "@/features/autenticacion/pages/Registro";
 import { Home } from "@/features/shared/pages/Home";
 import { SalesDocuments } from "@/features/ventas/pages/SalesDocuments";
 import { ShippingGuide } from "@/features/guias-remision/pages/ShippingGuide";
+import { OseSender } from "@/features/shared/pages/OseSender";
 import { NotFound } from "@/features/shared/pages/NotFound";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -45,6 +46,7 @@ export const router = createBrowserRouter([
       { path: "home", element: <Home /> },
       { path: "sales-documents", element: <SalesDocuments /> },
       { path: "shipping-guide", element: <ShippingGuide /> },
+      { path: "ose-sender", element: <OseSender /> },
     ],
   },
 
