@@ -6,6 +6,8 @@ import com.helger.ubl21.UBL21Marshaller;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.*;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.*;
 import oasis.names.specification.ubl.schema.xsd.invoice_21.InvoiceType;
+
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.StringWriter;
@@ -18,11 +20,15 @@ import java.util.List;
 
 /**
  * Constructor de XML UBL 2.1 para Boleta Electrónica.
- * Genera un documento XML válido según especificación UBL 2.1 y normativa SUNAT Perú.
- * 
- * <p>Esta clase construye objetos InvoiceType de UBL 2.1 utilizando la librería ph-ubl.
- * Soporta los campos requeridos por SUNAT para boletas electrónicas.</p>
- * 
+ * Genera un documento XML válido según especificación UBL 2.1 y normativa SUNAT
+ * Perú.
+ *
+ * <p>
+ * Esta clase construye objetos InvoiceType de UBL 2.1 utilizando la librería
+ * ph-ubl.
+ * Soporta los campos requeridos por SUNAT para boletas electrónicas.
+ * </p>
+ *
  * @author Facturación API
  * @version 1.0
  * @see <a href="https://github.com/phax/ph-ubl">ph-ubl</a>
@@ -33,9 +39,8 @@ public class BoletaUblBuilder {
 
     /** Formato de fecha para parsing de fechas. */
     private static final DateTimeFormatter FECHA_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    
-    /** Código de moneda por defecto para Perú. */
-    private static final String MONEDA_DEFAULT = "PEN";
+
+    private static final @Nullable String NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL = "-";
 
     /**
      * Construye el XML de boleta UBL 2.1.
@@ -46,7 +51,7 @@ public class BoletaUblBuilder {
      */
     public String construirXml(BoletaUblData data) throws Exception {
         InvoiceType invoice = new InvoiceType();
-        
+
         invoice.setUBLVersionID("2.1");
         invoice.setCustomizationID("2.0");
 
@@ -93,19 +98,19 @@ public class BoletaUblBuilder {
                 invoice.addInvoiceLine(crearLinea(linea, data.moneda()));
             }
         }
-        
+
         StringWriter writer = new StringWriter();
         UBL21Marshaller.invoice()
                 .setFormattedOutput(true)
                 .write(invoice, writer);
 
         String xmlFinal = writer.toString();
-        if (data.leyendas() != null ) {
+        if (data.leyendas() != null) {
             for (var leyenda : data.leyendas()) {
                 xmlFinal = xmlFinal.replace(
-                    "<cbc:Note>" + leyenda.leyenda() + "</cbc:Note>",
-                    "<cbc:Note languageLocaleID=\"" + leyenda.codigoLocal() + "\">" + leyenda.leyenda() + "</cbc:Note>"
-                    );
+                        "<cbc:Note>" + leyenda.leyenda() + "</cbc:Note>",
+                        "<cbc:Note languageLocaleID=\"" + leyenda.codigoLocal() + "\">" + leyenda.leyenda()
+                                + "</cbc:Note>");
             }
         }
 
@@ -121,7 +126,7 @@ public class BoletaUblBuilder {
     private SupplierPartyType crearProveedor(BoletaUblData data) {
         SupplierPartyType supplier = new SupplierPartyType();
         PartyType party = new PartyType();
-        
+
         if (data.emisorRazonSocial() != null) {
             PartyNameType partyName = new PartyNameType();
             NameType nombre = new NameType();
@@ -129,7 +134,7 @@ public class BoletaUblBuilder {
             partyName.setName(nombre);
             party.addPartyName(partyName);
         }
-        
+
         PartyTaxSchemeType taxScheme = new PartyTaxSchemeType();
         taxScheme.setRegistrationName(data.emisorRazonSocial());
 
@@ -141,13 +146,14 @@ public class BoletaUblBuilder {
         companyId.setValue(data.emisorNroDocumento());
         taxScheme.setCompanyID(companyId);
 
+        // TaxScheme del Emisor
+        /*
+         * <cac:TaxScheme>
+         * <cbc:ID>-</cbc:ID>
+         * </cac:TaxScheme>
+         */
         TaxSchemeType esquema = new TaxSchemeType();
-        IDType idEsquema = new IDType();
-        idEsquema.setSchemeID("UN/ECE 5153");
-        idEsquema.setSchemeAgencyID("6");
-        idEsquema.setValue("1000");
-        esquema.setID(idEsquema);
-        esquema.setName("IGV");
+        esquema.setID(NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL);
         taxScheme.setTaxScheme(esquema);
         party.addPartyTaxScheme(taxScheme);
 
@@ -168,7 +174,7 @@ public class BoletaUblBuilder {
     private CustomerPartyType crearCliente(BoletaUblData data) {
         CustomerPartyType customer = new CustomerPartyType();
         PartyType party = new PartyType();
-        
+
         PartyTaxSchemeType taxScheme = new PartyTaxSchemeType();
         taxScheme.setRegistrationName(data.receptorRazonSocial());
 
@@ -181,7 +187,7 @@ public class BoletaUblBuilder {
         taxScheme.setCompanyID(companyId);
 
         TaxSchemeType esquema = new TaxSchemeType();
-        esquema.setID("-");
+        esquema.setID(NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL);
         taxScheme.setTaxScheme(esquema);
         party.addPartyTaxScheme(taxScheme);
 
@@ -200,35 +206,36 @@ public class BoletaUblBuilder {
      * @return detalle del impuesto
      */
     private void crearImpuestoTotal(InvoiceType invoice, BoletaUblData data) {
-        BigDecimal totalImpuestos = data.totalImpuestos() != null 
-                ? data.totalImpuestos() : BigDecimal.ZERO;
+        BigDecimal totalImpuestos = data.totalImpuestos() != null
+                ? data.totalImpuestos()
+                : BigDecimal.ZERO;
 
         TaxTotalType taxTotal = new TaxTotalType();
         taxTotal.setTaxAmount(totalImpuestos).setCurrencyID(data.moneda());
 
         if (data.gravadas() != null && data.gravadas().compareTo(BigDecimal.ZERO) > 0) {
-        TaxSubtotalType sub = new TaxSubtotalType();
-        sub.setTaxableAmount(data.gravadas()).setCurrencyID(data.moneda());
-        sub.setTaxAmount(data.IGV() != null ? data.IGV() : BigDecimal.ZERO)
-                .setCurrencyID(data.moneda());
-        sub.setTaxCategory(crearCategoriaGravado());
-        taxTotal.addTaxSubtotal(sub);
+            TaxSubtotalType sub = new TaxSubtotalType();
+            sub.setTaxableAmount(data.gravadas()).setCurrencyID(data.moneda());
+            sub.setTaxAmount(data.IGV() != null ? data.IGV() : BigDecimal.ZERO)
+                    .setCurrencyID(data.moneda());
+            sub.setTaxCategory(crearCategoriaGravado());
+            taxTotal.addTaxSubtotal(sub);
         }
 
         if (data.exoneradas() != null && data.exoneradas().compareTo(BigDecimal.ZERO) > 0) {
-        TaxSubtotalType sub = new TaxSubtotalType();
-        sub.setTaxableAmount(data.exoneradas()).setCurrencyID(data.moneda());
-        sub.setTaxAmount(BigDecimal.ZERO).setCurrencyID(data.moneda());
-        sub.setTaxCategory(crearCategoriaExonerado());
-        taxTotal.addTaxSubtotal(sub);
+            TaxSubtotalType sub = new TaxSubtotalType();
+            sub.setTaxableAmount(data.exoneradas()).setCurrencyID(data.moneda());
+            sub.setTaxAmount(BigDecimal.ZERO).setCurrencyID(data.moneda());
+            sub.setTaxCategory(crearCategoriaExonerado());
+            taxTotal.addTaxSubtotal(sub);
         }
 
         if (data.inafectas() != null && data.inafectas().compareTo(BigDecimal.ZERO) > 0) {
-        TaxSubtotalType sub = new TaxSubtotalType();
-        sub.setTaxableAmount(data.inafectas()).setCurrencyID(data.moneda());
-        sub.setTaxAmount(BigDecimal.ZERO).setCurrencyID(data.moneda());
-        sub.setTaxCategory(crearCategoriaInafecto());
-        taxTotal.addTaxSubtotal(sub);
+            TaxSubtotalType sub = new TaxSubtotalType();
+            sub.setTaxableAmount(data.inafectas()).setCurrencyID(data.moneda());
+            sub.setTaxAmount(BigDecimal.ZERO).setCurrencyID(data.moneda());
+            sub.setTaxCategory(crearCategoriaInafecto());
+            taxTotal.addTaxSubtotal(sub);
         }
 
         invoice.addTaxTotal(taxTotal);
@@ -281,7 +288,7 @@ public class BoletaUblBuilder {
         scheme.setTaxTypeCode("VAT");
         scheme.setName("IGV");
         return scheme;
-    }  
+    }
 
     private TaxSchemeType crearEsquemaExonerado() {
         TaxSchemeType scheme = new TaxSchemeType();
@@ -316,16 +323,16 @@ public class BoletaUblBuilder {
     private MonetaryTotalType crearTotales(BoletaUblData data) {
         MonetaryTotalType mt = new MonetaryTotalType();
         String moneda = data.moneda();
-        
+
         BigDecimal subtotal = data.valorVenta() != null ? data.valorVenta() : BigDecimal.ZERO;
         BigDecimal impuestos = data.totalImpuestos() != null ? data.totalImpuestos() : BigDecimal.ZERO;
         BigDecimal total = data.importeTotal() != null ? data.importeTotal() : subtotal.add(impuestos);
-        
+
         mt.setLineExtensionAmount(subtotal).setCurrencyID(moneda);
         mt.setTaxExclusiveAmount(subtotal).setCurrencyID(moneda);
         mt.setTaxInclusiveAmount(total).setCurrencyID(moneda);
         mt.setPayableAmount(total).setCurrencyID(moneda);
-        
+
         return mt;
     }
 
@@ -337,9 +344,9 @@ public class BoletaUblBuilder {
      */
     private InvoiceLineType crearLinea(BoletaLineaUblData linea, String moneda) {
         InvoiceLineType line = new InvoiceLineType();
-        
+
         line.setID(String.valueOf(linea.numero() != null ? linea.numero() : 1));
-        
+
         if (linea.cantidad() != null) {
             InvoicedQuantityType qty = new InvoicedQuantityType();
             qty.setValue(linea.cantidad());
@@ -351,7 +358,7 @@ public class BoletaUblBuilder {
 
         BigDecimal valorVenta = linea.valorVenta() != null ? linea.valorVenta() : BigDecimal.ZERO;
         line.setLineExtensionAmount(valorVenta).setCurrencyID(moneda);
-        
+
         if (linea.precioUnitario() != null) {
             PricingReferenceType pricingRef = new PricingReferenceType();
             PriceType precioRef = new PriceType();
@@ -382,21 +389,23 @@ public class BoletaUblBuilder {
             item.setSellersItemIdentification(sellerId);
         }
         line.setItem(item);
-        
+
         if (linea.precioUnitario() != null) {
             PriceType price = new PriceType();
-            price.setPriceAmount(linea.precioUnitario()).setCurrencyID(moneda);;
+            price.setPriceAmount(linea.precioUnitario()).setCurrencyID(moneda);
+            ;
             line.setPrice(price);
         }
-        
+
         return line;
     }
 
-    private TaxTotalType crearImpuestoLinea(BoletaLineaUblData linea, String moneda){
+    private TaxTotalType crearImpuestoLinea(BoletaLineaUblData linea, String moneda) {
         BigDecimal montoIgv = linea.montoIGV() != null ? linea.montoIGV() : BigDecimal.ZERO;
         BigDecimal valorVenta = linea.valorVenta() != null ? linea.valorVenta() : BigDecimal.ZERO;
-        String tipoAfectacion = linea.tipoAfectacionIGV() != null 
-                ? linea.tipoAfectacionIGV() : "10";
+        String tipoAfectacion = linea.tipoAfectacionIGV() != null
+                ? linea.tipoAfectacionIGV()
+                : "10";
 
         TaxTotalType taxTotal = new TaxTotalType();
         taxTotal.setTaxAmount(montoIgv).setCurrencyID(moneda);
@@ -408,7 +417,7 @@ public class BoletaUblBuilder {
         taxTotal.addTaxSubtotal(sub);
 
         return taxTotal;
-    }   
+    }
 
     private TaxCategoryType crearCategoriaImpuestoLinea(String tipoAfectacion) {
         TaxCategoryType cat = new TaxCategoryType();
@@ -461,7 +470,7 @@ public class BoletaUblBuilder {
         invoice.setNote(notas);
     }
 
-    private void configurarDescuentoGlobal(InvoiceType invoice, BoletaUblData data){
+    private void configurarDescuentoGlobal(InvoiceType invoice, BoletaUblData data) {
         if (data.tieneDescuentoGlobal() == null || !data.tieneDescuentoGlobal()) {
             return;
         }
@@ -538,8 +547,8 @@ public class BoletaUblBuilder {
 
         if (data.anticipoMonto() != null) {
             anticipo.setPaidAmount(data.anticipoMonto())
-                    .setCurrencyID(data.anticipoMoneda() != null 
-                            ? data.anticipoMoneda() 
+                    .setCurrencyID(data.anticipoMoneda() != null
+                            ? data.anticipoMoneda()
                             : data.moneda());
         }
 

@@ -90,6 +90,8 @@ public class FacturaUblBuilder {
 
     private static final BigDecimal PORCENTAJE_IGV = new BigDecimal("18.00");
 
+    private static final @Nullable String NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL = "-";
+
     /**
      * Construye el XML de factura UBL 2.1 a partir de los datos canónicos.
      *
@@ -120,14 +122,14 @@ public class FacturaUblBuilder {
         return serializarFactura(facturaUbl);
     }
 
-/**
- * Crea los totales monetarios de la factura.
- *
- * @param totalesMonetarios DatosTotalesMonetariosFacturaUbl
- * @param totalesImpuestos DatosTotalesFacturaUbl
- * @param encabezado datos de encabezado
- * @return MonetaryTotalType UBL
- */
+    /**
+     * Crea los totales monetarios de la factura.
+     *
+     * @param totalesMonetarios DatosTotalesMonetariosFacturaUbl
+     * @param totalesImpuestos  DatosTotalesFacturaUbl
+     * @param encabezado        datos de encabezado
+     * @return MonetaryTotalType UBL
+     */
     private void configurarEncabezado(InvoiceType facturaUbl, DatosEncabezadoFacturaUbl encabezado) {
         facturaUbl.setUBLVersionID(VERSION_UBL);
         facturaUbl.setCustomizationID(VERSION_ESTRUCTURA);
@@ -181,7 +183,7 @@ public class FacturaUblBuilder {
      * </p>
      *
      * @param facturaUbl factura UBL a completar
-     * @param firma datos de firma
+     * @param firma      datos de firma
      */
     private void configurarFirmaSiExiste(InvoiceType facturaUbl, DatosFirmaFacturaUbl firma) {
         if (firma == null) {
@@ -211,18 +213,18 @@ public class FacturaUblBuilder {
 
         signature.setSignatoryParty(signatoryParty);
 
-        /* 
+        /*
          * Nota: DigitalSignatureAttachment no está disponible en ph-ubl21 10.1.0
-         * como método directo. En producción, la firma criptográfica real se 
+         * como método directo. En producción, la firma criptográfica real se
          * implementaría con una librería externa como:
          * - DSS (Digital Signature Services)
          * - xades4j
-         * 
+         *
          * Estructura esperada cuando se implemente:
          * <cac:DigitalSignatureAttachment>
-         *   <cac:ExternalReference>
-         *     <cbc:URI>#SignatureSP</cbc:URI>
-         *   </cac:ExternalReference>
+         * <cac:ExternalReference>
+         * <cbc:URI>#SignatureSP</cbc:URI>
+         * </cac:ExternalReference>
          * </cac:DigitalSignatureAttachment>
          */
 
@@ -232,10 +234,11 @@ public class FacturaUblBuilder {
     /**
      * Configura la referencia de orden si existe.
      *
-     * @param facturaUbl factura UBL a completar
+     * @param facturaUbl      factura UBL a completar
      * @param referenciaOrden datos de referencia de orden
      */
-    private void configurarReferenciaOrdenSiExiste(InvoiceType facturaUbl, DatosReferenciaOrdenFacturaUbl referenciaOrden) {
+    private void configurarReferenciaOrdenSiExiste(InvoiceType facturaUbl,
+            DatosReferenciaOrdenFacturaUbl referenciaOrden) {
         if (referenciaOrden == null || referenciaOrden.idOrden() == null) {
             return;
         }
@@ -247,7 +250,7 @@ public class FacturaUblBuilder {
     /**
      * Configura el total de líneas si existe.
      *
-     * @param facturaUbl factura UBL a completar
+     * @param facturaUbl  factura UBL a completar
      * @param totalLineas total de líneas
      */
     private void configurarTotalLineasSiExiste(InvoiceType facturaUbl, Integer totalLineas) {
@@ -329,7 +332,7 @@ public class FacturaUblBuilder {
      * Configura las leyendas cuando existen.
      *
      * @param facturaUbl factura UBL a completar
-     * @param leyendas leyendas registradas
+     * @param leyendas   leyendas registradas
      */
     private void configurarLeyendasSiExisten(InvoiceType facturaUbl, List<LeyendaUblData> leyendas) {
         if (leyendas == null || leyendas.isEmpty()) {
@@ -343,13 +346,14 @@ public class FacturaUblBuilder {
      * <p>
      * Genera el tag {@code cac:DespatchDocumentReference} con:
      * <ul>
-     *   <li>{@code cbc:ID}: serie-numero de la guía</li>
-     *   <li>{@code cbc:DocumentTypeCode}: código del catálogo 01 (09=remitente, 31=transportista)</li>
+     * <li>{@code cbc:ID}: serie-numero de la guía</li>
+     * <li>{@code cbc:DocumentTypeCode}: código del catálogo 01 (09=remitente,
+     * 31=transportista)</li>
      * </ul>
      * </p>
      *
      * @param facturaUbl factura UBL a completar
-     * @param data datos de factura
+     * @param data       datos de factura
      */
     private void configurarGuiaRemisionSiExiste(InvoiceType facturaUbl, FacturaUblData data) {
         if (data.guiaRemisionId() == null || data.guiaRemisionId().isBlank()) {
@@ -376,13 +380,13 @@ public class FacturaUblBuilder {
      * <p>
      * Genera los tags {@code cac:AdditionalDocumentReference} con:
      * <ul>
-     *   <li>{@code cbc:ID}: identificador del documento</li>
-     *   <li>{@code cbc:DocumentTypeCode}: código del catálogo 12</li>
+     * <li>{@code cbc:ID}: identificador del documento</li>
+     * <li>{@code cbc:DocumentTypeCode}: código del catálogo 12</li>
      * </ul>
      * </p>
      *
      * @param facturaUbl factura UBL a completar
-     * @param data datos de factura
+     * @param data       datos de factura
      */
     private void configurarDocumentosAdicionalesSiExisten(InvoiceType facturaUbl, FacturaUblData data) {
         if (data.documentosAdicionales() == null || data.documentosAdicionales().isEmpty()) {
@@ -410,8 +414,8 @@ public class FacturaUblBuilder {
      * Configura emisor y receptor de la factura.
      *
      * @param facturaUbl factura UBL a completar
-     * @param emisor datos del emisor
-     * @param receptor datos del receptor
+     * @param emisor     datos del emisor
+     * @param receptor   datos del receptor
      */
     private void configurarPartes(
             InvoiceType facturaUbl,
@@ -424,14 +428,14 @@ public class FacturaUblBuilder {
         }
     }
 
-/**
- * Configura los impuestos por categoría (gravadas, exoneradas, inafectas).
- * Genera un TaxTotal con tres subtotales según especificación SUNAT.
- *
- * @param facturaUbl factura UBL a completar
- * @param totales DatosTotalesFacturaUbl con totales por categoría
- * @param encabezado datos de encabezado
- */
+    /**
+     * Configura los impuestos por categoría (gravadas, exoneradas, inafectas).
+     * Genera un TaxTotal con tres subtotales según especificación SUNAT.
+     *
+     * @param facturaUbl factura UBL a completar
+     * @param totales    DatosTotalesFacturaUbl con totales por categoría
+     * @param encabezado datos de encabezado
+     */
     private void configurarImpuestosSiCorresponde(
             InvoiceType facturaUbl,
             DatosTotalesFacturaUbl totales,
@@ -479,9 +483,9 @@ public class FacturaUblBuilder {
     /**
      * Crea el subtotal de impuesto para operaciones gravadas (IGV).
      *
-     * @param montoBase base imponible gravada
+     * @param montoBase     base imponible gravada
      * @param montoImpuesto monto del IGV
-     * @param moneda código de moneda
+     * @param moneda        código de moneda
      * @return TaxSubtotalType configurado
      */
     private TaxSubtotalType crearSubtotalImpuestoGravado(
@@ -499,7 +503,7 @@ public class FacturaUblBuilder {
      * Crea el subtotal de impuesto para operaciones exoneradas.
      *
      * @param montoBase base imponible exonerada
-     * @param moneda código de moneda
+     * @param moneda    código de moneda
      * @return TaxSubtotalType configurado
      */
     private TaxSubtotalType crearSubtotalImpuestoExonerado(
@@ -516,7 +520,7 @@ public class FacturaUblBuilder {
      * Crea el subtotal de impuesto para operaciones inafectas.
      *
      * @param montoBase base imponible inafecta
-     * @param moneda código de moneda
+     * @param moneda    código de moneda
      * @return TaxSubtotalType configurado
      */
     private TaxSubtotalType crearSubtotalImpuestoInafecto(
@@ -635,9 +639,9 @@ public class FacturaUblBuilder {
     /**
      * Configura el total de impuestos con subtotales si existe.
      *
-     * @param facturaUbl factura UBL a completar
+     * @param facturaUbl       factura UBL a completar
      * @param impuestosTotales impuestos totales
-     * @param encabezado datos de encabezado
+     * @param encabezado       datos de encabezado
      */
     private void configurarImpuestosTotalesSiExisten(
             InvoiceType facturaUbl,
@@ -649,14 +653,14 @@ public class FacturaUblBuilder {
         facturaUbl.addTaxTotal(crearImpuestoTotal(impuestosTotales, encabezado.moneda()));
     }
 
-/**
- * Configura los totales monetarios de la factura.
- *
- * @param facturaUbl factura UBL a completar
- * @param totalesMonetarios DatosTotalesMonetariosFacturaUbl
- * @param totalesImpuestos DatosTotalesFacturaUbl
- * @param encabezado datos de encabezado
- */
+    /**
+     * Configura los totales monetarios de la factura.
+     *
+     * @param facturaUbl        factura UBL a completar
+     * @param totalesMonetarios DatosTotalesMonetariosFacturaUbl
+     * @param totalesImpuestos  DatosTotalesFacturaUbl
+     * @param encabezado        datos de encabezado
+     */
     private void configurarTotales(
             InvoiceType facturaUbl,
             DatosTotalesMonetariosFacturaUbl totalesMonetarios,
@@ -671,7 +675,7 @@ public class FacturaUblBuilder {
      *
      * @param facturaUbl factura UBL a completar
      * @param encabezado datos de encabezado
-     * @param lineas líneas de detalle
+     * @param lineas     líneas de detalle
      */
     private void configurarLineas(
             InvoiceType facturaUbl,
@@ -758,14 +762,14 @@ public class FacturaUblBuilder {
         esquemaTributario.setCompanyID(crearIdentificadorEmpresa(emisor.nroDocumento()));
         esquemaTributario.setRegistrationAddress(
                 crearDireccionRegistro(emisor.codigoDomicilio()));
-
+        // TaxScheme del Emisor
+        /*
+         * <cac:TaxScheme>
+         * <cbc:ID>-</cbc:ID>
+         * </cac:TaxScheme>
+         */
         TaxSchemeType esquemaImpuesto = new TaxSchemeType();
-        IDType idEsquema = new IDType();
-        idEsquema.setSchemeID("UN/ECE 5153");
-        idEsquema.setSchemeAgencyID("6");
-        idEsquema.setValue(CODIGO_TRIBUTO_IGV);
-        esquemaImpuesto.setID(idEsquema);
-        esquemaImpuesto.setName(NOMBRE_IMPUESTO_IGV);
+        esquemaImpuesto.setID(NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL);
         esquemaTributario.setTaxScheme(esquemaImpuesto);
 
         return esquemaTributario;
@@ -820,7 +824,7 @@ public class FacturaUblBuilder {
             esquemaTributario.setRegistrationName(receptor.razonSocial());
             esquemaTributario.setCompanyID(crearIdentificadorEmpresa(receptor.nroDocumento()));
             TaxSchemeType esquemaImpuesto = new TaxSchemeType();
-            esquemaImpuesto.setID("-");
+            esquemaImpuesto.setID(NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL);
             esquemaTributario.setTaxScheme(esquemaImpuesto);
             parte.addPartyTaxScheme(esquemaTributario);
         }
@@ -832,7 +836,7 @@ public class FacturaUblBuilder {
     /**
      * Crea el total de impuestos (IGV).
      *
-     * @param igv monto del IGV
+     * @param igv    monto del IGV
      * @param moneda código de moneda
      * @return detalle del impuesto
      */
@@ -854,7 +858,7 @@ public class FacturaUblBuilder {
      * Crea el total de impuestos con subtotales.
      *
      * @param impuestosTotales impuestos totales
-     * @param moneda código de moneda
+     * @param moneda           código de moneda
      * @return impuesto total UBL
      */
     private TaxTotalType crearImpuestoTotal(
@@ -879,7 +883,7 @@ public class FacturaUblBuilder {
      * Crea un subtotal de impuesto.
      *
      * @param subtotal datos del subtotal
-     * @param moneda código de moneda
+     * @param moneda   código de moneda
      * @return subtotal UBL
      */
     private TaxSubtotalType crearImpuestoSubtotal(
@@ -979,8 +983,8 @@ public class FacturaUblBuilder {
      * Crea los totales monetarios de la factura.
      *
      * @param totalesMonetarios datos monetarios
-     * @param totalesImpuestos datos de totales con impuestos
-     * @param encabezado datos de encabezado
+     * @param totalesImpuestos  datos de totales con impuestos
+     * @param encabezado        datos de encabezado
      * @return totales monetarios
      */
     private MonetaryTotalType crearTotalesMonetarios(
@@ -1024,7 +1028,7 @@ public class FacturaUblBuilder {
      * Crea un descuento global en UBL.
      *
      * @param descuento datos del descuento
-     * @param moneda código de moneda
+     * @param moneda    código de moneda
      * @return descuento UBL
      */
     private AllowanceChargeType crearDescuentoGlobal(
@@ -1042,7 +1046,7 @@ public class FacturaUblBuilder {
     /**
      * Crea una línea de detalle de la factura.
      *
-     * @param linea datos de la línea
+     * @param linea  datos de la línea
      * @param moneda código de moneda
      * @return línea UBL
      */
@@ -1097,7 +1101,7 @@ public class FacturaUblBuilder {
     /**
      * Crea la cantidad con unidad de medida para la línea.
      *
-     * @param cantidad cantidad del ítem
+     * @param cantidad     cantidad del ítem
      * @param unidadMedida código de unidad (NIU, KG, etc.)
      * @return InvoicedQuantityType configurado
      */
@@ -1117,7 +1121,7 @@ public class FacturaUblBuilder {
      * Crea el impuesto (TaxTotal) para una línea de detalle.
      * Incluye el código de afectación IGV según el tipo de operación.
      *
-     * @param linea datos de la línea
+     * @param linea  datos de la línea
      * @param moneda código de moneda
      * @return TaxTotalType configurado para la línea
      */
@@ -1137,9 +1141,8 @@ public class FacturaUblBuilder {
 
         // Crear la categoría según tipo de afectación
         TaxCategoryType categoria = crearCategoriaImpuestoLinea(
-            tipoAfectacion,
-            porcentajeIGV != null ? porcentajeIGV : PORCENTAJE_IGV
-        );
+                tipoAfectacion,
+                porcentajeIGV != null ? porcentajeIGV : PORCENTAJE_IGV);
         subtotal.setTaxCategory(categoria);
 
         taxTotal.addTaxSubtotal(subtotal);
@@ -1149,8 +1152,9 @@ public class FacturaUblBuilder {
     /**
      * Crea la categoría de impuesto para una línea según el tipo de afectación.
      *
-     * @param tipoAfectacion código de afectación IGV (10=Gravado, 20=Exonerado, 30/31=Inafecto)
-     * @param porcentajeIGV porcentaje del IGV
+     * @param tipoAfectacion código de afectación IGV (10=Gravado, 20=Exonerado,
+     *                       30/31=Inafecto)
+     * @param porcentajeIGV  porcentaje del IGV
      * @return TaxCategoryType configurado
      */
     private TaxCategoryType crearCategoriaImpuestoLinea(String tipoAfectacion, BigDecimal porcentajeIGV) {
@@ -1269,7 +1273,7 @@ public class FacturaUblBuilder {
      * Crea el precio de referencia para la línea.
      *
      * @param precioReferencia datos del precio de referencia
-     * @param moneda código de moneda
+     * @param moneda           código de moneda
      * @return pricing reference UBL
      */
     private PricingReferenceType crearPrecioReferencia(
@@ -1297,7 +1301,7 @@ public class FacturaUblBuilder {
      * Crea el descuento por línea.
      *
      * @param descuento datos del descuento
-     * @param moneda código de moneda
+     * @param moneda    código de moneda
      * @return descuento UBL
      */
     private AllowanceChargeType crearDescuentoLinea(
