@@ -2,6 +2,8 @@ package com.facturacion.api.application.comprobante.ubl.mapper.notaCredito;
 
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
+import com.facturacion.api.application.comprobante.modelo.DocumentoAdicionalCanonico;
+import com.facturacion.api.application.comprobante.modelo.GuiaRemisionReferenciaCanonico;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -18,23 +20,18 @@ public class NotaCreditoUblMapper {
 
     private static final BigDecimal PORCENTAJE_IGV = new BigDecimal("0.18");
 
-    /**
-     * Convierte el comprobante canónico a {@link NotaCreditoUblData}.
-     */
     public NotaCreditoUblData fromCanonico(ComprobanteCanonico canonico) {
-        // Serie y correlativo desde numero (ej: "F001-00000001")
         String[] numeros = canonico.numero() != null
                 ? canonico.numero().split("-", 2)
                 : new String[]{"FC01", "1"};
         String serie      = numeros.length > 0 ? numeros[0] : "FC01";
         String correlativo = numeros.length > 1 ? numeros[1] : "1";
 
-        // Líneas
         List<NotaCreditoLineaUblData> lineas = canonico.detalles() != null
                 ? mapLineas(canonico.detalles())
                 : List.of();
 
-        // Totales calculados desde líneas (igual que FacturaUblMapper)
+        // Totales por tipo de afectación IGV
         BigDecimal gravadas   = BigDecimal.ZERO;
         BigDecimal exoneradas = BigDecimal.ZERO;
         BigDecimal inafectas  = BigDecimal.ZERO;
@@ -42,9 +39,9 @@ public class NotaCreditoUblMapper {
         BigDecimal valorVenta = BigDecimal.ZERO;
 
         for (NotaCreditoLineaUblData linea : lineas) {
-            BigDecimal vv = valorOZero(linea.valorVenta());
+            BigDecimal vv  = valorOZero(linea.valorVenta());
             BigDecimal igv = valorOZero(linea.montoIGV());
-            String tipo = linea.tipoAfectacionIGV() != null ? linea.tipoAfectacionIGV() : "10";
+            String tipo    = linea.tipoAfectacionIGV() != null ? linea.tipoAfectacionIGV() : "10";
 
             valorVenta = valorVenta.add(vv);
 
@@ -65,9 +62,9 @@ public class NotaCreditoUblMapper {
         BigDecimal importeTotal   = valorVenta.add(totalImpuestos);
 
         // Documento afectado
-        String tipoAfectado = null;
-        String docAfectadoSerie = "";
-        String docAfectadoNumero = "";
+        String tipoAfectado       = null;
+        String docAfectadoSerie   = "";
+        String docAfectadoNumero  = "";
 
         if (canonico.documentoRelacionado() != null) {
             tipoAfectado = canonico.documentoRelacionado().tipoDocumento();
@@ -81,6 +78,14 @@ public class NotaCreditoUblMapper {
             }
         }
 
+        // Guía de remisión
+        GuiaRemisionReferenciaCanonico guia = canonico.guiaRemision();
+        String guiaId     = guia != null ? guia.id() : null;
+        String guiaCodigo = guia != null ? guia.codigoDocumento() : null;
+
+        // Documentos adicionales
+        List<DocumentoAdicionalUblData> docsAdicionales = mapDocumentosAdicionales(canonico.documentosAdicionales());
+
         return new NotaCreditoUblData(
                 serie,
                 correlativo,
@@ -89,7 +94,9 @@ public class NotaCreditoUblMapper {
                 canonico.moneda(),
                 canonico.emisorRuc(),
                 canonico.emisorRazonSocial(),
+                canonico.emisorCodigoDomicilio() != null ? canonico.emisorCodigoDomicilio() : "0001",
                 canonico.receptorDocumento(),
+                "6", // por defecto RUC; se puede extender con tipo desde canónico
                 canonico.receptorRazonSocial(),
                 tipoAfectado,
                 docAfectadoSerie,
@@ -103,6 +110,9 @@ public class NotaCreditoUblMapper {
                 totalImpuestos,
                 importeTotal,
                 valorVenta,
+                guiaId,
+                guiaCodigo,
+                docsAdicionales,
                 lineas
         );
     }
@@ -129,10 +139,17 @@ public class NotaCreditoUblMapper {
                 cantidad,
                 d.unidadMedida() != null ? d.unidadMedida() : "NIU",
                 montoIgv,
-                PORCENTAJE_IGV.multiply(new BigDecimal("100")), // 18.00
+                PORCENTAJE_IGV.multiply(new BigDecimal("100")),
                 d.codigoTipoIgv(),
                 valorVenta
         );
+    }
+
+    private List<DocumentoAdicionalUblData> mapDocumentosAdicionales(List<DocumentoAdicionalCanonico> docs) {
+        if (docs == null || docs.isEmpty()) return List.of();
+        return docs.stream()
+                .map(d -> new DocumentoAdicionalUblData(d.id(), d.tipoDocumento()))
+                .toList();
     }
 
     private static BigDecimal valorOZero(BigDecimal val) {

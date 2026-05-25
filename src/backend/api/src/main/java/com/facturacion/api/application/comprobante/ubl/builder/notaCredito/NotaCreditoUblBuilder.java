@@ -1,5 +1,6 @@
 package com.facturacion.api.application.comprobante.ubl.builder.notaCredito;
 
+import com.facturacion.api.application.comprobante.ubl.mapper.notaCredito.DocumentoAdicionalUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.notaCredito.NotaCreditoLineaUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.notaCredito.NotaCreditoUblData;
 import com.helger.ubl21.UBL21Marshaller;
@@ -7,10 +8,8 @@ import java.io.StringWriter;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
-import java.util.List;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.*;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.*;
 import oasis.names.specification.ubl.schema.xsd.creditnote_21.CreditNoteType;
@@ -19,18 +18,25 @@ import org.springframework.stereotype.Component;
 
 /**
  * Constructor de XML UBL 2.1 para Nota de Crédito Electrónica.
- * Sigue el mismo patrón que {@link com.facturacion.api.application.comprobante.ubl.builder.factura.FacturaUblBuilder}.
+ * Sigue el mismo patrón que FacturaUblBuilder.
+ *
+ * Correcciones aplicadas:
+ * - BillingReference usa setCreditNoteDocumentReference (no InvoiceDocumentReference)
+ * - PricingReference con PriceTypeCode="01" por línea (obligatorio SUNAT)
+ * - AddressTypeCode en emisor (campo 18)
+ * - schemeID dinámico para receptor según tipo de documento
+ * - DespatchDocumentReference para guía de remisión
+ * - AdditionalDocumentReference para documentos adicionales
  */
 @Component
 public class NotaCreditoUblBuilder {
 
     private static final DateTimeFormatter FORMATO_FECHA = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    private static final DateTimeFormatter FORMATO_HORA  = DateTimeFormatter.ofPattern("HH:mm:ss");
 
-    private static final String VERSION_UBL       = "2.1";
+    private static final String VERSION_UBL        = "2.1";
     private static final String VERSION_ESTRUCTURA = "2.0";
 
-    private static final String CODIGO_TRIBUTO_IGV      = "1000";
+    private static final String CODIGO_TRIBUTO_IGV       = "1000";
     private static final String CODIGO_TRIBUTO_EXONERADO = "9997";
     private static final String CODIGO_TRIBUTO_INAFECTO  = "9998";
 
@@ -47,19 +53,14 @@ public class NotaCreditoUblBuilder {
 
     private static final BigDecimal PORCENTAJE_IGV = new BigDecimal("18.00");
 
-    /**
-     * Construye el XML de nota de crédito UBL 2.1.
-     *
-     * @param data datos de la nota de crédito
-     * @return XML generado
-     * @throws Exception si hay error al generar
-     */
     public String construirXml(NotaCreditoUblData data) throws Exception {
         CreditNoteType nc = new CreditNoteType();
 
         configurarEncabezado(nc, data);
         configurarMotivo(nc, data);
         configurarDocumentoAfectado(nc, data);
+        configurarGuiaRemisionSiExiste(nc, data);
+        configurarDocumentosAdicionalesSiExisten(nc, data);
         configurarPartes(nc, data);
         configurarImpuestos(nc, data);
         configurarTotalesMonetarios(nc, data);
@@ -85,20 +86,19 @@ public class NotaCreditoUblBuilder {
         moneda.setListID("ISO 4217 Alpha");
         moneda.setName("Currency");
         moneda.setListAgencyName("United Nations Economic Commission for Europe");
-        moneda.setValue(data.moneda() != null ? data.moneda() : "PEN");
+        moneda.setValue(nvl(data.moneda(), "PEN"));
         nc.setDocumentCurrencyCode(moneda);
     }
 
     // =========================================================================
-    // MOTIVO (DiscrepancyResponse — catálogo 09)
+    // MOTIVO — DiscrepancyResponse (catálogo 09)
     // =========================================================================
 
     private void configurarMotivo(CreditNoteType nc, NotaCreditoUblData data) {
         ResponseType response = new ResponseType();
 
         ReferenceIDType refId = new ReferenceIDType();
-        String docAfectado = nvl(data.documentoAfectadoSerie()) + "-" + nvl(data.documentoAfectadoNumero());
-        refId.setValue(docAfectado);
+        refId.setValue(nvl(data.documentoAfectadoSerie()) + "-" + nvl(data.documentoAfectadoNumero()));
         response.setReferenceID(refId);
 
         ResponseCodeType responseCode = new ResponseCodeType();
@@ -116,7 +116,8 @@ public class NotaCreditoUblBuilder {
     }
 
     // =========================================================================
-    // DOCUMENTO AFECTADO (BillingReference)
+    // DOCUMENTO AFECTADO — BillingReference
+    // 🔴 CORRECCIÓN: setCreditNoteDocumentReference (no InvoiceDocumentReference)
     // =========================================================================
 
     private void configurarDocumentoAfectado(CreditNoteType nc, NotaCreditoUblData data) {
@@ -134,8 +135,57 @@ public class NotaCreditoUblBuilder {
         docTypeCode.setValue(nvl(data.documentoAfectadoTipo(), "01"));
         docRef.setDocumentTypeCode(docTypeCode);
 
-        billingRef.setInvoiceDocumentReference(docRef);
+        // 🔴 CORRECCIÓN CRÍTICA: para NC se usa CreditNoteDocumentReference
+        billingRef.setCreditNoteDocumentReference(docRef);
         nc.addBillingReference(billingRef);
+    }
+
+    // =========================================================================
+    // GUÍA DE REMISIÓN — DespatchDocumentReference (campos 12-13)
+    // =========================================================================
+
+    private void configurarGuiaRemisionSiExiste(CreditNoteType nc, NotaCreditoUblData data) {
+        if (data.guiaRemisionId() == null || data.guiaRemisionId().isBlank()) return;
+
+        DocumentReferenceType ref = new DocumentReferenceType();
+
+        IDType id = new IDType();
+        id.setValue(data.guiaRemisionId());
+        ref.setID(id);
+
+        DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+        typeCode.setValue(nvl(data.guiaRemisionCodigo(), "09"));
+        typeCode.setListAgencyName("PE:SUNAT");
+        typeCode.setListName("SUNAT:Identificador de guía relacionada");
+        typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01");
+        ref.setDocumentTypeCode(typeCode);
+
+        nc.addDespatchDocumentReference(ref);
+    }
+
+    // =========================================================================
+    // DOCUMENTOS ADICIONALES — AdditionalDocumentReference (campos 14-15)
+    // =========================================================================
+
+    private void configurarDocumentosAdicionalesSiExisten(CreditNoteType nc, NotaCreditoUblData data) {
+        if (data.documentosAdicionales() == null || data.documentosAdicionales().isEmpty()) return;
+
+        for (DocumentoAdicionalUblData doc : data.documentosAdicionales()) {
+            DocumentReferenceType ref = new DocumentReferenceType();
+
+            IDType id = new IDType();
+            id.setValue(nvl(doc.id()));
+            ref.setID(id);
+
+            DocumentTypeCodeType typeCode = new DocumentTypeCodeType();
+            typeCode.setValue(nvl(doc.tipoDocumento(), "99"));
+            typeCode.setListAgencyName("PE:SUNAT");
+            typeCode.setListName("SUNAT:Identificador de documento relacionado");
+            typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo12");
+            ref.setDocumentTypeCode(typeCode);
+
+            nc.addAdditionalDocumentReference(ref);
+        }
     }
 
     // =========================================================================
@@ -151,11 +201,17 @@ public class NotaCreditoUblBuilder {
         SupplierPartyType supplier = new SupplierPartyType();
         PartyType party = new PartyType();
 
-        // PartyTaxScheme con RUC
         if (data.emisorNroDocumento() != null) {
             PartyTaxSchemeType taxScheme = new PartyTaxSchemeType();
             taxScheme.setRegistrationName(nvl(data.emisorRazonSocial()));
-            taxScheme.setCompanyID(crearCompanyID(data.emisorNroDocumento()));
+            taxScheme.setCompanyID(crearCompanyID(data.emisorNroDocumento(), "6"));
+
+            // Campo 18 — AddressTypeCode (código domicilio fiscal)
+            AddressType address = new AddressType();
+            AddressTypeCodeType addressCode = new AddressTypeCodeType();
+            addressCode.setValue(nvl(data.emisorCodigoDomicilio(), "0001"));
+            address.setAddressTypeCode(addressCode);
+            taxScheme.setRegistrationAddress(address);
 
             TaxSchemeType scheme = new TaxSchemeType();
             IDType schemeId = new IDType();
@@ -169,10 +225,16 @@ public class NotaCreditoUblBuilder {
             party.addPartyTaxScheme(taxScheme);
         }
 
-        // PartyLegalEntity
         if (data.emisorRazonSocial() != null) {
             PartyLegalEntityType ple = new PartyLegalEntityType();
             ple.setRegistrationName(data.emisorRazonSocial());
+
+            AddressType regAddress = new AddressType();
+            AddressTypeCodeType addressCode = new AddressTypeCodeType();
+            addressCode.setValue(nvl(data.emisorCodigoDomicilio(), "0001"));
+            regAddress.setAddressTypeCode(addressCode);
+            ple.setRegistrationAddress(regAddress);
+
             party.addPartyLegalEntity(ple);
         }
 
@@ -187,7 +249,10 @@ public class NotaCreditoUblBuilder {
         if (data.receptorNroDocumento() != null) {
             PartyTaxSchemeType taxScheme = new PartyTaxSchemeType();
             taxScheme.setRegistrationName(nvl(data.receptorRazonSocial()));
-            taxScheme.setCompanyID(crearCompanyID(data.receptorNroDocumento()));
+
+            // Campo 19 — schemeID dinámico según tipo de documento del receptor
+            String tipoDocReceptor = nvl(data.receptorTipoDocumento(), "6");
+            taxScheme.setCompanyID(crearCompanyID(data.receptorNroDocumento(), tipoDocReceptor));
 
             TaxSchemeType scheme = new TaxSchemeType();
             scheme.setID("-");
@@ -200,9 +265,9 @@ public class NotaCreditoUblBuilder {
         return customer;
     }
 
-    private CompanyIDType crearCompanyID(String nroDocumento) {
+    private CompanyIDType crearCompanyID(String nroDocumento, String schemeId) {
         CompanyIDType companyId = new CompanyIDType();
-        companyId.setSchemeID("6");
+        companyId.setSchemeID(schemeId);
         companyId.setSchemeName("SUNAT:Identificador de Documento de Identidad");
         companyId.setSchemeAgencyName("PE:SUNAT");
         companyId.setSchemeURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo06");
@@ -211,7 +276,7 @@ public class NotaCreditoUblBuilder {
     }
 
     // =========================================================================
-    // IMPUESTOS (TaxTotal)
+    // IMPUESTOS — TaxTotal
     // =========================================================================
 
     private void configurarImpuestos(CreditNoteType nc, NotaCreditoUblData data) {
@@ -221,33 +286,28 @@ public class NotaCreditoUblBuilder {
         TaxTotalType taxTotal = new TaxTotalType();
         taxTotal.setTaxAmount(totalImpuestos).setCurrencyID(moneda);
 
-        // Subtotal gravadas
-        BigDecimal gravadas = valorOZero(data.gravadas());
-        BigDecimal igv = valorOZero(data.igv());
+        BigDecimal gravadas   = valorOZero(data.gravadas());
+        BigDecimal igv        = valorOZero(data.igv());
+        BigDecimal exoneradas = valorOZero(data.exoneradas());
+        BigDecimal inafectas  = valorOZero(data.inafectas());
+
         if (gravadas.compareTo(BigDecimal.ZERO) > 0) {
             taxTotal.addTaxSubtotal(crearSubtotalGravado(gravadas, igv, moneda));
         }
-
-        // Subtotal exoneradas
-        BigDecimal exoneradas = valorOZero(data.exoneradas());
         if (exoneradas.compareTo(BigDecimal.ZERO) > 0) {
             taxTotal.addTaxSubtotal(crearSubtotalExonerado(exoneradas, moneda));
         }
-
-        // Subtotal inafectas
-        BigDecimal inafectas = valorOZero(data.inafectas());
         if (inafectas.compareTo(BigDecimal.ZERO) > 0) {
             taxTotal.addTaxSubtotal(crearSubtotalInafecto(inafectas, moneda));
         }
 
-        // Si no hay subtotales específicos, agregar uno genérico con el total
+        // Fallback: si no hay subtotales pero hay impuesto total
         if (gravadas.compareTo(BigDecimal.ZERO) <= 0
                 && exoneradas.compareTo(BigDecimal.ZERO) <= 0
                 && inafectas.compareTo(BigDecimal.ZERO) <= 0
                 && totalImpuestos.compareTo(BigDecimal.ZERO) > 0) {
-            taxTotal.addTaxSubtotal(crearSubtotalGravado(
-                totalImpuestos.divide(new BigDecimal("0.18"), 2, RoundingMode.HALF_UP),
-                totalImpuestos, moneda));
+            BigDecimal base = totalImpuestos.divide(new BigDecimal("0.18"), 2, RoundingMode.HALF_UP);
+            taxTotal.addTaxSubtotal(crearSubtotalGravado(base, totalImpuestos, moneda));
         }
 
         nc.addTaxTotal(taxTotal);
@@ -291,9 +351,7 @@ public class NotaCreditoUblBuilder {
         idCat.setValue(codigoCategoria);
         cat.setID(idCat);
 
-        if (porcentaje != null) {
-            cat.setPercent(porcentaje);
-        }
+        if (porcentaje != null) cat.setPercent(porcentaje);
 
         TaxSchemeType scheme = new TaxSchemeType();
         IDType schemeId = new IDType();
@@ -309,25 +367,22 @@ public class NotaCreditoUblBuilder {
     }
 
     // =========================================================================
-    // TOTALES MONETARIOS (LegalMonetaryTotal)
+    // TOTALES MONETARIOS — LegalMonetaryTotal
     // =========================================================================
 
     private void configurarTotalesMonetarios(CreditNoteType nc, NotaCreditoUblData data) {
         String moneda = nvl(data.moneda(), "PEN");
         MonetaryTotalType total = new MonetaryTotalType();
 
-        BigDecimal valorVenta   = valorOZero(data.valorVenta());
-        BigDecimal importeTotal = valorOZero(data.importeTotal());
-
-        total.setLineExtensionAmount(valorVenta).setCurrencyID(moneda);
-        total.setTaxInclusiveAmount(importeTotal).setCurrencyID(moneda);
-        total.setPayableAmount(importeTotal).setCurrencyID(moneda);
+        total.setLineExtensionAmount(valorOZero(data.valorVenta())).setCurrencyID(moneda);
+        total.setTaxInclusiveAmount(valorOZero(data.importeTotal())).setCurrencyID(moneda);
+        total.setPayableAmount(valorOZero(data.importeTotal())).setCurrencyID(moneda);
 
         nc.setLegalMonetaryTotal(total);
     }
 
     // =========================================================================
-    // LÍNEAS (CreditNoteLine)
+    // LÍNEAS — CreditNoteLine
     // =========================================================================
 
     private void configurarLineas(CreditNoteType nc, NotaCreditoUblData data) {
@@ -343,22 +398,23 @@ public class NotaCreditoUblBuilder {
     private CreditNoteLineType crearLinea(NotaCreditoLineaUblData l, int idx, String moneda) {
         CreditNoteLineType line = new CreditNoteLineType();
 
-        // ID
         line.setID(l.numero() != null ? String.valueOf(l.numero()) : String.valueOf(idx));
 
         // Cantidad
         CreditedQuantityType qty = new CreditedQuantityType();
-        qty.setValue(l.cantidad() != null ? l.cantidad() : BigDecimal.ONE);
+        qty.setValue(valorOZero(l.cantidad()).compareTo(BigDecimal.ZERO) > 0 ? l.cantidad() : BigDecimal.ONE);
         qty.setUnitCode(nvl(l.unidadMedida(), "NIU"));
         qty.setUnitCodeListID("UN/ECE rec 20");
         qty.setUnitCodeListAgencyName("United Nations Economic Commission for Europe");
         line.setCreditedQuantity(qty);
 
-        // Valor de venta de la línea
-        BigDecimal valorVenta = valorOZero(l.valorVenta());
-        line.setLineExtensionAmount(valorVenta).setCurrencyID(moneda);
+        // Valor de venta
+        line.setLineExtensionAmount(valorOZero(l.valorVenta())).setCurrencyID(moneda);
 
-        // TaxTotal de la línea
+        // Campo 33-34 — PricingReference con PriceTypeCode="01" (obligatorio SUNAT)
+        line.setPricingReference(crearPricingReference(l, moneda));
+
+        // TaxTotal por línea
         line.addTaxTotal(crearImpuestoLinea(l, moneda));
 
         // Item
@@ -377,17 +433,48 @@ public class NotaCreditoUblBuilder {
         }
         line.setItem(item);
 
-        // Precio unitario (valorUnitario)
-        if (l.porcentajeIGV() != null) {
+        // Precio unitario (Price)
+        BigDecimal cantidad = valorOZero(l.cantidad());
+        if (cantidad.compareTo(BigDecimal.ZERO) > 0) {
             PriceType price = new PriceType();
             price.setPriceAmount(valorOZero(l.valorVenta())
-                .divide(l.cantidad() != null && l.cantidad().compareTo(BigDecimal.ZERO) > 0
-                    ? l.cantidad() : BigDecimal.ONE, 2, RoundingMode.HALF_UP))
-                .setCurrencyID(moneda);
+                    .divide(cantidad, 2, RoundingMode.HALF_UP))
+                    .setCurrencyID(moneda);
             line.setPrice(price);
         }
 
         return line;
+    }
+
+    /**
+     * Campo 33-34: PricingReference con AlternativeConditionPrice.
+     * PriceTypeCode="01" = precio unitario con IGV (obligatorio SUNAT).
+     * PriceTypeCode="02" = precio unitario sin IGV (para operaciones gratuitas).
+     */
+    private PricingReferenceType crearPricingReference(NotaCreditoLineaUblData l, String moneda) {
+        PricingReferenceType pricingRef = new PricingReferenceType();
+
+        BigDecimal cantidad = valorOZero(l.cantidad());
+        BigDecimal valorVenta = valorOZero(l.valorVenta());
+        BigDecimal montoIgv   = valorOZero(l.montoIGV());
+
+        // Precio con IGV = (valorVenta + IGV) / cantidad
+        BigDecimal precioConIgv = cantidad.compareTo(BigDecimal.ZERO) > 0
+                ? valorVenta.add(montoIgv).divide(cantidad, 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        PriceType precio = new PriceType();
+        precio.setPriceAmount(precioConIgv).setCurrencyID(moneda);
+
+        PriceTypeCodeType priceTypeCode = new PriceTypeCodeType();
+        priceTypeCode.setValue("01"); // 01 = precio unitario con IGV
+        priceTypeCode.setListName("SUNAT:Indicador de Tipo de Precio");
+        priceTypeCode.setListAgencyName("PE:SUNAT");
+        priceTypeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo16");
+        precio.setPriceTypeCode(priceTypeCode);
+
+        pricingRef.addAlternativeConditionPrice(precio);
+        return pricingRef;
     }
 
     private TaxTotalType crearImpuestoLinea(NotaCreditoLineaUblData l, String moneda) {
@@ -401,9 +488,6 @@ public class NotaCreditoUblBuilder {
         TaxSubtotalType sub = new TaxSubtotalType();
         sub.setTaxableAmount(montoBase).setCurrencyID(moneda);
         sub.setTaxAmount(montoIgv).setCurrencyID(moneda);
-
-        // Categoría según tipo de afectación
-        TaxCategoryType cat = new TaxCategoryType();
 
         String codigoCategoria;
         String codigoTributo;
@@ -419,6 +503,8 @@ public class NotaCreditoUblBuilder {
                          nombreTributo = NOMBRE_IGV; tipoTributo = TIPO_TRIBUTO_VAT; }
         }
 
+        TaxCategoryType cat = new TaxCategoryType();
+
         IDType idCat = new IDType();
         idCat.setSchemeID("UN/ECE 5305");
         idCat.setSchemeName("Tax Category Identifier");
@@ -426,11 +512,8 @@ public class NotaCreditoUblBuilder {
         idCat.setValue(codigoCategoria);
         cat.setID(idCat);
 
-        if (CATEGORIA_GRAVADO.equals(codigoCategoria)) {
-            cat.setPercent(PORCENTAJE_IGV);
-        }
+        if (CATEGORIA_GRAVADO.equals(codigoCategoria)) cat.setPercent(PORCENTAJE_IGV);
 
-        // TaxExemptionReasonCode (catálogo 07)
         TaxExemptionReasonCodeType exemption = new TaxExemptionReasonCodeType();
         exemption.setValue(tipoAfectacion);
         exemption.setListAgencyName("PE:SUNAT");
