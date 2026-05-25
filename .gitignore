@@ -70,3 +70,5 @@ graphify-out/**
 
 ### SDD / Skill Registry
 .atl//
+# Local Pi runtime state
+.atl/
