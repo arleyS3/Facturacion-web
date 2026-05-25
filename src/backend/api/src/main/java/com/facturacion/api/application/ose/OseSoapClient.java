@@ -1,54 +1,66 @@
 package com.facturacion.api.application.ose;
 
+import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
+
+import org.w3c.dom.Document;
+import org.w3c.dom.NodeList;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import org.xml.sax.InputSource;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Cliente SOAP para enviar XML UBL 2.1 al OSE (DBNet / eComprobantes).
  * <p>
  * Envía el XML firmado o sin firmar al endpoint SOAP del OSE usando
- * el m&eacute;todo {@code putCustomerETDLoadXML}.
+ * el método {@code putCustomerETDLoadXML}.
  * </p>
  */
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class OseSoapClient {
 
     private final RestTemplate restTemplate;
-    private final String endpointUrl;
+    @Value("${ose.endpoint.url}")
+    private String endpointUrl;
 
-    public OseSoapClient(
-            @Value("${ose.endpoint.url}") String endpointUrl) {
-        this.restTemplate = new RestTemplate();
-        this.endpointUrl = endpointUrl;
-    }
+    private static final String SOAP_ACTION = "http://www.dbnet.cl/putCustomerETDLoadXML";
+    private static final String SOAP_NAMESPACE = "http://www.dbnet.cl";
 
-    /**
-     * Env&iacute;a un XML UBL 2.1 al OSE para su validaci&oacute;n y env&iacute;o a SUNAT.
-     *
-     * @param xmlUbl contenido del XML UBL 2.1
-     * @return respuesta del OSE (ticket, CDR o mensaje de error)
-     */
     public String enviarXml(String xmlUbl) {
-        String soapEnvelope = construirSoapEnvelope(xmlUbl);
-
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.TEXT_XML);
-        headers.set("SOAPAction", "http://www.dbnet.cl/putCustomerETDLoadXML");
+        headers.setContentType(new MediaType("text", "xml", StandardCharsets.UTF_8));
+        headers.set("SOAPAction", SOAP_ACTION);
 
-        HttpEntity<String> request = new HttpEntity<>(soapEnvelope, headers);
+        HttpEntity<String> request = new HttpEntity<>(construirSoapEnvelope(xmlUbl), headers);
 
+        log.info("Lo que se va a enviar: {}", construirSoapEnvelope(xmlUbl));
         ResponseEntity<String> response = restTemplate.postForEntity(
                 endpointUrl, request, String.class);
 
-        return response.getBody();
+        if (!response.getStatusCode().is2xxSuccessful()) {
+            throw new RuntimeException("Error HTTP " + response.getStatusCode()
+                    + ": " + response.getBody());
+        }
+
+        return extraerResultado(response.getBody());
     }
 
-    /**
-     * Construye el envelope SOAP 1.1 con el XML UBL escapado dentro de &lt;lsXML&gt;.
-     */
     private String construirSoapEnvelope(String xmlUbl) {
+        // Comentarlo para deg
         String escapedXml = xmlUbl
                 .replace("&", "&amp;")
                 .replace("<", "&lt;")
@@ -57,16 +69,39 @@ public class OseSoapClient {
                 .replace("'", "&apos;");
 
         return """
-            <soap:Envelope
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
-              <soap:Body>
-                <putCustomerETDLoadXML xmlns="http://www.dbnet.cl">
-                  <lsXML>%s</lsXML>
-                </putCustomerETDLoadXML>
-              </soap:Body>
-            </soap:Envelope>
-            """.formatted(escapedXml);
+                <?xml version="1.0" encoding="utf-8"?>
+                <soap:Envelope
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                    xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                    xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+                  <soap:Body>
+                    <putCustomerETDLoadXML xmlns="http://www.dbnet.cl">
+                      <lsXML>%s</lsXML>
+                    </putCustomerETDLoadXML>
+                  </soap:Body>
+                </soap:Envelope>
+                """.formatted(escapedXml);
+    }
+
+    private String extraerResultado(String soapResponse) {
+        try {
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            factory.setNamespaceAware(true);
+
+            Document doc = factory.newDocumentBuilder()
+                    .parse(new InputSource(new StringReader(soapResponse)));
+
+            NodeList nodes = doc.getElementsByTagNameNS(
+                    SOAP_NAMESPACE, "putCustomerETDLoadXMLResult");
+
+            if (nodes.getLength() > 0) {
+                return nodes.item(0).getTextContent();
+            }
+
+            throw new RuntimeException("Resultado no encontrado en respuesta SOAP");
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error al parsear respuesta SOAP: " + e.getMessage(), e);
+        }
     }
 }
