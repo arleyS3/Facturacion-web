@@ -2,88 +2,83 @@ package com.facturacion.api.application.comprobante.ubl.mapper.notaDebito;
 
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.modelo.DetalleCanonico;
+import com.facturacion.api.application.comprobante.modelo.DocumentoRelacionadoCanonico;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Mapper de comprobante canónico a datos UBL de nota de débito.
+ * Mapper de comprobante canónico a datos UBL de Nota de Débito (DebitNote).
  */
 @Component
 public class NotaDebitoUblMapper {
 
-    /**
-     * Convierte el comprobante canónico a {@link NotaDebitoUblData}.
-     *
-     * @param canonico comprobante canónico
-     * @return datos UBL de nota de débito
-     */
     public NotaDebitoUblData fromCanonico(ComprobanteCanonico canonico) {
-        String[] numeros = canonico.numero() != null ? canonico.numero().split("-") : new String[]{"BD01", "1"};
-        String serie = numeros.length > 0 ? numeros[0] : "BD01";
-        String correlativo = numeros.length > 1 ? numeros[1] : "1";
-
-        List<NotaDebitoLineaUblData> lineas = canonico.detalles() != null
-            ? canonico.detalles().stream()
-                .map(this::mapLinea)
-                .toList()
-            : List.of();
-
-        String tipoAfectado = canonico.documentoRelacionado() != null 
-            ? canonico.documentoRelacionado().tipoDocumento() 
-            : null;
-        String documentoAfectadoNumero = canonico.documentoRelacionado() != null 
-            ? canonico.documentoRelacionado().numeroDocumento() 
-            : null;
-        
-        // Splitear numeroDocumento (ej: "F001-00000001") en serie y correlativo
-        String documentoAfectadoSerie = "";
-        String documentoAfectadoCorrelativo = documentoAfectadoNumero;
-        if (documentoAfectadoNumero != null && documentoAfectadoNumero.contains("-")) {
-            String[] partes = documentoAfectadoNumero.split("-", 2);
-            documentoAfectadoSerie = partes[0];
-            documentoAfectadoCorrelativo = partes.length > 1 ? partes[1] : "";
+        if (canonico == null) {
+            return null;
         }
 
-        return new NotaDebitoUblData(
-            serie,
-            correlativo,
-            canonico.fechaEmision(),
-            "08",
-            canonico.moneda(),
-            canonico.emisorRuc(),
-            null,
-            canonico.receptorDocumento(),
-            null,
-            tipoAfectado,
-            documentoAfectadoSerie,
-            documentoAfectadoCorrelativo,
-            canonico.documentoRelacionado() != null ? canonico.documentoRelacionado().motivoCodigo() : null,
-            canonico.documentoRelacionado() != null ? canonico.documentoRelacionado().motivoDescripcion() : null,
-            null,
-            null,
-            null,
-            lineas
-        );
-    }
+        // 1. Serie y Correlativo (Ej: FD01-000001)
+        String[] numeros = canonico.numero() != null ? canonico.numero().split("-") : new String[]{"FD01", "1"};
+        String serie = numeros.length > 0 ? numeros[0] : "FD01";
+        String correlativo = numeros.length > 1 ? numeros[1] : "1";
 
-    /**
-     * Mapea una línea canónica a línea UBL de nota de débito.
-     *
-     * @param detalle detalle canónico
-     * @return línea UBL
-     */
-    private NotaDebitoLineaUblData mapLinea(DetalleCanonico detalle) {
-        return new NotaDebitoLineaUblData(
-            null,
-            null,
-            detalle.descripcion(),
-            detalle.cantidad(),
-            "NIU",
-            detalle.igv(),
-            new java.math.BigDecimal("18.00"),
-            detalle.codigoTipoIgv(),
-            null
+        // 2. Extraer Documento de Referencia (Obligatorio en Notas de Débito/Crédito)
+        DocumentoRelacionadoCanonico docReferencia = null;
+        if (canonico.documentosRelacionados() != null && !canonico.documentosRelacionados().isEmpty()) {
+            docReferencia = canonico.documentosRelacionados().get(0);
+        }
+
+        if (docReferencia == null) {
+            throw new IllegalArgumentException("La Nota de Débito requiere un documento de referencia (Factura/Boleta).");
+        }
+
+        String[] refNumeros = docReferencia.numero() != null ? docReferencia.numero().split("-") : new String[]{"", ""};
+        String refSerie = refNumeros.length > 0 ? refNumeros[0] : "";
+        String refCorrelativo = refNumeros.length > 1 ? refNumeros[1] : "";
+
+        // 3. Mapeo de Detalles/Lineas
+        List<NotaDebitoLineaUblData> lineas = new ArrayList<>();
+        if (canonico.detalles() != null) {
+            int numeroLinea = 1;
+            for (DetalleCanonico det : canonico.detalles()) {
+                lineas.add(new NotaDebitoLineaUblData(
+                        numeroLinea++,
+                        det.codigoProducto(),
+                        det.descripcion(),
+                        det.cantidad(),
+                        det.unidadMedida() != null ? det.unidadMedida() : "NIU",
+                        det.precioUnitario() != null ? det.precioUnitario() : BigDecimal.ZERO,
+                        det.valorTotal() != null ? det.valorTotal() : BigDecimal.ZERO
+                ));
+            }
+        }
+
+        // 4. Retornar el objeto Data armado
+        return new NotaDebitoUblData(
+                serie,
+                correlativo,
+                canonico.fechaEmision(),
+                canonico.horaEmision() != null ? canonico.horaEmision() : "00:00:00",
+                canonico.moneda() != null ? canonico.moneda() : "PEN",
+                canonico.emisorRuc(),
+                "6", // RUC Emisor
+                canonico.emisorRazonSocial(),
+                canonico.receptorDocumento(),
+                canonico.receptorTipoDocumento() != null ? canonico.receptorTipoDocumento() : "6",
+                canonico.receptorRazonSocial(),
+                docReferencia.tipoDocumento(), // 01 (Factura) o 03 (Boleta)
+                refSerie,
+                refCorrelativo,
+                docReferencia.codigoMotivo(), // Catálogo 10
+                docReferencia.descripcionMotivo(),
+                canonico.totalCargos() != null ? canonico.totalCargos() : BigDecimal.ZERO,
+                BigDecimal.ZERO, 
+                canonico.totalIgv() != null ? canonico.totalIgv() : BigDecimal.ZERO,
+                canonico.totalImporte() != null ? canonico.totalImporte() : BigDecimal.ZERO,
+                lineas
         );
     }
 }
