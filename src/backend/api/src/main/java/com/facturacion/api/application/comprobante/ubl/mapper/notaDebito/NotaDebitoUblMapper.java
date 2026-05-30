@@ -6,6 +6,7 @@ import com.facturacion.api.application.comprobante.modelo.DocumentoRelacionadoCa
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,59 +26,75 @@ public class NotaDebitoUblMapper {
         String serie = numeros.length > 0 ? numeros[0] : "FD01";
         String correlativo = numeros.length > 1 ? numeros[1] : "1";
 
-        // 2. Extraer Documento de Referencia (Obligatorio en Notas de Débito/Crédito)
-        DocumentoRelacionadoCanonico docReferencia = null;
-        if (canonico.documentosRelacionados() != null && !canonico.documentosRelacionados().isEmpty()) {
-            docReferencia = canonico.documentosRelacionados().get(0);
+        // 2. Extraer Documento de Referencia (Obligatorio en Notas de Débito)
+        DocumentoRelacionadoCanonico docRef = canonico.documentoRelacionado();
+        if (docRef == null) {
+            throw new IllegalArgumentException("La Nota de Débito requiere un documento relacionado (Factura/Boleta).");
         }
 
-        if (docReferencia == null) {
-            throw new IllegalArgumentException("La Nota de Débito requiere un documento de referencia (Factura/Boleta).");
-        }
-
-        String[] refNumeros = docReferencia.numero() != null ? docReferencia.numero().split("-") : new String[]{"", ""};
+        // Dividir el número del documento afectado (ej: "F001-0001" -> "F001" y "0001")
+        String[] refNumeros = docRef.numeroDocumento() != null ? docRef.numeroDocumento().split("-") : new String[]{"", ""};
         String refSerie = refNumeros.length > 0 ? refNumeros[0] : "";
         String refCorrelativo = refNumeros.length > 1 ? refNumeros[1] : "";
 
-        // 3. Mapeo de Detalles/Lineas
+        // 3. Cálculos y Mapeo de Detalles/Lineas
         List<NotaDebitoLineaUblData> lineas = new ArrayList<>();
+        BigDecimal totalImpuestos = BigDecimal.ZERO;
+        BigDecimal valorVentaTotal = BigDecimal.ZERO;
+
         if (canonico.detalles() != null) {
             int numeroLinea = 1;
             for (DetalleCanonico det : canonico.detalles()) {
+                BigDecimal cantidad = det.cantidad() != null ? det.cantidad() : BigDecimal.ZERO;
+                BigDecimal valorUnitario = det.valorUnitario() != null ? det.valorUnitario() : BigDecimal.ZERO;
+                BigDecimal igv = det.igv() != null ? det.igv() : BigDecimal.ZERO;
+                
+                // Cálculo de Valor de Venta (Cantidad * Valor Unitario)
+                BigDecimal valorVentaLinea = cantidad.multiply(valorUnitario).setScale(2, RoundingMode.HALF_UP);
+                
+                // Determinación del porcentaje de IGV (18% si hay IGV)
+                BigDecimal porcentajeIgv = igv.compareTo(BigDecimal.ZERO) > 0 ? new BigDecimal("18.00") : BigDecimal.ZERO;
+
                 lineas.add(new NotaDebitoLineaUblData(
                         numeroLinea++,
                         det.codigoProducto(),
                         det.descripcion(),
-                        det.cantidad(),
+                        cantidad,
                         det.unidadMedida() != null ? det.unidadMedida() : "NIU",
-                        det.precioUnitario() != null ? det.precioUnitario() : BigDecimal.ZERO,
-                        det.valorTotal() != null ? det.valorTotal() : BigDecimal.ZERO
+                        igv,
+                        porcentajeIgv,
+                        det.codigoTipoIgv(),
+                        valorVentaLinea
                 ));
+                
+                // Sumar a los totales globales
+                totalImpuestos = totalImpuestos.add(igv);
+                valorVentaTotal = valorVentaTotal.add(valorVentaLinea);
             }
         }
 
-        // 4. Retornar el objeto Data armado
+        // Importe Total = Valor de Venta Total + Total Impuestos
+        BigDecimal importeTotal = valorVentaTotal.add(totalImpuestos);
+
+        // 4. Retornar el objeto Data armado (Alineado con NotaDebitoUblData.java)
         return new NotaDebitoUblData(
                 serie,
                 correlativo,
                 canonico.fechaEmision(),
-                canonico.horaEmision() != null ? canonico.horaEmision() : "00:00:00",
+                canonico.tipoDocumento() != null ? canonico.tipoDocumento() : "08", // 08 = Nota de Débito
                 canonico.moneda() != null ? canonico.moneda() : "PEN",
                 canonico.emisorRuc(),
-                "6", // RUC Emisor
                 canonico.emisorRazonSocial(),
                 canonico.receptorDocumento(),
-                canonico.receptorTipoDocumento() != null ? canonico.receptorTipoDocumento() : "6",
                 canonico.receptorRazonSocial(),
-                docReferencia.tipoDocumento(), // 01 (Factura) o 03 (Boleta)
+                docRef.tipoDocumento(),
                 refSerie,
                 refCorrelativo,
-                docReferencia.codigoMotivo(), // Catálogo 10
-                docReferencia.descripcionMotivo(),
-                canonico.totalCargos() != null ? canonico.totalCargos() : BigDecimal.ZERO,
-                BigDecimal.ZERO, 
-                canonico.totalIgv() != null ? canonico.totalIgv() : BigDecimal.ZERO,
-                canonico.totalImporte() != null ? canonico.totalImporte() : BigDecimal.ZERO,
+                docRef.motivoCodigo(),
+                docRef.motivoDescripcion(),
+                totalImpuestos,
+                importeTotal,
+                valorVentaTotal,
                 lineas
         );
     }
