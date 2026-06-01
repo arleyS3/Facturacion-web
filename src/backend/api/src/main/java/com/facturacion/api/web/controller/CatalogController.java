@@ -10,6 +10,7 @@ import com.facturacion.api.web.repositories.MotivoTrasladoRepository;
 import com.facturacion.api.web.repositories.TipoNotaCreditoRepository;
 import com.facturacion.api.web.repositories.TipoNotaDebitoRepository;
 import com.facturacion.api.web.repositories.TipoOperacionRepository;
+import com.facturacion.api.web.repositories.UnidadesMedidaComercialRepository;
 import com.facturacion.api.web.repositories.TipoDocumentoIdentidadRepository;
 import com.facturacion.api.web.repositories.TipoAfectacionIgvRepository;
 import com.facturacion.api.web.repositories.DocumentosRelacionadosTransporteRepository;
@@ -32,6 +33,7 @@ public class CatalogController {
   private final PuertosPeruRepository puertosPeruRepository;
   private final MonedaRepository monedaRepository;
   private final UnidadesMedidaRepository unidadesMedidaRepository;
+  private final UnidadesMedidaComercialRepository unidadesMedidaComercialRepository;
   private final CodigoTipoTributoRepository codigoTipoTributoRepository;
   private final MotivoTrasladoRepository motivoTrasladoRepository;
   private final TipoNotaCreditoRepository tipoNotaCreditoRepository;
@@ -49,6 +51,13 @@ public class CatalogController {
         .toList();
   }
 
+  @GetMapping("/unidades-medida-comercial")
+  /** Devuelve las unidades de medida comercial disponibles. */
+  public List<CatalogItem> unidadesDeMedidaComercial() {
+    return unidadesMedidaComercialRepository.findAll().stream()
+        .map(u -> CatalogItem.of(u.getCodigo(), u.getDescripcion()))
+        .toList();
+  }
   @GetMapping("/motivos-traslado")
   /** Devuelve los motivos de traslado (catalogo). */
   public List<CatalogItem> motivosTraslado() {
