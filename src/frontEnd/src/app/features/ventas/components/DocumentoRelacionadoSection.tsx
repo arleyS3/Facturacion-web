@@ -9,31 +9,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useFormContext } from "react-hook-form";
+import { useCatalog } from "@/hooks/useCatalog";
 import type { ComprobanteFormData } from "@/lib/schemas/comprobante.schema";
 
-const MOTIVOS_CATALOGO_09 = [
-  { code: "01", label: "Anulación de la operación" },
-  { code: "02", label: "Anulación por error en el RUC" },
-  { code: "03", label: "Corrección por error en la descripción" },
-  { code: "04", label: "Descuento global" },
-  { code: "05", label: "Descuento por ítem" },
-  { code: "06", label: "Devolución por ítem" },
-  { code: "07", label: "Bonificación" },
-  { code: "08", label: "Disminución en el valor" },
-  { code: "09", label: "Otros conceptos" },
-];
+type DocumentoRelacionadoType = "credit" | "debit";
+
+interface DocumentoRelacionadoSectionProps {
+  type: DocumentoRelacionadoType;
+}
 
 /**
- * Sección de referencia al documento que modifica la Nota de Crédito.
+ * Sección de referencia al documento que modifica la Nota de Crédito o Débito.
  * Usa el campo documentoRelacionado del schema del comprobante.
- * Campos: tipoDocumento, numeroDocumento (serie-correlativo), codigoMotivo.
+ * Muestra el catálogo de motivos correspondiente según el tipo (09 para NC, 10 para ND).
+ *
+ * @param type - "credit" para Nota de Crédito (catálogo 09) o "debit" para Nota de Débito (catálogo 10)
  */
-export function CreditNoteReferenceSection() {
+export function DocumentoRelacionadoSection({ type }: DocumentoRelacionadoSectionProps) {
   const { watch, setValue } = useFormContext<ComprobanteFormData>();
 
   const tipoDocumento  = watch("documentoRelacionado.tipoDocumento") ?? "01";
   const numeroDocumento = watch("documentoRelacionado.numeroDocumento") ?? "";
   const codigoMotivo   = watch("documentoRelacionado.codigoMotivo") ?? "";
+
+  const catalogPath = type === "credit"
+    ? "/catalogos/tipos-nota-credito"
+    : "/catalogos/tipos-nota-debito";
+
+  const { data: catalogo, loading: catalogoLoading } = useCatalog(catalogPath);
+
+  const catalogoLabel = `Catálogo 0${type === "credit" ? "9" : "10"}`;
+  const notaLabel = type === "credit" ? "Crédito" : "Débito";
 
   // Separar serie y correlativo para mostrarlos por separado
   const [serieRef, correlativoRef] = numeroDocumento.includes("-")
@@ -50,8 +56,11 @@ export function CreditNoteReferenceSection() {
       <div className="flex items-center gap-2">
         <Link className="size-4 text-amber-600" />
         <h4 className="font-semibold text-amber-900">Documento que Modifica</h4>
-        <span className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full">
-          Obligatorio para Nota de Crédito
+        <span
+          className="text-xs text-amber-600 bg-amber-100 px-2 py-0.5 rounded-full"
+          aria-live="polite"
+        >
+          Obligatorio para Nota de {notaLabel}
         </span>
       </div>
 
@@ -64,7 +73,7 @@ export function CreditNoteReferenceSection() {
               setValue("documentoRelacionado.tipoDocumento", v)
             }
           >
-            <SelectTrigger className="h-9">
+            <SelectTrigger className="h-9 min-h-[44px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -93,29 +102,32 @@ export function CreditNoteReferenceSection() {
             placeholder="00000001"
             value={correlativoRef}
             onChange={(e) => actualizarNumero(serieRef, e.target.value)}
+            inputMode="numeric"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs font-medium">Motivo (Catálogo 09)</Label>
+        <Label className="text-xs font-medium">Motivo ({catalogoLabel})</Label>
         <Select
           value={codigoMotivo}
           onValueChange={(v) =>
             setValue("documentoRelacionado.codigoMotivo", v)
           }
+          disabled={catalogoLoading}
         >
-          <SelectTrigger className="h-9">
-            <SelectValue placeholder="Seleccione motivo" />
+          <SelectTrigger className="h-9 min-h-[44px]" aria-label="Motivo">
+            <SelectValue placeholder={catalogoLoading ? "Cargando..." : "Seleccione motivo"} />
           </SelectTrigger>
           <SelectContent>
-            {MOTIVOS_CATALOGO_09.map((m) => (
+            {catalogo?.map((m) => (
               <SelectItem key={m.code} value={m.code}>
                 {m.code} - {m.label}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
+        <p className="text-xs text-muted-foreground">Seleccione el motivo de la nota</p>
       </div>
 
       {serieRef && correlativoRef && (
@@ -124,13 +136,13 @@ export function CreditNoteReferenceSection() {
           <span className="font-mono font-semibold">
             {serieRef}-{correlativoRef}
           </span>
-          {codigoMotivo && (
+          {codigoMotivo && catalogo && (
             <>
               {" "}
               · Motivo:{" "}
               <span className="font-semibold">
                 {codigoMotivo} -{" "}
-                {MOTIVOS_CATALOGO_09.find((m) => m.code === codigoMotivo)?.label}
+                {catalogo.find((m) => m.code === codigoMotivo)?.label}
               </span>
             </>
           )}

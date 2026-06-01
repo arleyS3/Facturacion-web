@@ -27,7 +27,7 @@ import {
 } from "../../../lib/emitErrorNotification";
 import { documentoSchema, type DocumentoFormData } from "@/lib/schemas/documento.schema";
 import { generarYDescargarXml } from "@/lib/xmlService";
-import { CreditNoteReferenceSection } from "@/features/ventas/components/CreditNoteReferenceSection";
+import { DocumentoRelacionadoSection } from "@/features/ventas/components/DocumentoRelacionadoSection";
 
 type ZodIssue = { path: (string | number)[]; message: string; code?: string };
 
@@ -155,9 +155,9 @@ export function InvoiceForm() {
     },
   });
 
-  const isNotaCredito = ["07", "Nota de Crédito"].includes(
-    methods.watch("tipoDocumento") || methods.watch("docType") || ""
-  );
+  const docValue = methods.watch("tipoDocumento") || methods.watch("docType") || "";
+  const isNota = ["07", "08", "Nota de Crédito", "Nota de Débito"].includes(docValue);
+  const isCredit = ["07", "Nota de Crédito"].includes(docValue);
 
   const descargarTxt = async (payload: any) => {
     const preferredName = buildFilenameFromPayload(payload, {
@@ -269,7 +269,7 @@ export function InvoiceForm() {
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-slate-900">Documentos de Venta</h1>
-                  <p className="text-sm text-slate-600">Factura, Boleta y Nota de Crédito</p>
+                  <p className="text-sm text-slate-600">Factura, Boleta, Nota de Crédito y Nota de Débito</p>
                 </div>
               </div>
             </div>
@@ -307,9 +307,11 @@ export function InvoiceForm() {
 
                 <TabsContent value="documento" className="mt-6">
                   <DocumentSection />
-                  {isNotaCredito && (
+                  {isNota && (
                     <div className="mt-6">
-                      <CreditNoteReferenceSection />
+                      <DocumentoRelacionadoSection
+                        type={isCredit ? "credit" : "debit"}
+                      />
                     </div>
                   )}
                 </TabsContent>

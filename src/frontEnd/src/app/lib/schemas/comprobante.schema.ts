@@ -89,6 +89,7 @@ const documentoRelacionadoSchema = z.object({
   tipoDocumento: z.string(),
   numeroDocumento: z.string(),
   codigoMotivo: z.string().optional(),
+  descripcionMotivo: z.string().optional(),
 }).optional();
 
 /**
