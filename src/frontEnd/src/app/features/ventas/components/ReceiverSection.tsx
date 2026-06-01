@@ -799,11 +799,17 @@ export function ReceiverSection() {
                 Sustento
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Input 
-                id="sustento" 
-                placeholder="Información de sustento de la nota" 
-                className="h-10"
+              <textarea
+                id="sustento"
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 min-h-[80px] resize-y"
+                placeholder="Información de sustento de la nota"
+                value={methods.watch("documentoRelacionado.descripcionMotivo") ?? ""}
+                onChange={(e) => methods.setValue("documentoRelacionado.descripcionMotivo", e.target.value)}
+                aria-describedby="sustento-helper"
               />
+              <p id="sustento-helper" className="text-xs text-muted-foreground">
+                Describa el motivo de la nota
+              </p>
             </div>
             <div className="space-y-2">
               <Label htmlFor="tipo-nota">

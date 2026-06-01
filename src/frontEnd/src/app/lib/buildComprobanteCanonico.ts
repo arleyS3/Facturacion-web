@@ -137,6 +137,7 @@ interface DocumentoRelacionadoPayload {
   tipo_documento: string;
   numero_documento: string;
   codigo_motivo?: string;
+  descripcion_motivo?: string;
 }
 
 /**
@@ -491,6 +492,8 @@ export function buildComprobanteCanonico(values: ComprobanteFormData): Comproban
       numero_documento: values.documentoRelacionado.numeroDocumento,
       /** Código del motivo de la nota */
       codigo_motivo: values.documentoRelacionado.codigoMotivo,
+      /** Descripción del motivo (sustento) */
+      descripcion_motivo: values.documentoRelacionado.descripcionMotivo,
     };
   }
 
