@@ -15,12 +15,44 @@ Repositorio full-stack compuesto por una API REST en Java Spring Boot (`src/back
 
 ---
 
-## 📌 Tecnologías usadas
+## 📌 Stack Tecnológico
 
-| Capa | Stack |
-|------|-------|
-| Backend | Java 21, Spring Boot 4.x (Web MVC, Validation), Maven (wrapper), springdoc-openapi (Swagger), JUnit |
-| Frontend | Node.js v20+, npm, React 18 + TypeScript, Vite, React Router, React Hook Form, Axios, Tailwind CSS, Radix UI, TanStack React Query |
+<details open>
+<summary><strong>Backend</strong> — Java 21 + Spring Boot 4.x</summary>
+<br/>
+
+| Categoría | Tecnología |
+|-----------|------------|
+| **Lenguaje** | ![Java](https://img.shields.io/badge/Java_21-007396?style=flat-square&logo=openjdk&logoColor=white) |
+| **Framework** | ![Spring Boot](https://img.shields.io/badge/Spring_Boot_4.x-6DB33F?style=flat-square&logo=springboot&logoColor=white) *(Web MVC, Validation)* |
+| **Build** | ![Maven](https://img.shields.io/badge/Maven_Wrapper-C71A36?style=flat-square&logo=apachemaven&logoColor=white) |
+| **Documentación API** | ![Swagger](https://img.shields.io/badge/springdoc--openapi-85EA2D?style=flat-square&logo=swagger&logoColor=black) |
+| **Testing** | ![JUnit](https://img.shields.io/badge/JUnit_5-25A162?style=flat-square&logo=junit5&logoColor=white) |
+| **SOAP Client** | WebServiceTemplate + JAXB |
+| **XML Processing** | DOM Parser, JAXB |
+
+</details>
+
+<details open>
+<summary><strong>Frontend</strong> — React 18 + TypeScript</summary>
+<br/>
+
+| Categoría | Tecnología |
+|-----------|------------|
+| **Framework** | ![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat-square&logo=typescript&logoColor=white) |
+| **Build** | ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white) |
+| **Routing** | ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=reactrouter&logoColor=white) |
+| **Forms** | ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?style=flat-square&logo=reacthookform&logoColor=white) + ![Zod](https://img.shields.io/badge/Zod-3E67B1?style=flat-square&logo=zod&logoColor=white) *(schemas y validación)* |
+| **HTTP** | ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white) |
+| **Caching / Estado** | ![TanStack Query](https://img.shields.io/badge/TanStack_Query-FF4154?style=flat-square&logo=reactquery&logoColor=white) *(catálogos SUNAT)* |
+| **Estilos** | ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white) |
+| **Componentes** | ![shadcn/ui](https://img.shields.io/badge/shadcn/ui-000000?style=flat-square&logo=shadcnui&logoColor=white) *(Radix UI + Tailwind)* |
+| **Íconos** | ![Lucide](https://img.shields.io/badge/Lucide-F56565?style=flat-square&logo=lucide&logoColor=white) |
+| **UI Library** | MUI Autocomplete *(importación Excel)* |
+| **Excel** | SheetJS (xlsx) *(importación productos)* |
+| **Notificaciones** | Sonner *(toasts)* |
+
+</details>
 
 ---
 
