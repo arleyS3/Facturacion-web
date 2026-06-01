@@ -83,7 +83,7 @@ Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa
 - [x] **Descuentos Globales**: Descuentos por ítem y globales con AllowanceCharge
 - [x] **Catálogos SUNAT**: Cacheo con TanStack Query (staleTime 5min, cacheTime 30min)
 - [x] **Monto en Letras**: Generación automática (SON XXX CON YY/100 SOLES)
-- [x] **OSE Client**: Envío a DBNet con ComponentesSucursalLoad + Base64 UBL
+- [ ] **OSE Client**: Envío a DBNet con ComponentesSucursalLoad + Base64 UBL
 - [x] **Importación Excel/CSV**: Carga masiva de productos desde archivo
 - [x] **Login** con JWT
 - [x] **Swagger UI** en `/swagger-ui`
