@@ -50,7 +50,9 @@ Ubicaciones de evidencias:
 
 ![Git branch develop](./git-sim_media/Imagenes/git-develop.jpg)
 ![Historial y autores](./git-sim_media/Imagenes/git-history-users.png)
-![Git Graph en VS Code](./git-sim_media/Imagenes/vs-code-grafica.png)
+![Git Graph en VS Code](./git-sim_media/Imagenes/vs-code-grafica_1.png)
+![Git Graph en VS Code](./git-sim_media/Imagenes/vs-code-grafica_2.png)
+![Git Graph en VS Code](./git-sim_media/Imagenes/vs-code-grafica_3.png)
 
 ### Video
 
@@ -62,13 +64,46 @@ Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa
 
 ---
 
-## ✅ Funcionalidades actuales
+## ✅ Funcionalidades implementadas
 
-Se mantiene el checklist para el seguimiento funcional.
+### Comprobantes Electrónicos (UBL 2.1 / SUNAT)
 
-- [ ] Generación de tramas TXT para comprobantes electrónicos
-- [ ] Descarga de tramas generadas
-- [ ] Login
+| Comprobante | Backend | Frontend | Estado |
+|-------------|---------|----------|--------|
+| Factura Electrónica (01) | ✅ XML con InvoiceType, IGV, ISC, descuentos, docs relacionados | ✅ Formulario completo + builder canónico | ✅ Completo |
+| Boleta de Venta (03) | ✅ XML con InvoiceType simplificado | ✅ Mismo formulario que Factura | ✅ Completo |
+| Nota de Crédito (07) | ✅ XML con CreditNoteType, DiscrepancyResponse (catálogo 09), BillingReference | ✅ DocumentoRelacionadoSection + Sustento | ✅ Completo |
+| Nota de Débito (08) | ✅ XML con DebitNoteType, DiscrepancyResponse (catálogo 10), BillingReference | ✅ DocumentoRelacionadoSection + Sustento | ✅ Completo |
+| Guía de Remisión (09) | ✅ XML con DespatchAdviceType (transporte, remitente, destinatario) | ⏳ En desarrollo | En desarrollo |
+
+### Funcionalidades transversales
+
+- [x] **Generación de XML UBL 2.1** para Factura, Boleta, Nota de Crédito y Nota de Débito
+- [x] **Documentos Relacionados**: Guías de remisión, documentos adicionales y anticipos
+- [x] **Descuentos Globales**: Descuentos por ítem y globales con AllowanceCharge
+- [x] **Catálogos SUNAT**: Cacheo con TanStack Query (staleTime 5min, cacheTime 30min)
+- [x] **Monto en Letras**: Generación automática (SON XXX CON YY/100 SOLES)
+- [x] **OSE Client**: Envío a DBNet con ComponentesSucursalLoad + Base64 UBL
+- [x] **Importación Excel/CSV**: Carga masiva de productos desde archivo
+- [x] **Login** con JWT
+- [x] **Swagger UI** en `/swagger-ui`
+- [x] **Accesibilidad**: ARIA labels, roles, descripciones, navegación por teclado
+
+### PRs mergeados
+
+| PR | Feature |
+|----|---------|
+| [#12](https://github.com/ArleyUTP/Facturacion-web/pull/12) | Factura Electrónica UBL 2.1 |
+| [#13](https://github.com/ArleyUTP/Facturacion-web/pull/13) | Integración Frontend XML UBL 2.1 |
+| [#14](https://github.com/ArleyUTP/Facturacion-web/pull/14) | Accesibilidad Ventas |
+| [#16](https://github.com/ArleyUTP/Facturacion-web/pull/16) | Cacheo Catálogos |
+| [#18](https://github.com/ArleyUTP/Facturacion-web/pull/18) | Boleta Electrónica UBL |
+| [#19](https://github.com/ArleyUTP/Facturacion-web/pull/19) | Descuentos Globales |
+| [#21](https://github.com/ArleyUTP/Facturacion-web/pull/21) | Documentos Relacionados |
+| [#22](https://github.com/ArleyUTP/Facturacion-web/pull/22) | Nota de Crédito UBL |
+| [#24](https://github.com/ArleyUTP/Facturacion-web/pull/24) | Nota de Débito UBL |
+| [#26](https://github.com/ArleyUTP/Facturacion-web/pull/26) | Frontend Nota de Crédito y Débito |
+
 ---
 
 ## 🚀 Ejecución local
