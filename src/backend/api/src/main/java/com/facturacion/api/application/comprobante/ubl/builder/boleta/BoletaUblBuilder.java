@@ -2,6 +2,7 @@ package com.facturacion.api.application.comprobante.ubl.builder.boleta;
 
 import com.facturacion.api.application.comprobante.ubl.mapper.boleta.BoletaUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.boleta.BoletaLineaUblData;
+import com.facturacion.api.application.comprobante.ubl.util.MontoEnLetrasUtil;
 import com.helger.ubl21.UBL21Marshaller;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.*;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.*;
@@ -459,11 +460,18 @@ public class BoletaUblBuilder {
         if (data.leyendas() == null || data.leyendas().isEmpty()) {
             return;
         }
+        final BigDecimal importeTotal = data.importeTotal();
+        final String moneda = data.moneda();
+
         List<NoteType> notas = data.leyendas().stream()
                 .map(leyenda -> {
                     NoteType nota = new NoteType();
-                    nota.setValue(leyenda.leyenda());
                     nota.setLanguageLocaleID(leyenda.codigoLocal());
+                    if ("1000".equals(leyenda.codigoLocal()) && importeTotal != null) {
+                        nota.setValue(MontoEnLetrasUtil.convertir(importeTotal, moneda));
+                    } else {
+                        nota.setValue(leyenda.leyenda());
+                    }
                     return nota;
                 })
                 .toList();

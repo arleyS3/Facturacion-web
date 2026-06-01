@@ -17,6 +17,7 @@ import com.facturacion.api.application.comprobante.ubl.mapper.factura.DatosTotal
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.FacturaLineaUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.FacturaUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.LeyendaUblData;
+import com.facturacion.api.application.comprobante.ubl.util.MontoEnLetrasUtil;
 import com.helger.ubl21.UBL21Marshaller;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -108,7 +109,8 @@ public class FacturaUblBuilder {
         configurarTotalLineasSiExiste(facturaUbl, datosFactura.totalLineas());
         configurarDescuentosGlobalesSiExisten(facturaUbl, datosFactura.descuentosGlobales(),
                 datosFactura.encabezado());
-        configurarLeyendasSiExisten(facturaUbl, datosFactura.leyendas());
+        configurarLeyendasSiExisten(facturaUbl, datosFactura.leyendas(),
+                datosFactura.totalesMonetarios(), datosFactura.encabezado().moneda());
         configurarGuiaRemisionSiExiste(facturaUbl, datosFactura);
         configurarDocumentosAdicionalesSiExisten(facturaUbl, datosFactura);
         configurarPartes(facturaUbl, datosFactura.emisor(), datosFactura.receptor());
@@ -330,15 +332,21 @@ public class FacturaUblBuilder {
 
     /**
      * Configura las leyendas cuando existen.
+     * <p>
+     * Para la leyenda de código 1000 (Monto en Letras), genera automáticamente
+     * el texto en palabras usando el importe total del comprobante.
+     * </p>
      *
-     * @param facturaUbl factura UBL a completar
-     * @param leyendas   leyendas registradas
+     * @param facturaUbl      factura UBL a completar
+     * @param leyendas        leyendas registradas
+     * @param totalesMonetarios totales monetarios (para monto en letras)
      */
-    private void configurarLeyendasSiExisten(InvoiceType facturaUbl, List<LeyendaUblData> leyendas) {
+    private void configurarLeyendasSiExisten(InvoiceType facturaUbl, List<LeyendaUblData> leyendas,
+            DatosTotalesMonetariosFacturaUbl totalesMonetarios, String moneda) {
         if (leyendas == null || leyendas.isEmpty()) {
             return;
         }
-        facturaUbl.setNote(crearNotasLeyenda(leyendas));
+        facturaUbl.setNote(crearNotasLeyenda(leyendas, totalesMonetarios, moneda));
     }
 
     /**
@@ -1318,17 +1326,33 @@ public class FacturaUblBuilder {
 
     /**
      * Crea una lista de notas (leyendas) a partir de una lista de descripciones.
+     * <p>
+     * Para la leyenda de código 1000 (Monto en Letras), reemplaza automáticamente
+     * el texto con el monto total expresado en palabras usando
+     * {@link MontoEnLetrasUtil}.
+     * </p>
      *
-     * @param leyendas lista de descripciones de leyendas
+     * @param leyendas         lista de descripciones de leyendas
+     * @param totalesMonetarios totales monetarios (para generar monto en letras)
      * @return lista de notas UBL
      */
-    private List<NoteType> crearNotasLeyenda(List<LeyendaUblData> leyendas) {
+    private List<NoteType> crearNotasLeyenda(List<LeyendaUblData> leyendas,
+            DatosTotalesMonetariosFacturaUbl totalesMonetarios, String moneda) {
+        final BigDecimal importeTotal = totalesMonetarios != null
+                ? totalesMonetarios.importeTotalPagar()
+                : null;
+        final String codigoMoneda = moneda;
+
         return leyendas
                 .stream()
                 .map(leyenda -> {
                     NoteType nota = new NoteType();
                     nota.setLanguageLocaleID(leyenda.codigoLocal());
-                    nota.setValue(leyenda.leyenda());
+                    if ("1000".equals(leyenda.codigoLocal()) && importeTotal != null) {
+                        nota.setValue(MontoEnLetrasUtil.convertir(importeTotal, codigoMoneda));
+                    } else {
+                        nota.setValue(leyenda.leyenda());
+                    }
                     return nota;
                 })
                 .toList();
