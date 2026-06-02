@@ -22,20 +22,6 @@ const correlativoSchema = z
   .regex(/^\d{8}$/, { message: "El correlativo debe tener exactamente 8 dígitos numéricos" });
 
 /**
- * Schema para el monto neto pendiente (campo opcional).
- */
-const montoPendienteSchema = z
-  .string()
-  .optional()
-  .refine(
-    (val) => {
-      if (!val || val.trim() === "") return true;
-      return /^\d+(\.\d{1,2})?$/.test(val);
-    },
-    { message: "El monto debe ser un número válido con hasta 2 decimales" }
-  );
-
-/**
  * Schema para un detalle (producto) del comprobante.
  */
 const detalleSchema = z.object({
@@ -198,10 +184,6 @@ export const comprobanteSchema = z.object({
   // =================================================================
   documentosAdicionales: documentosAdicionalesSchema.optional(),
 
-  // =================================================================
-  // CAMPOS ADICIONALES
-  // =================================================================
-  montoPendiente: montoPendienteSchema,
 });
 
 /**
@@ -231,8 +213,6 @@ export const payloadLegacySchema = z.object({
   moneda: z.string().optional(),
   // Productos
   products: z.array(detalleSchema).optional(),
-  // Otros
-  montoPendiente: z.string().optional(),
   // Campos legacy (para compatibilidad con buildPayload)
   issuerDocType: z.string().optional(),
   issuerDocNumber: z.string().optional(),

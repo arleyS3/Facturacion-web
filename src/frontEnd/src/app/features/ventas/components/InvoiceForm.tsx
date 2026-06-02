@@ -129,11 +129,6 @@ export function InvoiceForm() {
       documentoRelacionado: undefined,
       
       // =================================================================
-      // CAMPOS ADICIONALES
-      // =================================================================
-      montoPendiente: "",
-      
-      // =================================================================
       // CAMPOS LEGACY (para compatibilidad con buildPayload/TXT)
       // =================================================================
       // Estos campos mantienen los nombres old para que buildPayload funcione

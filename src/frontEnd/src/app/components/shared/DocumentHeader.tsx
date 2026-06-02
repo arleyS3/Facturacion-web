@@ -1,18 +1,14 @@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { AlertCircle, CalendarIcon } from "lucide-react";
-import { format } from "date-fns";
-import { es } from "date-fns/locale";
-import { cn } from "@/components/ui/utils";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { AlertCircle } from "lucide-react";
 
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
@@ -154,9 +150,6 @@ export function DocumentHeader({
   const [correlativo, setCorrelativo] = useState<string>(() => {
     return methods?.getValues?.("correlativo") ?? watchedCorrelativo ?? "";
   });
-  const [montoPendiente, setMontoPendiente] = useState<string>(() => {
-    return methods?.getValues?.("montoPendiente") ?? "";
-  });
   const formatTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const formatCorrelativo = (value?: string) => {
@@ -245,16 +238,7 @@ export function DocumentHeader({
   const monedaValue = methods?.watch?.("moneda") || "";
   const selectedMoneda =
     opcionesMoneda.find((m) => m.code === monedaValue) || null;
-  const showTipoPago = isSales && currentDocType === "Factura";
   const codigoEmpresaValue = watchedCompanyCode ?? codigoEmpresaLocal;
-  const [fechaVencimiento, setFechaVencimiento] = useState<Date | undefined>(
-    () => {
-      const raw = methods?.getValues?.("fechaVencimiento");
-      return raw ? new Date(raw + "T00:00:00") : undefined;
-    },
-  );
-  const tipoPago = methods?.watch?.("tipoPago") ?? "contado";
-  const showFechaVencimiento = showTipoPago && tipoPago === "credito";
 
   return (
     <div className="space-y-6">
@@ -383,6 +367,7 @@ export function DocumentHeader({
                 setCorrelativo(val);
                 if (setValue) setValue("correlativo", val);
               }}
+              maxLength={8}
               onBlur={() => formatCorrelativo()}
               aria-invalid={!!formState?.errors?.correlativo}
               aria-describedby={
@@ -559,95 +544,7 @@ export function DocumentHeader({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="tipo-pago">Tipo de Pago</Label>
-              <Select
-                value={methods?.watch?.("tipoPago") ?? "contado"}
-                onValueChange={(v) => setValue?.("tipoPago", v)}
-                defaultValue="contado"
-                disabled={!showTipoPago}
-              >
-                <SelectTrigger id="tipo-pago">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="contado">Contado</SelectItem>
-                  <SelectItem value="credito">Crédito</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="monto-pendiente">Monto Neto Pendiente</Label>
-              <Input
-                id="monto-pendiente"
-                placeholder="0.00"
-                className={`font-mono ${formState?.errors?.montoPendiente ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
-                value={montoPendiente}
-                onChange={(e) => {
-                  const val = e.target.value.replace(/[^0-9.]/g, ""); // Solo dígitos y punto
-                  setMontoPendiente(val);
-                  if (setValue) setValue("montoPendiente", val);
-                }}
-                aria-invalid={!!formState?.errors?.montoPendiente}
-                aria-describedby={
-                  formState?.errors?.montoPendiente
-                    ? "monto-pendiente-error"
-                    : undefined
-                }
-              />
-              {formState?.errors?.montoPendiente && (
-                <p
-                  id="monto-pendiente-error"
-                  role="alert"
-                  className="text-xs text-destructive flex items-center gap-1"
-                >
-                  <AlertCircle className="size-3" />
-                  {formState.errors.montoPendiente.message}
-                </p>
-              )}
-            </div>
           </div>
-
-          {showFechaVencimiento && (
-            <div className="mt-4 border-t border-slate-100 pt-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="fecha-vencimiento">
-                    Fecha de Vencimiento
-                  </Label>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        data-empty={!fechaVencimiento}
-                        className="w-full justify-start text-left font-normal data-[empty=true]:text-muted-foreground"
-                      >
-                        <CalendarIcon />
-                        {fechaVencimiento ? (
-                          format(fechaVencimiento, "PPP", { locale: es })
-                        ) : (
-                          <span>Seleccionar fecha</span>
-                        )}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={fechaVencimiento}
-                        onSelect={(date) => {
-                          setFechaVencimiento(date);
-                          setValue?.("fechaVencimiento", date ? format(date, "yyyy-MM-dd") : "");
-                        }}
-                        locale={es}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       ) : null}
     </div>
