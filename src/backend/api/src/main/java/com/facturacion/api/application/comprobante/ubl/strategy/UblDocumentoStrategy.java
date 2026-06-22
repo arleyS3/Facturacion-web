@@ -1,5 +1,6 @@
 package com.facturacion.api.application.comprobante.ubl.strategy;
 
+import com.facturacion.api.application.comprobante.dto.GenerarXmlResult;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 
 /**
@@ -15,11 +16,13 @@ public interface UblDocumentoStrategy {
     String codigoSunat();
 
     /**
-     * Genera el XML UBL a partir del comprobante canónico.
+     * Genera el XML UBL a partir del comprobante canónico, incluyendo
+     * validación XSD post-construcción. La validación es informativa
+     * y no bloquea la generación del XML.
      *
      * @param canonico comprobante canónico
-     * @return XML generado
+     * @return resultado con XML generado y errores de validación
      * @throws Exception si ocurre un error en la generación
      */
-    String generarXml(ComprobanteCanonico canonico) throws Exception;
+    GenerarXmlResult generarXml(ComprobanteCanonico canonico) throws Exception;
 }
