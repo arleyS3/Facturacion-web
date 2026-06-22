@@ -69,6 +69,15 @@ graphify-out/**
 .obsidian
 
 ### SDD / Skill Registry
-.atl//
-# Local Pi runtime state
 .atl/
+
+### Pi runtime
+.pi/
+**/.pi/
+
+### OS files
+.DS_Store
+Thumbs.db
+
+### AI Agent artifacts
+openspec/
