@@ -10,17 +10,23 @@ interface GenerarXmlResponse {
   tipoDocumento?: string;
   xml?: string;
   error?: string;
+  validationErrors?: string[];
+}
+
+export interface GenerarXmlResult {
+  xml: string;
+  validationErrors: string[];
 }
 
 /**
  * Genera el XML UBL 2.1 del comprobante electrónico.
  *
  * @param formData - Los datos del formulario
- * @returns El XML generado como string
+ * @returns Objeto con el XML generado y errores de validación (si los hay)
  */
 export async function generarXml(
   formData: ComprobanteFormData,
-): Promise<string> {
+): Promise<GenerarXmlResult> {
   const canonico = buildComprobanteCanonico(formData);
 
   console.log(
@@ -37,7 +43,10 @@ export async function generarXml(
     throw new Error(response.data.error || "Error al generar XML");
   }
 
-  return response.data.xml!;
+  return {
+    xml: response.data.xml!,
+    validationErrors: response.data.validationErrors ?? [],
+  };
 }
 
 /**
@@ -58,16 +67,21 @@ export function descargarXml(xml: string, nombreArchivo: string): void {
   window.URL.revokeObjectURL(url);
 }
 
+export interface GenerarYDescargarXmlResult {
+  filename: string;
+  validationErrors: string[];
+}
+
 /**
  * Genera y descarga el XML del comprobante.
  *
  * @param formData - Los datos del formulario
- * @returns El nombre del archivo descargado
+ * @returns Objeto con el nombre del archivo descargado y errores de validación
  */
 export async function generarYDescargarXml(
   formData: ComprobanteFormData,
-): Promise<string> {
-  const xml = await generarXml(formData);
+): Promise<GenerarYDescargarXmlResult> {
+  const { xml, validationErrors } = await generarXml(formData);
 
   // Generar nombre de archivo basado en el número de documento
   const numero = formData.correlativo?.padStart(8, "0") || "00000000";
@@ -88,7 +102,7 @@ export async function generarYDescargarXml(
 
   descargarXml(xml, nombreArchivo);
 
-  return nombreArchivo;
+  return { filename: nombreArchivo, validationErrors };
 }
 
 /**
