@@ -1,5 +1,6 @@
 package com.facturacion.api.web.controller;
 
+import com.facturacion.api.application.comprobante.dto.GenerarXmlResult;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.ubl.signature.XmlSignatureService;
 import com.facturacion.api.application.comprobante.ubl.strategy.UblDocumentoStrategy;
@@ -116,9 +117,9 @@ public class ComprobanteController {
                             schema = @Schema(implementation = Map.class),
                             examples = {
                                     @ExampleObject(name = "Factura generada",
-                                            value = "{\"success\":true,\"tipoDocumento\":\"01\",\"xml\":\"<Invoice>...\"}"),
+                                            value = "{\"success\":true,\"tipoDocumento\":\"01\",\"xml\":\"<Invoice>...\",\"validationErrors\":[]}"),
                                     @ExampleObject(name = "Boleta generada",
-                                            value = "{\"success\":true,\"tipoDocumento\":\"03\",\"xml\":\"<Invoice>...\"}")})),
+                                            value = "{\"success\":true,\"tipoDocumento\":\"03\",\"xml\":\"<Invoice>...\",\"validationErrors\":[]}")})),
             @ApiResponse(responseCode = "400", description = "Request inválido o tipo de documento no soportado",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class))),
@@ -180,8 +181,9 @@ public class ComprobanteController {
         }
 
         try {
-            // 1. Generar XML UBL
-            String xml = estrategia.generarXml(canonico);
+            // 1. Generar XML UBL con validación post-construcción
+            GenerarXmlResult result = estrategia.generarXml(canonico);
+            String xml = result.xml();
             
             // 2. Firmar digitalmente el XML solo si se indica (por defecto true)
             String xmlResult = canonico.debeFirmar()
@@ -191,7 +193,8 @@ public class ComprobanteController {
             return Map.of(
                     "success", true,
                     "tipoDocumento", codigoSunat,
-                    "xml", xmlResult);
+                    "xml", xmlResult,
+                    "validationErrors", result.validationErrors());
         } catch (Exception e) {
             log.error("Error al generar XML: {}", e.getMessage(), e);
             return Map.of(
