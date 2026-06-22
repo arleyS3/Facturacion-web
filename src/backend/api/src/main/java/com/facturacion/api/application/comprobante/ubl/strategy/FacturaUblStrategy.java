@@ -1,9 +1,11 @@
 package com.facturacion.api.application.comprobante.ubl.strategy;
 
+import com.facturacion.api.application.comprobante.dto.GenerarXmlResult;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.ubl.builder.factura.FacturaUblBuilder;
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.FacturaUblMapper;
 import com.facturacion.api.application.comprobante.ubl.signature.XmlSignatureService;
+import com.facturacion.api.application.comprobante.validation.ValidacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +19,7 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
     private final FacturaUblMapper mapper;
     private final FacturaUblBuilder builder;
     private final XmlSignatureService signatureService;
+    private final ValidacionService validacionService;
 
     /**
      * {@inheritDoc}
@@ -30,12 +33,20 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
      * {@inheritDoc}
      */
     @Override
-    public String generarXml(ComprobanteCanonico canonico) throws Exception {
-        // 1. Generar XML UBL
+    public GenerarXmlResult generarXml(ComprobanteCanonico canonico) throws Exception {
+        // 1. Mapear datos canónicos a datos UBL
         var data = mapper.fromCanonico(canonico);
-        String xml = builder.construirXml(data);
 
-        // 2. Firmar XML solo si se indica y hay certificado configurado
+        // 2. Construir objeto InvoiceType UBL
+        var invoiceType = builder.buildInvoice(data);
+
+        // 3. Validar contra esquema XSD (no bloqueante)
+        var validationErrors = validacionService.validar(invoiceType);
+
+        // 4. Serializar a XML
+        String xml = builder.serializarFactura(invoiceType);
+
+        // 5. Firmar XML solo si se indica y hay certificado configurado
         if (canonico.debeFirmar()) {
             String rucEmisor = canonico.emisorRuc();
             if (rucEmisor != null && !rucEmisor.isBlank()) {
@@ -47,6 +58,6 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
             }
         }
 
-        return xml;
+        return new GenerarXmlResult(xml, validationErrors);
     }
 }

@@ -94,13 +94,13 @@ public class FacturaUblBuilder {
     private static final @Nullable String NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL = "-";
 
     /**
-     * Construye el XML de factura UBL 2.1 a partir de los datos canónicos.
+     * Construye el objeto InvoiceType UBL 2.1 a partir de los datos canónicos,
+     * sin serializar a XML.
      *
      * @param datosFactura datos de la factura en formato canónico
-     * @return contenido XML generado
-     * @throws Exception si hay error al generar el XML
+     * @return InvoiceType construido (no serializado)
      */
-    public String construirXml(FacturaUblData datosFactura) throws Exception {
+    public InvoiceType buildInvoice(FacturaUblData datosFactura) {
         InvoiceType facturaUbl = new InvoiceType();
 
         configurarEncabezado(facturaUbl, datosFactura.encabezado());
@@ -121,6 +121,18 @@ public class FacturaUblBuilder {
                 datosFactura.encabezado());
         configurarLineas(facturaUbl, datosFactura.encabezado(), datosFactura.lineas());
 
+        return facturaUbl;
+    }
+
+    /**
+     * Construye el XML de factura UBL 2.1 a partir de los datos canónicos.
+     *
+     * @param datosFactura datos de la factura en formato canónico
+     * @return contenido XML generado
+     * @throws Exception si hay error al generar el XML
+     */
+    public String construirXml(FacturaUblData datosFactura) throws Exception {
+        InvoiceType facturaUbl = buildInvoice(datosFactura);
         return serializarFactura(facturaUbl);
     }
 
@@ -706,7 +718,7 @@ public class FacturaUblBuilder {
      * @return XML serializado
      * @throws Exception si hay error al serializar
      */
-    private String serializarFactura(InvoiceType facturaUbl) throws Exception {
+    public String serializarFactura(InvoiceType facturaUbl) throws Exception {
         StringWriter escritorXml = new StringWriter();
         UBL21Marshaller.invoice()
                 .setFormattedOutput(true)

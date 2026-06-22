@@ -1,5 +1,6 @@
 package com.facturacion.api.application.comprobante.ubl.strategy;
 
+import com.facturacion.api.application.comprobante.dto.GenerarXmlResult;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.ubl.builder.guiaRemision.GuiaRemisionUblBuilder;
 import com.facturacion.api.application.comprobante.ubl.mapper.guiaRemision.GuiaRemisionUblMapper;
@@ -28,16 +29,17 @@ public class GuiaRemisionUblStrategy implements UblDocumentoStrategy {
      * {@inheritDoc}
      */
     @Override
-    public String generarXml(ComprobanteCanonico canonico) throws Exception {
+    public GenerarXmlResult generarXml(ComprobanteCanonico canonico) throws Exception {
         var data = mapper.fromCanonico(canonico);
         if (data == null) {
-            return """
+            String xml = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <DespatchAdvice xmlns="urn:oasis:names:specification:ubl:schema:xsd:DespatchAdvice-2">
                   <cbc:ID>%s</cbc:ID>
                 </DespatchAdvice>
                 """.formatted(canonico.numero());
+            return new GenerarXmlResult(xml, java.util.List.of());
         }
-        return builder.construirXml(data);
+        return new GenerarXmlResult(builder.construirXml(data), java.util.List.of());
     }
 }

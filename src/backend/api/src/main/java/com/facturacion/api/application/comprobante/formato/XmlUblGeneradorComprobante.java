@@ -46,7 +46,8 @@ public class XmlUblGeneradorComprobante implements GeneradorComprobante {
         String codigoSunat = TipoDocumentoMapper.toCodigoSunat(request.tipoDocumento());
         UblDocumentoStrategy strategy = strategyRegistry.getByCodigo(codigoSunat);
 
-        String xmlRaw = strategy.generarXml(canonico);
+        var generarXmlResult = strategy.generarXml(canonico);
+        String xmlRaw = generarXmlResult.xml();
         String xml = ublXmlWriter.normalize(xmlRaw);
         schemaValidator.validar(xml);
 

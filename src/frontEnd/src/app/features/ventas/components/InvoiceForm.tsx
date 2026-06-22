@@ -28,6 +28,7 @@ import {
 import { documentoSchema, type DocumentoFormData } from "@/lib/schemas/documento.schema";
 import { generarYDescargarXml } from "@/lib/xmlService";
 import { DocumentoRelacionadoSection } from "@/features/ventas/components/DocumentoRelacionadoSection";
+import { ValidationBanner } from "@/components/shared/ValidationBanner";
 
 type ZodIssue = { path: (string | number)[]; message: string; code?: string };
 
@@ -60,6 +61,7 @@ export function InvoiceForm() {
   const [showEmitDialog, setShowEmitDialog] = useState(false);
   const [isGeneratingTxt, setIsGeneratingTxt] = useState(false);
   const [isGeneratingXml, setIsGeneratingXml] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
   const goHome = () => {
     navigate("/");
   };
@@ -215,12 +217,18 @@ export function InvoiceForm() {
   const generarXml = async () => {
     console.log("[InvoiceForm] generarXml fired");
     setIsGeneratingXml(true);
+    setValidationErrors([]);
     const values = methods.getValues();
     console.log("[InvoiceForm] Generando XML con valores:", values);
 
     try {
-      const filename = await generarYDescargarXml(values);
-      console.log(`[InvoiceForm] XML descargado correctamente: ${filename}`);
+      const result = await generarYDescargarXml(values);
+      console.log(
+        `[InvoiceForm] XML descargado correctamente: ${result.filename}`,
+      );
+      if (result.validationErrors.length > 0) {
+        setValidationErrors(result.validationErrors);
+      }
     } catch (error) {
       console.error("[InvoiceForm] Error al generar XML ->", error);
       notifyRequestError(error, "No se pudo generar el XML");
@@ -357,6 +365,13 @@ export function InvoiceForm() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Banner de validaciones no bloqueante */}
+        {validationErrors.length > 0 && (
+          <div className="mt-6">
+            <ValidationBanner errors={validationErrors} />
+          </div>
+        )}
       </main>
 
       {/* Barra de Acciones Flotante */}

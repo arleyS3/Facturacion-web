@@ -25,7 +25,14 @@ public class NotaDebitoUblBuilder {
     private static final String VERSION_UBL = "2.1";
     private static final String VERSION_ESTRUCTURA = "2.0";
 
-    public String construirXml(NotaDebitoUblData data) throws Exception {
+    /**
+     * Construye el objeto DebitNoteType UBL 2.1 a partir de los datos canónicos,
+     * sin serializar a XML.
+     *
+     * @param data datos de la nota de débito en formato canónico
+     * @return DebitNoteType construido (no serializado)
+     */
+    public DebitNoteType buildDebitNote(NotaDebitoUblData data) {
         DebitNoteType notaDebito = new DebitNoteType();
         
         // 1. Encabezado principal
@@ -85,14 +92,29 @@ public class NotaDebitoUblBuilder {
                 notaDebito.addDebitNoteLine(crearLinea(linea, moneda));
             }
         }
-        
-        // Generar XML String
+
+        return notaDebito;
+    }
+
+    /**
+     * Serializa un DebitNoteType UBL a XML.
+     *
+     * @param notaDebito DebitNoteType a serializar
+     * @return XML serializado
+     * @throws Exception si hay error al serializar
+     */
+    public String serializar(DebitNoteType notaDebito) throws Exception {
         StringWriter writer = new StringWriter();
         UBL21Marshaller.debitNote()
             .setFormattedOutput(true)
             .write(notaDebito, writer);
         
         return writer.toString();
+    }
+
+    public String construirXml(NotaDebitoUblData data) throws Exception {
+        DebitNoteType notaDebito = buildDebitNote(data);
+        return serializar(notaDebito);
     }
 
     private SupplierPartyType crearEmisor(NotaDebitoUblData data) {

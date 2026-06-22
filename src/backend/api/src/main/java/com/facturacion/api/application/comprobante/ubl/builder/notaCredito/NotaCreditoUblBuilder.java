@@ -53,7 +53,14 @@ public class NotaCreditoUblBuilder {
 
     private static final BigDecimal PORCENTAJE_IGV = new BigDecimal("18.00");
 
-    public String construirXml(NotaCreditoUblData data) throws Exception {
+    /**
+     * Construye el objeto CreditNoteType UBL 2.1 a partir de los datos canónicos,
+     * sin serializar a XML.
+     *
+     * @param data datos de la nota de crédito en formato canónico
+     * @return CreditNoteType construido (no serializado)
+     */
+    public CreditNoteType buildCreditNote(NotaCreditoUblData data) {
         CreditNoteType nc = new CreditNoteType();
 
         configurarEncabezado(nc, data);
@@ -66,6 +73,11 @@ public class NotaCreditoUblBuilder {
         configurarTotalesMonetarios(nc, data);
         configurarLineas(nc, data);
 
+        return nc;
+    }
+
+    public String construirXml(NotaCreditoUblData data) throws Exception {
+        CreditNoteType nc = buildCreditNote(data);
         return serializar(nc);
     }
 
@@ -540,7 +552,7 @@ public class NotaCreditoUblBuilder {
     // SERIALIZACIÓN
     // =========================================================================
 
-    private String serializar(CreditNoteType nc) throws Exception {
+    public String serializar(CreditNoteType nc) throws Exception {
         StringWriter writer = new StringWriter();
         UBL21Marshaller.creditNote()
                 .setFormattedOutput(true)

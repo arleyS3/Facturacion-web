@@ -44,13 +44,13 @@ public class BoletaUblBuilder {
     private static final @Nullable String NO_HAY_CODIGO_DE_REGIMEN_ESPECIAL = "-";
 
     /**
-     * Construye el XML de boleta UBL 2.1.
+     * Construye el objeto InvoiceType UBL 2.1 a partir de los datos canónicos,
+     * sin serializar a XML.
      *
      * @param data datos de la boleta en formato canónico
-     * @return contenido XML generado
-     * @throws Exception si hay error al generar el XML
+     * @return InvoiceType construido (no serializado)
      */
-    public String construirXml(BoletaUblData data) throws Exception {
+    public InvoiceType buildInvoice(BoletaUblData data) {
         InvoiceType invoice = new InvoiceType();
 
         invoice.setUBLVersionID("2.1");
@@ -100,6 +100,19 @@ public class BoletaUblBuilder {
             }
         }
 
+        return invoice;
+    }
+
+    /**
+     * Serializa un InvoiceType UBL a XML, aplicando el reemplazo de leyendas
+     * post-serialización que requiere SUNAT.
+     *
+     * @param invoice InvoiceType a serializar
+     * @param data    datos originales de la boleta (para reemplazo de leyendas)
+     * @return XML serializado
+     * @throws Exception si hay error al serializar
+     */
+    public String serializar(InvoiceType invoice, BoletaUblData data) throws Exception {
         StringWriter writer = new StringWriter();
         UBL21Marshaller.invoice()
                 .setFormattedOutput(true)
@@ -116,6 +129,18 @@ public class BoletaUblBuilder {
         }
 
         return xmlFinal;
+    }
+
+    /**
+     * Construye el XML de boleta UBL 2.1.
+     *
+     * @param data datos de la boleta en formato canónico
+     * @return contenido XML generado
+     * @throws Exception si hay error al generar el XML
+     */
+    public String construirXml(BoletaUblData data) throws Exception {
+        InvoiceType invoice = buildInvoice(data);
+        return serializar(invoice, data);
     }
 
     /**
