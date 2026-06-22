@@ -29,8 +29,6 @@ public class SecurityConfig {
                 auth
                     .requestMatchers("/api/v1/auth/**")
                     .permitAll()
-                    .requestMatchers("/api/**")
-                    .permitAll() //Para pruebas con Swagger
                     .requestMatchers(
                         "/swagger-ui/**",
                         "/api-docs/**",
