@@ -1,7 +1,7 @@
 package com.facturacion.api.application.comprobante.ubl.builder.guiaRemision;
 
-import com.facturacion.api.application.comprobante.ubl.mapper.guiaRemision.GuiaRemisionUblData;
 import com.facturacion.api.application.comprobante.ubl.mapper.guiaRemision.GuiaRemisionLineaUblData;
+import com.facturacion.api.application.comprobante.ubl.mapper.guiaRemision.GuiaRemisionUblData;
 import com.helger.ubl21.UBL21Marshaller;
 import oasis.names.specification.ubl.schema.xsd.commonaggregatecomponents_21.*;
 import oasis.names.specification.ubl.schema.xsd.commonbasiccomponents_21.*;
@@ -15,53 +15,49 @@ import java.util.Collections;
 
 /**
  * Constructor de XML UBL 2.1 para Guía de Remisión Electrónica.
- * Genera un documento XML válido según especificación UBL 2.1 y normativa SUNAT Perú.
- * 
- * <p>Esta clase construye objetos DespatchAdviceType de UBL 2.1 utilizando la librería ph-ubl.
- * Soporta los campos requeridos por SUNAT para guías de remisión electrónicas.</p>
- * 
- * @author Facturación API
- * @version 1.0
- * @see <a href="https://github.com/phax/ph-ubl">ph-ubl</a>
- * @see <a href="https://cpe.sunat.gob.pe">SUNAT CPE</a>
  */
 @Component
 public class GuiaRemisionUblBuilder {
 
-    /** Formato de fecha para parsing de fechas. */
     private static final DateTimeFormatter FECHA_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    private static final String VERSION_UBL = "2.1";
+    private static final String VERSION_ESTRUCTURA = "2.0";
 
-    /**
-     * Construye el XML de guía de remisión UBL 2.1.
-     *
-     * @param data datos de la guía en formato canónico
-     * @return contenido XML generado
-     * @throws Exception si hay error al generar el XML
-     */
     public String construirXml(GuiaRemisionUblData data) throws Exception {
         DespatchAdviceType guia = new DespatchAdviceType();
         
+        // 1. Encabezado principal
+        guia.setUBLVersionID(VERSION_UBL);
+        guia.setCustomizationID(VERSION_ESTRUCTURA);
         guia.setID(data.serie() + "-" + data.correlativo());
         
-        LocalDate fecha = LocalDate.parse(data.fechaEmision(), FECHA_FMT);
-        guia.setIssueDate(fecha);
-        
-        guia.setDespatchAdviceTypeCode("09");
-        
-        guia.setDespatchSupplierParty(crearRemitente(data));
-        
-        if (data.destinatarioNroDocumento() != null) {
-            guia.setDeliveryCustomerParty(crearDestinatario(data));
+        if (data.fechaEmision() != null) {
+            guia.setIssueDate(LocalDate.parse(data.fechaEmision(), FECHA_FMT));
         }
         
+        // Código de tipo de documento (09)
+        DespatchAdviceTypeCodeType typeCode = new DespatchAdviceTypeCodeType();
+        typeCode.setValue(data.tipoDocumento());
+        typeCode.setListAgencyName("PE:SUNAT");
+        typeCode.setListName("SUNAT:Identificador de Tipo de Documento");
+        typeCode.setListURI("urn:pe:gob:sunat:cpe:see:gem:catalogos:catalogo01");
+        guia.setDespatchAdviceTypeCode(typeCode);
+
+        // 2. Entidades (Remitente y Destinatario)
+        guia.setDespatchSupplierParty(crearRemitente(data));
+        guia.setDeliveryCustomerParty(crearDestinatario(data));
+        
+        // 3. Datos de Traslado (Shipment)
         guia.setShipment(crearShipment(data));
         
+        // 4. Detalle de los bienes
         if (data.lineas() != null) {
             for (GuiaRemisionLineaUblData linea : data.lineas()) {
                 guia.addDespatchLine(crearLinea(linea));
             }
         }
         
+        // 5. Generar XML
         StringWriter writer = new StringWriter();
         UBL21Marshaller.despatchAdvice()
             .setFormattedOutput(true)
@@ -70,82 +66,178 @@ public class GuiaRemisionUblBuilder {
         return writer.toString();
     }
 
-    /**
-     * Crea el remitente de la guía de remisión.
-     *
-     * @param data datos de la guía
-     * @return datos del remitente
-     */
     private SupplierPartyType crearRemitente(GuiaRemisionUblData data) {
         SupplierPartyType supplier = new SupplierPartyType();
         PartyType party = new PartyType();
         
+        if (data.emisorNroDocumento() != null) {
+            PartyIdentificationType id = new PartyIdentificationType();
+            IDType docId = new IDType();
+            docId.setSchemeID(data.emisorTipoDocumento() != null ? data.emisorTipoDocumento() : "6");
+            docId.setValue(data.emisorNroDocumento());
+            id.setID(docId);
+            party.addPartyIdentification(id);
+        }
+
         if (data.emisorRazonSocial() != null) {
-            PartyNameType name = new PartyNameType();
-            name.setName(data.emisorRazonSocial());
-            party.addPartyName(name);
+            PartyLegalEntityType legalEntity = new PartyLegalEntityType();
+            legalEntity.setRegistrationName(data.emisorRazonSocial());
+            party.addPartyLegalEntity(legalEntity);
         }
         
         supplier.setParty(party);
         return supplier;
     }
 
-    /**
-     * Crea el destinatario de la guía de remisión.
-     *
-     * @param data datos de la guía
-     * @return datos del destinatario
-     */
     private CustomerPartyType crearDestinatario(GuiaRemisionUblData data) {
         CustomerPartyType customer = new CustomerPartyType();
         PartyType party = new PartyType();
         
+        if (data.destinatarioNroDocumento() != null) {
+            PartyIdentificationType id = new PartyIdentificationType();
+            IDType docId = new IDType();
+            docId.setSchemeID(data.destinatarioTipoDocumento() != null ? data.destinatarioTipoDocumento() : "6");
+            docId.setValue(data.destinatarioNroDocumento());
+            id.setID(docId);
+            party.addPartyIdentification(id);
+        }
+
         if (data.destinatarioRazonSocial() != null) {
-            PartyLegalEntityType ple = new PartyLegalEntityType();
-            ple.setRegistrationName(data.destinatarioRazonSocial());
-            party.addPartyLegalEntity(ple);
+            PartyLegalEntityType legalEntity = new PartyLegalEntityType();
+            legalEntity.setRegistrationName(data.destinatarioRazonSocial());
+            party.addPartyLegalEntity(legalEntity);
         }
         
         customer.setParty(party);
         return customer;
     }
 
-    /**
-     * Crea el contenido del shipment (datos de traslado).
-     *
-     * @param data datos de la guía de remisión
-     * @return datos de traslado
-     */
     private ShipmentType crearShipment(GuiaRemisionUblData data) {
         ShipmentType shipment = new ShipmentType();
+        shipment.setID("SUNAT_Envio");
         
+        // Motivo de traslado (Catálogo 20)
+        if (data.motivoTraslado() != null) {
+            HandlingCodeType handlingCode = new HandlingCodeType();
+            handlingCode.setValue(data.motivoTraslado());
+            shipment.setHandlingCode(handlingCode);
+        }
+
+        // Peso Bruto Total
         if (data.pesoBruto() != null) {
             GrossWeightMeasureType peso = new GrossWeightMeasureType();
             peso.setValue(data.pesoBruto());
             peso.setUnitCode(data.unidadMedidaPeso() != null ? data.unidadMedidaPeso() : "KGM");
             shipment.setGrossWeightMeasure(peso);
         }
+
+        ShipmentStageType stage = new ShipmentStageType();
         
+        // Modalidad de Traslado (Catálogo 18: 01=Público, 02=Privado)
+        if (data.modalidadTraslado() != null) {
+            TransportModeCodeType transportMode = new TransportModeCodeType();
+            transportMode.setValue(data.modalidadTraslado());
+            stage.setTransportModeCode(transportMode);
+            
+            // Lógica SUNAT: Si es Público (01) requiere Transportista
+            if ("01".equals(data.modalidadTraslado()) && data.transportistaNroDocumento() != null) {
+                PartyType carrierParty = new PartyType();
+                PartyIdentificationType carrierId = new PartyIdentificationType();
+                IDType id = new IDType();
+                id.setSchemeID(data.transportistaTipoDocumento() != null ? data.transportistaTipoDocumento() : "6");
+                id.setValue(data.transportistaNroDocumento());
+                carrierId.setID(id);
+                carrierParty.addPartyIdentification(carrierId);
+                
+                if (data.transportistaRazonSocial() != null) {
+                    PartyLegalEntityType ple = new PartyLegalEntityType();
+                    ple.setRegistrationName(data.transportistaRazonSocial());
+                    carrierParty.addPartyLegalEntity(ple);
+                }
+                stage.addCarrierParty(carrierParty);
+            }
+            // Lógica SUNAT: Si es Privado (02) requiere Conductor
+            else if ("02".equals(data.modalidadTraslado()) && data.conductorNroDocumento() != null) {
+                PersonType driver = new PersonType();
+                IDType id = new IDType();
+                id.setSchemeID(data.conductorTipoDocumento() != null ? data.conductorTipoDocumento() : "1"); // 1=DNI
+                id.setValue(data.conductorNroDocumento());
+                driver.setID(id);
+                stage.addDriverPerson(driver);
+            }
+        }
+        
+        // Fecha de inicio de traslado
+        if(data.fechaTraslado() != null) {
+            PeriodType period = new PeriodType();
+            period.setStartDate(LocalDate.parse(data.fechaTraslado(), FECHA_FMT));
+            stage.setTransitPeriod(period);
+        }
+        shipment.addShipmentStage(stage);
+
+        // Lógica SUNAT: Vehículo (solo en transporte privado 02)
+        if ("02".equals(data.modalidadTraslado()) && data.transportistaPlacaVehiculo() != null) {
+            TransportHandlingUnitType thu = new TransportHandlingUnitType();
+            TransportEquipmentType equipment = new TransportEquipmentType();
+            equipment.setID(data.transportistaPlacaVehiculo());
+            thu.addTransportEquipment(equipment);
+            shipment.addTransportHandlingUnit(thu);
+        }
+
+        // Punto de Llegada
+        DeliveryType delivery = new DeliveryType();
+        AddressType addressLlegada = new AddressType();
+        if (data.puntoLlegadaUbigeo() != null) addressLlegada.setID(data.puntoLlegadaUbigeo());
+        if (data.puntoLlegadaDireccion() != null) {
+            AddressLineType lineLlegada = new AddressLineType();
+            lineLlegada.setLine(data.puntoLlegadaDireccion());
+            addressLlegada.addAddressLine(lineLlegada);
+        }
+        delivery.setDeliveryAddress(addressLlegada);
+        
+        // !!! AQUÍ ESTÁ LA CORRECCIÓN !!!
+        shipment.setDelivery(delivery); 
+        
+        // Punto de Partida
+        AddressType addressPartida = new AddressType();
+        if (data.puntoPartidaUbigeo() != null) addressPartida.setID(data.puntoPartidaUbigeo());
+        if (data.puntoPartidaDireccion() != null) {
+            AddressLineType linePartida = new AddressLineType();
+            linePartida.setLine(data.puntoPartidaDireccion());
+            addressPartida.addAddressLine(linePartida);
+        }
+        shipment.setOriginAddress(addressPartida);
+
         return shipment;
     }
 
-    /**
-     * Crea una línea de detalle de la guía de remisión.
-     *
-     * @param linea datos de la línea
-     * @return línea UBL
-     */
     private DespatchLineType crearLinea(GuiaRemisionLineaUblData linea) {
         DespatchLineType line = new DespatchLineType();
-        
         line.setID(String.valueOf(linea.numero() != null ? linea.numero() : 1));
         
-        ItemType item = new ItemType();
-        DescriptionType desc = new DescriptionType();
-        desc.setValue(linea.descripcion());
-        item.setDescription(Collections.singletonList(desc));
-        line.setItem(item);
+        if (linea.cantidad() != null) {
+            DeliveredQuantityType qty = new DeliveredQuantityType();
+            qty.setValue(linea.cantidad());
+            qty.setUnitCode(linea.unidadMedida() != null ? linea.unidadMedida() : "NIU");
+            line.setDeliveredQuantity(qty);
+        }
         
+        ItemType item = new ItemType();
+        if (linea.descripcion() != null) {
+            DescriptionType desc = new DescriptionType();
+            desc.setValue(linea.descripcion());
+            item.setDescription(Collections.singletonList(desc));
+        }
+        
+        if (linea.codigoProducto() != null) {
+            ItemIdentificationType itemId = new ItemIdentificationType();
+            IDType id = new IDType();
+            id.setValue(linea.codigoProducto());
+            itemId.setID(id);
+            item.setSellersItemIdentification(itemId);
+        }
+        
+        line.setItem(item);
         return line;
     }
 }
