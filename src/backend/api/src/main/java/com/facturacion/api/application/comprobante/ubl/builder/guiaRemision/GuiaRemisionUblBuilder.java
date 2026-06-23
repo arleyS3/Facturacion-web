@@ -194,9 +194,7 @@ public class GuiaRemisionUblBuilder {
             addressLlegada.addAddressLine(lineLlegada);
         }
         delivery.setDeliveryAddress(addressLlegada);
-        
-        // !!! AQUÍ ESTÁ LA CORRECCIÓN !!!
-        shipment.setDelivery(delivery); 
+        shipment.setDelivery(delivery);
         
         // Punto de Partida
         AddressType addressPartida = new AddressType();
