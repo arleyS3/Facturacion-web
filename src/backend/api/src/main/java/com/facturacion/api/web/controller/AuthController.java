@@ -33,7 +33,7 @@ public class AuthController {
     private static final String COOKIE_NAME = "access_token";
     private static final int COOKIE_MAX_AGE = 60 * 60; // 1 hora
 
-    @Value("${cookie.secure:false}")
+    @Value("${cookie.secure:true}")
     private boolean cookieSecure;
 
     private final UserRepository userRepository;
@@ -80,7 +80,7 @@ public class AuthController {
         cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(COOKIE_MAX_AGE);
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", "None");
         response.addCookie(cookie);
 
         return ResponseEntity.ok(AuthResponse.builder()
@@ -106,7 +106,7 @@ public class AuthController {
         cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(COOKIE_MAX_AGE);
-        cookie.setAttribute("SameSite", "Strict");
+        cookie.setAttribute("SameSite", "None");
         response.addCookie(cookie);
 
         return ResponseEntity.ok(new AuthResponse(null, request.getRefreshToken()));
@@ -137,7 +137,7 @@ public class AuthController {
         expired.setSecure(cookieSecure);
         expired.setPath("/");
         expired.setMaxAge(0);
-        expired.setAttribute("SameSite", "Strict");
+        expired.setAttribute("SameSite", "None");
         response.addCookie(expired);
 
         return ResponseEntity.ok("logout exitoso");
