@@ -45,8 +45,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         boolean isBlacklisted = tokenBlacklistService.isBlacklisted(token);
 
-        System.out.println("TOKEN RECIBIDO: " + token);
-        System.out.println("¿Está en blacklist?: " + isBlacklisted);
+      
 
         if (isBlacklisted) {
             SecurityContextHolder.clearContext();
