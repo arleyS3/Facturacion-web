@@ -13,8 +13,7 @@ export default async function handler(req, res) {
     typeof req.headers?.["x-sunat-token"] === "string"
       ? req.headers["x-sunat-token"].trim()
       : "";
-  const queryToken = typeof req.query?.token === "string" ? req.query.token.trim() : "";
-  const token = process.env.SUNAT_TOKEN || process.env.VITE_SUNAT_TOKEN || headerToken || queryToken;
+  const token = process.env.SUNAT_TOKEN || headerToken;
   if (!token) {
     return res.status(500).json({ error: "SUNAT token no configurado" });
   }
