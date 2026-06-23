@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.facturacion.api.security.JwtService;
 import com.facturacion.api.security.TokenBlacklistService;
+import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -31,6 +32,9 @@ public class AuthController {
 
     private static final String COOKIE_NAME = "access_token";
     private static final int COOKIE_MAX_AGE = 60 * 60; // 1 hora
+
+    @Value("${cookie.secure:false}")
+    private boolean cookieSecure;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -73,7 +77,7 @@ public class AuthController {
 
         Cookie cookie = new Cookie(COOKIE_NAME, accessToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false); // true en producción con HTTPS
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(COOKIE_MAX_AGE);
         cookie.setAttribute("SameSite", "Strict");
@@ -99,7 +103,7 @@ public class AuthController {
 
         Cookie cookie = new Cookie(COOKIE_NAME, newAccessToken);
         cookie.setHttpOnly(true);
-        cookie.setSecure(false);
+        cookie.setSecure(cookieSecure);
         cookie.setPath("/");
         cookie.setMaxAge(COOKIE_MAX_AGE);
         cookie.setAttribute("SameSite", "Strict");
@@ -130,7 +134,7 @@ public class AuthController {
 
         Cookie expired = new Cookie(COOKIE_NAME, "");
         expired.setHttpOnly(true);
-        expired.setSecure(false);
+        expired.setSecure(cookieSecure);
         expired.setPath("/");
         expired.setMaxAge(0);
         expired.setAttribute("SameSite", "Strict");
