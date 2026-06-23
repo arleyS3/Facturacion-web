@@ -1,17 +1,22 @@
+import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
+import { api } from "@/lib/api";
 
 interface Props {
   children: React.ReactNode;
 }
 
 export const ProtectedRoute = ({ children }: Props) => {
-  const token = localStorage.getItem('token');
+  const [auth, setAuth] = useState<"loading" | "ok" | "fail">("loading");
 
-  // Si no hay token, redirigimos al login ("/")
-  if (!token) {
-    return <Navigate to="/login" replace />;
-  }
+  useEffect(() => {
+    api
+      .get("/auth/me")
+      .then(() => setAuth("ok"))
+      .catch(() => setAuth("fail"));
+  }, []);
 
-  // Si hay token, permitimos ver la página
+  if (auth === "loading") return null;
+  if (auth === "fail") return <Navigate to="/login" replace />;
   return <>{children}</>;
 };

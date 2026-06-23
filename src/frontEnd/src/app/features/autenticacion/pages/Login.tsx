@@ -54,10 +54,6 @@ export const Login: React.FC = () => {
       const response = await api.post("/auth/login", data);
 
       if (response.status === 200) {
-        const accessToken = response.data?.accessToken ?? response.data?.token;
-        if (accessToken) {
-          localStorage.setItem("token", accessToken);
-        }
         if (data.email) {
           localStorage.setItem("user_email", data.email);
         }

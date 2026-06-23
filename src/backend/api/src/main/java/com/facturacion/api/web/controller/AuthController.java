@@ -11,18 +11,26 @@ import com.facturacion.api.web.dto.RegisterRequest;
 import com.facturacion.api.web.models.UserEntity;
 import com.facturacion.api.web.repositories.UserRepository;
 
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.facturacion.api.security.JwtService;
-import com.facturacion.api.security.TokenBlacklistService;;
+import com.facturacion.api.security.TokenBlacklistService;
 
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
+
+    private static final String COOKIE_NAME = "access_token";
+    private static final int COOKIE_MAX_AGE = 60 * 60; // 1 hora
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -32,53 +40,55 @@ public class AuthController {
     @PostMapping("/register")
     public String register(@RequestBody RegisterRequest request) {
 
-        // 1. Validar que no exista el usuario
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
             return "El usuario ya existe";
         }
 
-        // 2. Encriptar contraseña
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
-        // 3. Crear usuario
         UserEntity user = UserEntity.builder()
                 .email(request.getEmail())
                 .password(hashedPassword)
                 .role("USER")
                 .build();
 
-        // 4. Guardar en base de datos
         userRepository.save(user);
-
         return "Usurio registrado correctamente";
     }
 
     @PostMapping("/login")
-    public AuthResponse login(@RequestBody LoginRequest request) {
+    public ResponseEntity<AuthResponse> login(
+            @RequestBody LoginRequest request,
+            HttpServletResponse response) {
 
-        // 1. Buscar usuario por email
         UserEntity user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // 2. Verificar contraseña
-        boolean isValid = passwordEncoder.matches(request.getPassword(), user.getPassword());
-
-        if (!isValid) {
+        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new RuntimeException("Contraseña incorrecta");
         }
 
-        // 3. Login correcto (Genera el token)
-        String accessTokenoken = jwtService.generateToken(user.getEmail(), user.getRole());
+        String accessToken = jwtService.generateToken(user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
-        return AuthResponse.builder()
-                .accessToken(accessTokenoken)
+        Cookie cookie = new Cookie(COOKIE_NAME, accessToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false); // true en producción con HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(COOKIE_MAX_AGE);
+        cookie.setAttribute("SameSite", "Strict");
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(AuthResponse.builder()
+                .accessToken(null) // no se expone en el body
                 .refreshToken(refreshToken)
-                .build();
+                .build());
     }
 
     @PostMapping("/refresh")
-    public AuthResponse refreshToken(@RequestBody RefreshRequest request) {
+    public ResponseEntity<AuthResponse> refreshToken(
+            @RequestBody RefreshRequest request,
+            HttpServletResponse response) {
 
         String email = jwtService.extractEmail(request.getRefreshToken());
 
@@ -87,20 +97,45 @@ public class AuthController {
 
         String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole());
 
-        return new AuthResponse(newAccessToken, request.getRefreshToken());
+        Cookie cookie = new Cookie(COOKIE_NAME, newAccessToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(COOKIE_MAX_AGE);
+        cookie.setAttribute("SameSite", "Strict");
+        response.addCookie(cookie);
+
+        return ResponseEntity.ok(new AuthResponse(null, request.getRefreshToken()));
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<String> me(@AuthenticationPrincipal String email) {
+        if (email == null) return ResponseEntity.status(401).build();
+        return ResponseEntity.ok(email);
     }
 
     @PostMapping("/logout")
-    public String logout(HttpServletRequest request) {
+    public ResponseEntity<String> logout(
+            HttpServletRequest request,
+            HttpServletResponse response) {
 
-        String authHeader = request.getHeader("Authorization");
-
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            blacklistService.addToBlacklist(token);
+        if (request.getCookies() != null) {
+            for (Cookie c : request.getCookies()) {
+                if (COOKIE_NAME.equals(c.getName())) {
+                    blacklistService.addToBlacklist(c.getValue());
+                    break;
+                }
+            }
         }
 
-        return "logout exitoso";
-    }
+        Cookie expired = new Cookie(COOKIE_NAME, "");
+        expired.setHttpOnly(true);
+        expired.setSecure(false);
+        expired.setPath("/");
+        expired.setMaxAge(0);
+        expired.setAttribute("SameSite", "Strict");
+        response.addCookie(expired);
 
+        return ResponseEntity.ok("logout exitoso");
+    }
 }

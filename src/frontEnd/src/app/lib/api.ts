@@ -1,25 +1,20 @@
 import axios from "axios";
 
 const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;
-const API_BASE_URL =
-  viteEnv?.VITE_API_BASE_URL || "/api/v1";
+const API_BASE_URL = viteEnv?.VITE_API_BASE_URL || "/api/v1";
 
 /**
  * Cliente Axios compartido para llamadas al backend.
- * Configura la baseURL usando la variable VITE_API_BASE_URL o un fallback.
+ * - withCredentials: true → envía cookies httpOnly automáticamente
+ * - El token JWT ya no se almacena en localStorage (mitigación XSS)
+ * - Axios lee la cookie XSRF-TOKEN y la envía en el header X-XSRF-TOKEN (CSRF)
  */
 export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
+  withCredentials: true,
+  xsrfCookieName: "XSRF-TOKEN",
+  xsrfHeaderName: "X-XSRF-TOKEN",
 });
-
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
 
 export default api;
