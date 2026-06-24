@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.facturacion.api.security.JwtService;
 import com.facturacion.api.security.TokenBlacklistService;
-import org.springframework.beans.factory.annotation.Value;
 
 @RestController
 @RequestMapping("/api/v1/auth")
@@ -32,9 +31,6 @@ public class AuthController {
 
     private static final String COOKIE_NAME = "access_token";
     private static final int COOKIE_MAX_AGE = 60 * 60; // 1 hora
-
-    @Value("${cookie.secure:true}")
-    private boolean cookieSecure;
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -60,10 +56,21 @@ public class AuthController {
         return "Usurio registrado correctamente";
     }
 
+    private Cookie crearCookie(String accessToken, int maxAge, HttpServletRequest request) {
+        Cookie cookie = new Cookie(COOKIE_NAME, accessToken);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(request.isSecure()); // true en HTTPS, false en HTTP (dev)
+        cookie.setPath("/");
+        cookie.setMaxAge(maxAge);
+        cookie.setAttribute("SameSite", "None");
+        return cookie;
+    }
+
     @PostMapping("/login")
     public ResponseEntity<AuthResponse> login(
             @RequestBody LoginRequest request,
-            HttpServletResponse response) {
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
 
         UserEntity user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
@@ -75,13 +82,7 @@ public class AuthController {
         String accessToken = jwtService.generateToken(user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
-        Cookie cookie = new Cookie(COOKIE_NAME, accessToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-        cookie.setPath("/");
-        cookie.setMaxAge(COOKIE_MAX_AGE);
-        cookie.setAttribute("SameSite", "None");
-        response.addCookie(cookie);
+        httpResponse.addCookie(crearCookie(accessToken, COOKIE_MAX_AGE, httpRequest));
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .accessToken(null) // no se expone en el body
@@ -92,7 +93,8 @@ public class AuthController {
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(
             @RequestBody RefreshRequest request,
-            HttpServletResponse response) {
+            HttpServletRequest httpRequest,
+            HttpServletResponse httpResponse) {
 
         String email = jwtService.extractEmail(request.getRefreshToken());
 
@@ -100,14 +102,7 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole());
-
-        Cookie cookie = new Cookie(COOKIE_NAME, newAccessToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(cookieSecure);
-        cookie.setPath("/");
-        cookie.setMaxAge(COOKIE_MAX_AGE);
-        cookie.setAttribute("SameSite", "None");
-        response.addCookie(cookie);
+        httpResponse.addCookie(crearCookie(newAccessToken, COOKIE_MAX_AGE, httpRequest));
 
         return ResponseEntity.ok(new AuthResponse(null, request.getRefreshToken()));
     }
@@ -132,12 +127,7 @@ public class AuthController {
             }
         }
 
-        Cookie expired = new Cookie(COOKIE_NAME, "");
-        expired.setHttpOnly(true);
-        expired.setSecure(cookieSecure);
-        expired.setPath("/");
-        expired.setMaxAge(0);
-        expired.setAttribute("SameSite", "None");
+        Cookie expired = crearCookie("", 0, request);
         response.addCookie(expired);
 
         return ResponseEntity.ok("logout exitoso");
