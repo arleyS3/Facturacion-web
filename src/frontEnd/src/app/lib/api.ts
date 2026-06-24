@@ -4,6 +4,7 @@ const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).en
 
 // Prioridad: env var de Vite → fallback a Railway directo
 const API_BASE_URL = viteEnv?.VITE_API_BASE_URL || "https://facturacion-web.up.railway.app/api/v1";
+export const REFRESH_TOKEN_KEY = "refresh_token";
 
 /**
  * Token JWT en memoria (no localStorage / evitar XSS persistente).

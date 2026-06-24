@@ -107,7 +107,7 @@ public class AuthController {
         String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole());
         setCookie(httpResponse, newAccessToken, COOKIE_MAX_AGE, httpRequest);
 
-        return ResponseEntity.ok(new AuthResponse(null, request.getRefreshToken()));
+        return ResponseEntity.ok(new AuthResponse(newAccessToken, request.getRefreshToken()));
     }
 
     @GetMapping("/me")
