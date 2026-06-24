@@ -88,7 +88,7 @@ public class AuthController {
         setCookie(httpResponse, accessToken, COOKIE_MAX_AGE, httpRequest);
 
         return ResponseEntity.ok(AuthResponse.builder()
-                .accessToken(null) // no se expone en el body
+                .accessToken(accessToken) // también se devuelve en el body para session en memoria
                 .refreshToken(refreshToken)
                 .build());
     }

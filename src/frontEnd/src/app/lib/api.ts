@@ -1,20 +1,40 @@
 import axios from "axios";
 
 const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;
-const API_BASE_URL = viteEnv?.VITE_API_BASE_URL || "/api/v1";
+
+// Prioridad: env var de Vite → fallback a Railway directo
+const API_BASE_URL = viteEnv?.VITE_API_BASE_URL || "https://facturacion-web.up.railway.app/api/v1";
+
+/**
+ * Token JWT en memoria (no localStorage / evitar XSS persistente).
+ * Se pierde al recargar la página, pero la cookie httpOnly es el fallback.
+ */
+let accessToken: string | null = null;
+
+export const setAccessToken = (token: string | null) => {
+  accessToken = token;
+};
+
+export const getAccessToken = () => accessToken;
 
 /**
  * Cliente Axios compartido para llamadas al backend.
- * - withCredentials: true → envía cookies httpOnly automáticamente
- * - El token JWT ya no se almacena en localStorage (mitigación XSS)
- * - Axios lee la cookie XSRF-TOKEN y la envía en el header X-XSRF-TOKEN (CSRF)
+ * - withCredentials: true → envía cookies httpOnly como fallback
+ * - Interceptor: agrega Authorization: Bearer <token> desde memoria
+ * - Si no hay token en memoria, la cookie httpOnly es el respaldo
  */
 export const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   withCredentials: true,
-  xsrfCookieName: "XSRF-TOKEN",
-  xsrfHeaderName: "X-XSRF-TOKEN",
+});
+
+// Interceptor: agrega el token Bearer si existe en memoria
+api.interceptors.request.use((config) => {
+  if (accessToken) {
+    config.headers.Authorization = `Bearer ${accessToken}`;
+  }
+  return config;
 });
 
 export default api;

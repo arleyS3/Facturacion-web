@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 
-import { api } from "@/lib/api";
+import { api, setAccessToken } from "@/lib/api";
 import { loginSchema, type LoginFormData } from "@/lib/schemas/login.schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,6 +54,10 @@ export const Login: React.FC = () => {
       const response = await api.post("/auth/login", data);
 
       if (response.status === 200) {
+        // Guardar token en memoria (no localStorage) para requests autenticadas
+        if (response.data?.accessToken) {
+          setAccessToken(response.data.accessToken);
+        }
         if (data.email) {
           localStorage.setItem("user_email", data.email);
         }
