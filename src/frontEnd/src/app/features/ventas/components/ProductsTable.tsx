@@ -55,7 +55,7 @@ import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import { useFormContext } from "react-hook-form";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import type { CatalogItem } from "@/hooks/useCatalog";
 import { toast } from "sonner";
 
@@ -209,67 +209,110 @@ export function ProductsTable() {
     setProducts([...products, newProduct]);
   };
 
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setIsImporting(true);
-    const reader = new FileReader();
+    try {
+      const buffer = await file.arrayBuffer();
+      const workbook = new ExcelJS.Workbook();
 
-    reader.onload = (evt) => {
-      try {
-        const data = new Uint8Array(evt.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json<Record<string, string>>(sheet);
-
-        const imported: Product[] = rows.map((row, i) => {
-          const descripcion = row["Descripcion"] || row["descripcion"] || row["DESCRIPCION"] || row["Producto"] || row["producto"] || "";
-          const cantidad = String(row["Cantidad"] || row["cantidad"] || row["CANTIDAD"] || row["Cant"] || row["cant"] || "1");
-          const precioUnitario = String(row["Precio"] || row["precio"] || row["PRECIO"] || row["PrecioUnitario"] || row["precioUnitario"] || row["P.U."] || "0");
-          const unidad = String(row["Unidad"] || row["unidad"] || row["UNIDAD"] || row["UndMedida"] || row["undMedida"] || "NIU");
-
-          return {
-            id: `import-${Date.now()}-${i}`,
-            correlativo: products.length + i + 1,
-            descripcion,
-            cantidad,
-            unidadMedida: unidad,
-            precioUnitario,
-            valorVenta: 0,
-            tieneDescuento: false,
-            descuentoPorItem: "",
-            descuentoMonto: 0,
-            tipoAfectacionIGV: "10",
-            codigoTributo: "1000",
-            tasaIGV: "18",
-            impuestoIGV: 0,
-            tieneISC: false,
-            iscData: null,
-            total: 0,
-          };
-        });
-
-        const withCalculations = imported.map((p) => calculateProduct(p));
-        setProducts([...products, ...withCalculations]);
-        toast.success(`${rows.length} producto(s) importado(s) correctamente`);
-      } catch (err) {
-        console.error("Error al importar archivo:", err);
-        toast.error("Error al leer el archivo. Asegúrate de que sea un Excel (.xlsx) o CSV válido.");
-      } finally {
-        setIsImporting(false);
+      if (file.name.endsWith(".csv")) {
+        const text = new TextDecoder().decode(buffer);
+        await workbook.csv.read(text);
+      } else {
+        await workbook.xlsx.load(buffer);
       }
-    };
 
-    reader.onerror = () => {
-      toast.error("Error al leer el archivo.");
+      const worksheet = workbook.worksheets[0];
+      if (!worksheet || worksheet.rowCount < 2) {
+        toast.error("El archivo no contiene datos.");
+        return;
+      }
+
+      // Leer encabezados de la primera fila
+      const headers: string[] = [];
+      worksheet.getRow(1).eachCell((cell) => {
+        headers.push(String(cell.value ?? "").trim());
+      });
+
+      // Leer filas de datos
+      const rows: Record<string, string>[] = [];
+      for (let i = 2; i <= worksheet.rowCount; i++) {
+        const row = worksheet.getRow(i);
+        const obj: Record<string, string> = {};
+        let hasData = false;
+        headers.forEach((header, idx) => {
+          const val = row.getCell(idx + 1).value;
+          if (val != null) hasData = true;
+          obj[header] = val != null ? String(val).trim() : "";
+        });
+        if (hasData) rows.push(obj);
+      }
+
+      const imported: Product[] = rows.map((row, i) => {
+        const descripcion =
+          row["Descripcion"] || row["descripcion"] || row["DESCRIPCION"]
+          || row["Producto"] || row["producto"] || row["PRODUCTO"]
+          || row["Nombre"] || row["nombre"] || row["Item"] || row["item"]
+          || "";
+        const cantidad = String(
+          row["Cantidad"] || row["cantidad"] || row["CANTIDAD"]
+          || row["Cant"] || row["cant"]
+          || row["Qty"] || row["qty"]
+          || "1"
+        );
+        const precioUnitario = String(
+          row["Precio"] || row["precio"] || row["PRECIO"]
+          || row["PrecioUnitario"] || row["precioUnitario"]
+          || row["P.U."] || row["PU"] || row["p.u."]
+          || row["Price"] || row["price"]
+          || "0"
+        );
+        const unidad = String(
+          row["Unidad"] || row["unidad"] || row["UNIDAD"]
+          || row["UndMedida"] || row["undMedida"] || row["Und"]
+          || row["Unit"] || row["unit"]
+          || "NIU"
+        );
+        // Importe/Total precalculado (si el Excel lo trae)
+        const importe = parseFloat(
+          row["Importe"] || row["importe"] || row["IMPORTE"]
+          || row["Total"] || row["total"] || row["TOTAL"]
+          || row["ValorVenta"] || row["valorVenta"] || row["Valor Venta"]
+          || ""
+        );
+
+        return {
+          id: `import-${Date.now()}-${i}`,
+          correlativo: products.length + i + 1,
+          descripcion,
+          cantidad,
+          unidadMedida: unidad,
+          precioUnitario,
+          valorVenta: 0,
+          tieneDescuento: false,
+          descuentoPorItem: "",
+          descuentoMonto: 0,
+          tipoAfectacionIGV: "10",
+          codigoTributo: "1000",
+          tasaIGV: "18",
+          impuestoIGV: 0,
+          tieneISC: false,
+          iscData: null,
+          total: 0,
+        };
+      });
+
+      const withCalculations = imported.map((p) => calculateProduct(p));
+      setProducts([...products, ...withCalculations]);
+      toast.success(`${rows.length} producto(s) importado(s) correctamente`);
+    } catch (err) {
+      console.error("Error al importar archivo:", err);
+      toast.error("Error al leer el archivo. Asegúrate de que sea un Excel (.xlsx) o CSV válido.");
+    } finally {
       setIsImporting(false);
-    };
-
-    if (file.name.endsWith(".csv")) {
-      reader.readAsText(file);
-    } else {
-      reader.readAsArrayBuffer(file);
     }
 
     // Resetear el input para permitir re-subir el mismo archivo
