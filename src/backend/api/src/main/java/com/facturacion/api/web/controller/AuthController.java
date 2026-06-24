@@ -15,6 +15,8 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -56,14 +58,15 @@ public class AuthController {
         return "Usurio registrado correctamente";
     }
 
-    private Cookie crearCookie(String accessToken, int maxAge, HttpServletRequest request) {
-        Cookie cookie = new Cookie(COOKIE_NAME, accessToken);
-        cookie.setHttpOnly(true);
-        cookie.setSecure(request.isSecure()); // true en HTTPS, false en HTTP (dev)
-        cookie.setPath("/");
-        cookie.setMaxAge(maxAge);
-        cookie.setAttribute("SameSite", "None");
-        return cookie;
+    private void setCookie(HttpServletResponse response, String value, int maxAge, HttpServletRequest request) {
+        ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, value)
+                .httpOnly(true)
+                .secure(request.isSecure()) // true en HTTPS, false en HTTP (dev)
+                .path("/")
+                .maxAge(maxAge)
+                .sameSite("None")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     @PostMapping("/login")
@@ -82,7 +85,7 @@ public class AuthController {
         String accessToken = jwtService.generateToken(user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
-        httpResponse.addCookie(crearCookie(accessToken, COOKIE_MAX_AGE, httpRequest));
+        setCookie(httpResponse, accessToken, COOKIE_MAX_AGE, httpRequest);
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .accessToken(null) // no se expone en el body
@@ -102,7 +105,7 @@ public class AuthController {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole());
-        httpResponse.addCookie(crearCookie(newAccessToken, COOKIE_MAX_AGE, httpRequest));
+        setCookie(httpResponse, newAccessToken, COOKIE_MAX_AGE, httpRequest);
 
         return ResponseEntity.ok(new AuthResponse(null, request.getRefreshToken()));
     }
@@ -127,8 +130,7 @@ public class AuthController {
             }
         }
 
-        Cookie expired = crearCookie("", 0, request);
-        response.addCookie(expired);
+        setCookie(response, "", 0, request);
 
         return ResponseEntity.ok("logout exitoso");
     }
