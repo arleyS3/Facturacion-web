@@ -96,6 +96,47 @@ interface Product {
   total: number;
 }
 
+const parseCsvRows = (text: string): string[][] => {
+  const rows: string[][] = [];
+  let row: string[] = [];
+  let cell = "";
+  let quoted = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    const next = text[i + 1];
+
+    if (char === '"' && quoted && next === '"') {
+      cell += '"';
+      i++;
+    } else if (char === '"') {
+      quoted = !quoted;
+    } else if (char === "," && !quoted) {
+      row.push(cell.trim());
+      cell = "";
+    } else if ((char === "\n" || char === "\r") && !quoted) {
+      if (char === "\r" && next === "\n") i++;
+      row.push(cell.trim());
+      if (row.some(Boolean)) rows.push(row);
+      row = [];
+      cell = "";
+    } else {
+      cell += char;
+    }
+  }
+
+  row.push(cell.trim());
+  if (row.some(Boolean)) rows.push(row);
+  return rows;
+};
+
+const toObjectRows = (rows: string[][]): Record<string, string>[] => {
+  const headers = rows[0]?.map((header) => header.trim()) ?? [];
+  return rows.slice(1).map((row) =>
+    Object.fromEntries(headers.map((header, index) => [header, row[index]?.trim() ?? ""]))
+  );
+};
+
 export function ProductsTable() {
   const methods = useFormContext();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -216,39 +257,44 @@ export function ProductsTable() {
     setIsImporting(true);
     try {
       const buffer = await file.arrayBuffer();
-      const workbook = new ExcelJS.Workbook();
+      let rows: Record<string, string>[] = [];
 
-      if (file.name.endsWith(".csv")) {
+      if (file.name.toLowerCase().endsWith(".csv")) {
         const text = new TextDecoder().decode(buffer);
-        await workbook.csv.read(text);
+        rows = toObjectRows(parseCsvRows(text));
       } else {
+        const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.load(buffer);
+
+        const worksheet = workbook.worksheets[0];
+        if (!worksheet || worksheet.rowCount < 2) {
+          toast.error("El archivo no contiene datos.");
+          return;
+        }
+
+        // Leer encabezados de la primera fila
+        const headers: string[] = [];
+        worksheet.getRow(1).eachCell((cell) => {
+          headers.push(String(cell.value ?? "").trim());
+        });
+
+        // Leer filas de datos
+        for (let i = 2; i <= worksheet.rowCount; i++) {
+          const row = worksheet.getRow(i);
+          const obj: Record<string, string> = {};
+          let hasData = false;
+          headers.forEach((header, idx) => {
+            const val = row.getCell(idx + 1).value;
+            if (val != null) hasData = true;
+            obj[header] = val != null ? String(val).trim() : "";
+          });
+          if (hasData) rows.push(obj);
+        }
       }
 
-      const worksheet = workbook.worksheets[0];
-      if (!worksheet || worksheet.rowCount < 2) {
+      if (rows.length === 0) {
         toast.error("El archivo no contiene datos.");
         return;
-      }
-
-      // Leer encabezados de la primera fila
-      const headers: string[] = [];
-      worksheet.getRow(1).eachCell((cell) => {
-        headers.push(String(cell.value ?? "").trim());
-      });
-
-      // Leer filas de datos
-      const rows: Record<string, string>[] = [];
-      for (let i = 2; i <= worksheet.rowCount; i++) {
-        const row = worksheet.getRow(i);
-        const obj: Record<string, string> = {};
-        let hasData = false;
-        headers.forEach((header, idx) => {
-          const val = row.getCell(idx + 1).value;
-          if (val != null) hasData = true;
-          obj[header] = val != null ? String(val).trim() : "";
-        });
-        if (hasData) rows.push(obj);
       }
 
       const imported: Product[] = rows.map((row, i) => {
