@@ -63,12 +63,13 @@ public class AuthController {
     }
 
     private void setCookie(HttpServletResponse response, String value, int maxAge, HttpServletRequest request) {
+        boolean secure = request.isSecure();
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, value)
                 .httpOnly(true)
-                .secure(request.isSecure())
+                .secure(secure)
                 .path("/")
                 .maxAge(maxAge)
-                .sameSite("Lax")
+                .sameSite(secure ? "None" : "Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }

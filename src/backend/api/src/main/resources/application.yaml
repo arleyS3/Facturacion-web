@@ -44,6 +44,10 @@ springdoc:
   swagger-ui:
     path: /swagger-ui
 
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
 sunat:
   api:
     base-url: ${SUNAT_API_URL}
@@ -54,10 +58,6 @@ app:
   encryption:
     key: ${ENCRYPTION_KEY}
   # certificate.default-alias: Eliminado - en prod viene de BD (tabla configuracion_certificado)
-
-# Server
-server:
-  port: 8080
 
 jwt:
   secret: ${JWT_SECRET}
