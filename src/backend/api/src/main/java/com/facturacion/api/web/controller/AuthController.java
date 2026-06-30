@@ -99,12 +99,14 @@ public class AuthController {
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
-        UserEntity user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        var userOpt = userRepository.findByEmail(request.getEmail());
 
-        if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Contraseña incorrecta");
+        if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
+            // Mensaje genérico — no revelar si el email existe o no
+            throw new RuntimeException("Credenciales invalidas");
         }
+
+        UserEntity user = userOpt.get();
 
         String accessToken = jwtService.generateToken(user.getEmail(), user.getRole());
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
@@ -114,7 +116,7 @@ public class AuthController {
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .accessToken(accessToken)
-                .refreshToken(refreshToken) // fallback para entornos sin soporte de cookie cross-origin
+                .refreshToken(refreshToken)
                 .build());
     }
 
@@ -131,6 +133,9 @@ public class AuthController {
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new RuntimeException("Refresh token requerido");
         }
+
+        // Invalidar el refresh anterior (rotación)
+        blacklistService.addToBlacklist(refreshToken);
 
         String email = jwtService.extractEmailFromRefresh(refreshToken);
 
