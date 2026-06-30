@@ -14,6 +14,7 @@ import com.facturacion.api.web.repositories.UnidadesMedidaComercialRepository;
 import com.facturacion.api.web.repositories.TipoDocumentoIdentidadRepository;
 import com.facturacion.api.web.repositories.TipoAfectacionIgvRepository;
 import com.facturacion.api.web.repositories.DocumentosRelacionadosTransporteRepository;
+import com.facturacion.api.web.repositories.TipoSistemaIscRepository;
 import lombok.RequiredArgsConstructor;
 
 
@@ -42,6 +43,7 @@ public class CatalogController {
   private final TipoDocumentoIdentidadRepository tipoDocumentoIdentidadRepository;
   private final TipoAfectacionIgvRepository tipoAfectacionIgvRepository;
   private final DocumentosRelacionadosTransporteRepository documentosRelacionadosTransporteRepository;
+  private final TipoSistemaIscRepository tipoSistemaIscRepository;
 
   @GetMapping("/unidades-medida")
   /** Devuelve las unidades de medida disponibles. */
@@ -147,6 +149,14 @@ public class CatalogController {
   public List<CatalogItem> documentosRelacionadosTransporte() {
     return documentosRelacionadosTransporteRepository.findAll().stream()
         .map(d -> CatalogItem.of(d.getCodigo(), d.getNombre()))
+        .toList();
+  }
+
+  @GetMapping("/sistemas-isc")
+  /** Sistemas de ISC (catálogo 08 SUNAT). */
+  public List<CatalogItem> sistemasIsc() {
+    return tipoSistemaIscRepository.findAll().stream()
+        .map(s -> CatalogItem.of(s.getCodigo(), s.getDescripcion()))
         .toList();
   }
 
