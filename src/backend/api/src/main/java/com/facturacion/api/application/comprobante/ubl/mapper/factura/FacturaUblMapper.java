@@ -129,6 +129,7 @@ public class FacturaUblMapper {
         BigDecimal exoneradas = BigDecimal.ZERO;
         BigDecimal inafectas = BigDecimal.ZERO;
         BigDecimal totalIgv = BigDecimal.ZERO;
+        BigDecimal totalIsc = BigDecimal.ZERO;
         BigDecimal valorVenta = BigDecimal.ZERO;
 
         for (FacturaLineaUblData linea : lineas) {
@@ -137,6 +138,7 @@ public class FacturaUblMapper {
                 ? linea.precioUnitario() 
                 : BigDecimal.ZERO;
             BigDecimal montoIgv = linea.montoIGV() != null ? linea.montoIGV() : BigDecimal.ZERO;
+            BigDecimal montoIsc = linea.montoISC() != null ? linea.montoISC() : BigDecimal.ZERO;
             String tipoAfectacion = linea.tipoAfectacionIGV();
 
             // Calcular valor de venta de la línea
@@ -159,16 +161,19 @@ public class FacturaUblMapper {
                 // Inafecto
                 inafectas = inafectas.add(valorLinea);
             }
+
+            // Acumular ISC
+            totalIsc = totalIsc.add(montoIsc);
         }
 
-        BigDecimal totalImpuestos = totalIgv;
+        BigDecimal totalImpuestos = totalIgv.add(totalIsc);
         BigDecimal importeTotal = valorVenta.add(totalImpuestos);
 
         return new DatosTotalesFacturaUbl(
             gravadas,
             exoneradas,
             inafectas,
-            null, // ISC
+            totalIsc, // ISC
             totalIgv,
             null, // IVAP
             totalImpuestos,
@@ -298,6 +303,8 @@ public class FacturaUblMapper {
         BigDecimal valorUnitario = detalle.valorUnitario();
         BigDecimal valorVenta = cantidad.multiply(valorUnitario);
         BigDecimal montoIgv = detalle.igv();
+        BigDecimal montoIsc = detalle.iscMonto() != null ? detalle.iscMonto() : BigDecimal.ZERO;
+        String iscTipoSistema = detalle.iscTipoSistema();
         
         // Calcular monto base IGV (valor sin impuesto)
         BigDecimal montoBaseIGV = montoIgv.compareTo(BigDecimal.ZERO) > 0
@@ -319,8 +326,8 @@ public class FacturaUblMapper {
             montoIgv,                    // montoIGV
             PORCENTAJE_IGV.multiply(new BigDecimal("100")), // porcentajeIGV (18.00)
             detalle.codigoTipoIgv(),     // tipoAfectacionIGV
-            null,                        // montoISC
-            null,                        // tipoSistemaISC
+            montoIsc.compareTo(BigDecimal.ZERO) > 0 ? montoIsc : null,  // montoISC
+            iscTipoSistema,              // tipoSistemaISC
             valorVenta,                  // valorVenta
             null                         // valorVentaUnitario
         );

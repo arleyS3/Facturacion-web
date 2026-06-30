@@ -142,9 +142,11 @@ class FacturaUblMapperTest {
                 "Producto de prueba",    // descripcion
                 new BigDecimal("1"),     // cantidad
                 new BigDecimal("100.00"), // valorUnitario
-                new BigDecimal("18.00"),   // igv
+                new BigDecimal("18.00"),  // igv
                 "10",                    // codigoTipoIgv (10 = Gravado)
-                "NIU"                    // unidadMedida
+                "NIU",                   // unidadMedida
+                null,                    // iscMonto
+                null                     // iscTipoSistema
         );
 
         return new ComprobanteCanonico(

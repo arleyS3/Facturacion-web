@@ -102,6 +102,8 @@ interface ComprobanteCanonicoPayload {
  * @property {number} igv - Monto del IGV calculado
  * @property {string} codigo_tipoIgv - Código de tipo de afectación IGV (10=Gravado, 20=Exonerado, 30/31=Inafecto)
  * @property {string} [unidad_medida] - Código de unidad de medida (catálogo SUNAT, ej: NIU, KG, ZZ)
+ * @property {number} [isc_monto] - Monto del ISC (opcional)
+ * @property {string} [isc_tipo_sistema] - Tipo de sistema ISC — catálogo 08 (01/02/03)
  */
 interface DetallePayload {
   codigo_producto?: string;
@@ -111,6 +113,8 @@ interface DetallePayload {
   igv: number;
   codigo_tipoIgv: string;
   unidad_medida?: string;
+  isc_monto?: number;
+  isc_tipo_sistema?: string;
 }
 
 /**
@@ -262,6 +266,13 @@ function convertirDetalle(producto: DetalleFormData): DetallePayload {
   if (igv === 0 && tipoAfectacion === "10") {
     igv = valorVenta * 0.18;
   }
+
+  // ISC: leer desde iscData (Product interface) o flat fields (schema)
+  const iscData = (producto as Record<string, unknown>).iscData as {
+    codigoISC?: string; codigoTipoISC?: string; tasa?: string; montoISC?: number;
+  } | undefined;
+  const iscMonto = iscData?.montoISC ?? (Number(producto.montoISC) || 0);
+  const iscTipoSistema = iscData?.codigoTipoISC ?? producto.codigoTipoISC ?? undefined;
   
   return {
     /** Código interno del producto */
@@ -278,6 +289,10 @@ function convertirDetalle(producto: DetalleFormData): DetallePayload {
     codigo_tipoIgv: tipoAfectacion,
     /** Código de unidad de medida (catálogo SUNAT, ej: NIU, KG, ZZ) */
     unidad_medida: producto.unidadMedida || "NIU",
+    /** Monto del ISC (solo si el producto tiene ISC) */
+    isc_monto: iscMonto > 0 ? parseFloat(iscMonto.toFixed(2)) : undefined,
+    /** Tipo de sistema ISC (catálogo 08: 01=Valor, 02=Específico, 03=PVP) */
+    isc_tipo_sistema: iscTipoSistema,
   };
 }
 

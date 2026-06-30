@@ -93,7 +93,9 @@ public class SeccionesToCanonicoMapper {
                     decimal(item.get("VlrCodItem")),
                     decimal(item.get("MntIgvItem")),
                     item.getOrDefault("CodigoTipoIgv", ""),
-                    item.getOrDefault("UnidadMedida", "NIU"))); // unidad de medida
+                    item.getOrDefault("UnidadMedida", "NIU"), // unidad de medida
+                    null, // iscMonto
+                    null)); // iscTipoSistema
         }
 
         return detalles;

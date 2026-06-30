@@ -32,6 +32,8 @@ import java.math.BigDecimal;
  * @param igv monto de IGV
  * @param codigoTipoIgv código de afectación IGV
  * @param unidadMedida código de unidad de medida (catálogo SUNAT)
+ * @param iscMonto monto del ISC
+ * @param iscTipoSistema tipo de sistema ISC (catálogo 08: 01=Valor, 02=Específico, 03=PVP)
  */
 public record DetalleCanonico(
         @Size(max = 50, message = "Código de producto máximo 50 caracteres")
@@ -66,6 +68,24 @@ public record DetalleCanonico(
          */
         @Size(max = 3, message = "Unidad de medida máximo 3 caracteres")
         @JsonProperty("unidad_medida")
-        String unidadMedida
+        String unidadMedida,
+
+        /**
+         * Monto del ISC (Impuesto Selectivo al Consumo).
+         * Opcional — solo para productos afectos.
+         */
+        @DecimalMin(value = "0.00", message = "ISC no puede ser negativo")
+        @JsonProperty("isc_monto")
+        BigDecimal iscMonto,
+
+        /**
+         * Tipo de sistema ISC (catálogo 08 SUNAT):
+         * 01 = Sistema al Valor
+         * 02 = Sistema Específico
+         * 03 = Sistema al Valor (Precio Venta al Público)
+         */
+        @Size(max = 2, message = "Tipo sistema ISC máximo 2 caracteres")
+        @JsonProperty("isc_tipo_sistema")
+        String iscTipoSistema
 ) {
 }

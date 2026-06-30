@@ -65,6 +65,8 @@ public class FacturaUblBuilder {
 
     /** Código de tributo IGV. */
     private static final String CODIGO_TRIBUTO_IGV = "1000";
+    /** Código de tributo ISC. */
+    private static final String CODIGO_TRIBUTO_ISC = "2000";
     /** Código de tributo Exonerado. */
     private static final String CODIGO_TRIBUTO_EXONERADO = "9997";
     /** Código de tributo Inafecto. */
@@ -72,6 +74,8 @@ public class FacturaUblBuilder {
 
     /** Nombre del impuesto IGV. */
     private static final String NOMBRE_IMPUESTO_IGV = "IGV";
+    /** Nombre del impuesto ISC. */
+    private static final String NOMBRE_IMPUESTO_ISC = "ISC";
     /** Nombre del impuesto Exonerado. */
     private static final String NOMBRE_IMPUESTO_EXONERADO = "EXONERADO";
     /** Nombre del impuesto Inafecto. */
@@ -79,6 +83,8 @@ public class FacturaUblBuilder {
 
     /** Código de tipo de tributo VAT. */
     private static final String TIPO_TRIBUTO_VAT = "VAT";
+    /** Código de tipo de tributo EXC (Excise). */
+    private static final String TIPO_TRIBUTO_EXC = "EXC";
     /** Código de tipo de tributo FRE (Free/Exempt). */
     private static final String TIPO_TRIBUTO_FRE = "FRE";
 
@@ -470,11 +476,12 @@ public class FacturaUblBuilder {
         if (totalImpuestos.compareTo(BigDecimal.ZERO) <= 0
                 && valorOZero(totales.gravadas()).compareTo(BigDecimal.ZERO) <= 0
                 && valorOZero(totales.exoneradas()).compareTo(BigDecimal.ZERO) <= 0
-                && valorOZero(totales.inafectas()).compareTo(BigDecimal.ZERO) <= 0) {
+                && valorOZero(totales.inafectas()).compareTo(BigDecimal.ZERO) <= 0
+                && valorOZero(totales.isc()).compareTo(BigDecimal.ZERO) <= 0) {
             return;
         }
 
-        // Crear TaxTotal con los tres subtotales
+        // Crear TaxTotal con los subtotales
         TaxTotalType taxTotal = new TaxTotalType();
         taxTotal.setTaxAmount(totalImpuestos).setCurrencyID(moneda);
 
@@ -495,6 +502,12 @@ public class FacturaUblBuilder {
         BigDecimal inafectas = valorOZero(totales.inafectas());
         if (inafectas.compareTo(BigDecimal.ZERO) > 0) {
             taxTotal.addTaxSubtotal(crearSubtotalImpuestoInafecto(inafectas, moneda));
+        }
+
+        // Subtotal ISC
+        BigDecimal isc = valorOZero(totales.isc());
+        if (isc.compareTo(BigDecimal.ZERO) > 0) {
+            taxTotal.addTaxSubtotal(crearSubtotalImpuestoIsc(isc, moneda));
         }
 
         facturaUbl.addTaxTotal(taxTotal);
@@ -551,6 +564,58 @@ public class FacturaUblBuilder {
         subtotal.setTaxAmount(BigDecimal.ZERO).setCurrencyID(moneda);
         subtotal.setTaxCategory(crearCategoriaInafecto());
         return subtotal;
+    }
+
+    /**
+     * Crea el subtotal de impuesto para ISC (a nivel de totales del comprobante).
+     * Corresponde al campo 28 del XML (Sumatoria de ISC).
+     *
+     * @param montoISC monto total del ISC
+     * @param moneda   código de moneda
+     * @return TaxSubtotalType configurado
+     */
+    private TaxSubtotalType crearSubtotalImpuestoIsc(
+            BigDecimal montoISC,
+            String moneda) {
+        TaxSubtotalType subtotal = new TaxSubtotalType();
+        subtotal.setTaxableAmount(montoISC).setCurrencyID(moneda);
+        subtotal.setTaxAmount(montoISC).setCurrencyID(moneda);
+        subtotal.setTaxCategory(crearCategoriaIsc());
+        return subtotal;
+    }
+
+    /**
+     * Crea la categoría de impuesto para ISC (a nivel de totales).
+     * 
+     * @return TaxCategoryType configurado
+     */
+    private TaxCategoryType crearCategoriaIsc() {
+        TaxCategoryType categoria = new TaxCategoryType();
+        IDType idCategoria = new IDType();
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(CATEGORIA_GRAVADO);
+        categoria.setID(idCategoria);
+        categoria.setTaxScheme(crearEsquemaImpuestoIsc());
+        return categoria;
+    }
+
+    /**
+     * Crea el esquema de impuesto ISC.
+     *
+     * @return TaxSchemeType configurado
+     */
+    private TaxSchemeType crearEsquemaImpuestoIsc() {
+        TaxSchemeType esquema = new TaxSchemeType();
+        IDType idEsquema = new IDType();
+        idEsquema.setSchemeID("UN/ECE 5153");
+        idEsquema.setSchemeAgencyID("6");
+        idEsquema.setValue(CODIGO_TRIBUTO_ISC);
+        esquema.setID(idEsquema);
+        esquema.setName(NOMBRE_IMPUESTO_ISC);
+        esquema.setTaxTypeCode(TIPO_TRIBUTO_EXC);
+        return esquema;
     }
 
     /**
@@ -1103,6 +1168,12 @@ public class FacturaUblBuilder {
         // CAMPO 42: Afectación al IGV por ítem (TaxTotal por línea)
         lineaUbl.addTaxTotal(crearImpuestoLinea(linea, moneda));
 
+        // CAMPO 43: Afectación al ISC por ítem (segundo TaxTotal por línea, si aplica)
+        BigDecimal montoISC = linea.montoISC();
+        if (montoISC != null && montoISC.compareTo(BigDecimal.ZERO) > 0) {
+            lineaUbl.addTaxTotal(crearImpuestoIscLinea(linea, moneda));
+        }
+
         // CAMPO 44-46: Descripción y códigos del producto
         ItemType item = crearItem(linea);
         lineaUbl.setItem(item);
@@ -1165,6 +1236,59 @@ public class FacturaUblBuilder {
                 porcentajeIGV != null ? porcentajeIGV : PORCENTAJE_IGV);
         subtotal.setTaxCategory(categoria);
 
+        taxTotal.addTaxSubtotal(subtotal);
+        return taxTotal;
+    }
+
+    /**
+     * Crea el impuesto ISC (TaxTotal) para una línea de detalle.
+     * Genera un TaxTotal separado del IGV según especificación SUNAT, campo 43.
+     *
+     * @param linea  datos de la línea
+     * @param moneda código de moneda
+     * @return TaxTotalType configurado para ISC
+     */
+    private TaxTotalType crearImpuestoIscLinea(FacturaLineaUblData linea, String moneda) {
+        BigDecimal montoISC = valorOZero(linea.montoISC());
+        BigDecimal montoBaseISC = valorOZero(linea.montoBaseIGV()); // misma base que IGV
+
+        TaxTotalType taxTotal = new TaxTotalType();
+        taxTotal.setTaxAmount(montoISC).setCurrencyID(moneda);
+
+        TaxSubtotalType subtotal = new TaxSubtotalType();
+        subtotal.setTaxableAmount(montoBaseISC).setCurrencyID(moneda);
+        subtotal.setTaxAmount(montoISC).setCurrencyID(moneda);
+
+        TaxCategoryType categoria = new TaxCategoryType();
+
+        // ID de categoría: S (misma categoría que gravado, ISC es impuesto)
+        IDType idCategoria = new IDType();
+        idCategoria.setSchemeID("UN/ECE 5305");
+        idCategoria.setSchemeName("Tax Category Identifier");
+        idCategoria.setSchemeAgencyName("United Nations Economic Commission for Europe");
+        idCategoria.setValue(CATEGORIA_GRAVADO);
+        categoria.setID(idCategoria);
+
+        // TierRange: sistema ISC (01=Valor, 02=Específico, 03=PVP)
+        String iscTipoSistema = linea.tipoSistemaISC();
+        if (iscTipoSistema != null) {
+            TierRangeType tierRange = new TierRangeType();
+            tierRange.setValue(iscTipoSistema);
+            categoria.setTierRange(tierRange);
+        }
+
+        // TaxScheme: ISC
+        TaxSchemeType esquema = new TaxSchemeType();
+        IDType idEsquema = new IDType();
+        idEsquema.setSchemeID("UN/ECE 5153");
+        idEsquema.setSchemeName("Tax Scheme Identifier");
+        idEsquema.setValue(CODIGO_TRIBUTO_ISC);
+        esquema.setID(idEsquema);
+        esquema.setName(NOMBRE_IMPUESTO_ISC);
+        esquema.setTaxTypeCode(TIPO_TRIBUTO_EXC);
+        categoria.setTaxScheme(esquema);
+
+        subtotal.setTaxCategory(categoria);
         taxTotal.addTaxSubtotal(subtotal);
         return taxTotal;
     }
