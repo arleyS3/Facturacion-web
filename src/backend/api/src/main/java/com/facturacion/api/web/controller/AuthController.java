@@ -63,7 +63,7 @@ public class AuthController {
     }
 
     private void setCookie(HttpServletResponse response, String value, int maxAge, HttpServletRequest request) {
-        boolean secure = request.isSecure();
+        boolean secure = shouldUseSecureCookies(request);
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, value)
                 .httpOnly(true)
                 .secure(secure)
@@ -75,25 +75,32 @@ public class AuthController {
     }
 
     private void setRefreshCookie(HttpServletResponse response, String value, HttpServletRequest request) {
+        boolean secure = shouldUseSecureCookies(request);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, value)
                 .httpOnly(true)
-                .secure(request.isSecure())
+                .secure(secure)
                 .path("/api/v1/auth/refresh")
                 .maxAge(REFRESH_MAX_AGE)
-                .sameSite(request.isSecure() ? "None" : "Lax")
+                .sameSite(secure ? "None" : "Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     private void clearRefreshCookie(HttpServletResponse response, HttpServletRequest request) {
+        boolean secure = shouldUseSecureCookies(request);
         ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, "")
                 .httpOnly(true)
-                .secure(request.isSecure())
+                .secure(secure)
                 .path("/api/v1/auth/refresh")
                 .maxAge(0)
-                .sameSite(request.isSecure() ? "None" : "Lax")
+                .sameSite(secure ? "None" : "Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private boolean shouldUseSecureCookies(HttpServletRequest request) {
+        String host = request.getHeader("Host");
+        return host == null || !(host.startsWith("localhost") || host.startsWith("127.0.0.1"));
     }
 
     @PostMapping("/login")
