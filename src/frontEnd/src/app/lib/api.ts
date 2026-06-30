@@ -1,9 +1,9 @@
 import axios from "axios";
 
-const viteEnv = (import.meta as { env?: Record<string, string | undefined> }).env;
+const viteEnv = (import.meta as { env?: Record<string, string | boolean | undefined> }).env;
 
-// Prioridad: env var de Vite → fallback a Railway directo
-const API_BASE_URL = viteEnv?.VITE_API_BASE_URL || "https://facturacion-web.up.railway.app/api/v1";
+// Producción usa el rewrite same-origin de Vercel; desarrollo puede sobreescribir por env.
+const API_BASE_URL = viteEnv?.PROD ? "/api/v1" : viteEnv?.VITE_API_BASE_URL || "/api/v1";
 export const REFRESH_TOKEN_KEY = "refresh_token";
 
 /**

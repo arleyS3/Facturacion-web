@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { useLocation, Outlet} from "react-router";
+import { useLocation, Outlet, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload } from "lucide-react";
 import { api, setAccessToken } from "@/lib/api";
@@ -37,11 +37,10 @@ function BrandLogo({ className = "" }: { className?: string }) {
 }
 
 /** Navigation handler that shows loader for 3 seconds then navigates */
-function handleNavigation(path: string) {
+function handleNavigation(path: string, navigate: (path: string) => void) {
   // Set loading state via sessionStorage to persist across page load
   sessionStorage.setItem("navigating", "true");
-  // Force navigation
-  window.location.href = path;
+  navigate(path);
 }
 
 /** Loading overlay with Motion animation - always shows for 3 seconds */
@@ -140,9 +139,11 @@ function NavButton({
   isActive: boolean;
   className?: string;
 }) {
+  const navigate = useNavigate();
+
   return (
     <button
-      onClick={() => handleNavigation(item.path)}
+      onClick={() => handleNavigation(item.path, navigate)}
       className={`flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors cursor-pointer ${className} ${
         isActive
           ? "bg-primary-soft text-primary"
@@ -166,9 +167,11 @@ function MobileNavButton({
   isActive: boolean;
   className?: string;
 }) {
+  const navigate = useNavigate();
+
   return (
     <button
-      onClick={() => handleNavigation(item.path)}
+      onClick={() => handleNavigation(item.path, navigate)}
       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer shrink-0 ${className} ${
         isActive
           ? "bg-primary text-primary-foreground"
@@ -183,6 +186,7 @@ function MobileNavButton({
 
 export function AppLayout() {
   const location = useLocation();
+  const navigate = useNavigate();
   const userEmail = localStorage.getItem("user_email") ?? "Usuario";
 
   const handleLogout = async () => {
@@ -207,7 +211,7 @@ export function AppLayout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
 
           {/* Brand */}
-          <button onClick={() => handleNavigation("/home")} className="flex items-center gap-3 shrink-0 cursor-pointer">
+          <button onClick={() => handleNavigation("/home", navigate)} className="flex items-center gap-3 shrink-0 cursor-pointer">
             <BrandLogo />
             <span className="text-sm font-bold text-foreground hidden sm:block tracking-tight">
               AutonomiFlow
@@ -248,7 +252,7 @@ export function AppLayout() {
                 <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
               </div>
               <DropdownMenuItem
-                onClick={() => handleNavigation("/ose-sender")}
+                onClick={() => handleNavigation("/ose-sender", navigate)}
                 className="cursor-pointer"
               >
                 <Upload className="size-4" />
