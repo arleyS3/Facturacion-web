@@ -19,8 +19,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    private static final String GENERAR_XML_PATH = "/api/v1/comprobantes/generar-xml";
-
     private final JwtAuthFilter jwtAuthFilter;
 
     public SecurityConfig(JwtAuthFilter jwtAuthFilter) {

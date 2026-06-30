@@ -18,6 +18,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+
+import java.util.Map;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -94,7 +96,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(
+    public ResponseEntity<?> login(
             @RequestBody LoginRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
@@ -102,8 +104,7 @@ public class AuthController {
         var userOpt = userRepository.findByEmail(request.getEmail());
 
         if (userOpt.isEmpty() || !passwordEncoder.matches(request.getPassword(), userOpt.get().getPassword())) {
-            // Mensaje genérico — no revelar si el email existe o no
-            throw new RuntimeException("Credenciales invalidas");
+            return ResponseEntity.status(401).body(Map.of("error", "Credenciales invalidas"));
         }
 
         UserEntity user = userOpt.get();
@@ -121,32 +122,45 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponse> refreshToken(
+    public ResponseEntity<?> refreshToken(
             @RequestBody(required = false) RefreshRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
+        // 1. Obtener refresh token (cookie > body)
         String refreshToken = extractRefreshToken(httpRequest);
         if (refreshToken == null && request != null) {
             refreshToken = request.getRefreshToken();
         }
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new RuntimeException("Refresh token requerido");
+            return ResponseEntity.status(400).body(Map.of("error", "Refresh token requerido"));
         }
 
-        // Invalidar el refresh anterior (rotación)
-        blacklistService.addToBlacklist(refreshToken);
+        // 2. Validar el token ANTES de blacklistear
+        String email;
+        try {
+            email = jwtService.extractEmailFromRefresh(refreshToken);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("error", "Refresh token invalido o expirado"));
+        }
 
-        String email = jwtService.extractEmailFromRefresh(refreshToken);
+        // 3. Buscar usuario
+        var userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(401).body(Map.of("error", "Usuario no encontrado"));
+        }
+        UserEntity user = userOpt.get();
 
-        UserEntity user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
+        // 4. Generar nuevos tokens
         String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole());
         String newRefreshToken = jwtService.generateRefreshToken(user.getEmail());
 
+        // 5. Setear cookies
         setCookie(httpResponse, newAccessToken, COOKIE_MAX_AGE, httpRequest);
         setRefreshCookie(httpResponse, newRefreshToken, httpRequest);
+
+        // 6. Recién acá invalidar el anterior (rotación segura)
+        blacklistService.addToBlacklist(refreshToken);
 
         return ResponseEntity.ok(AuthResponse.builder()
                 .accessToken(newAccessToken)
