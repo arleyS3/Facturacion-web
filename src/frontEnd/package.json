@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "type": "module",
   "scripts": {
+    "prebuild": "node src/app/lib/buildShippingPayload.check.ts && node src/app/lib/buildShippingCanonicalPayload.check.ts && node src/app/lib/emitFormats.check.ts",
     "build": "vite build",
     "dev": "vite"
   },

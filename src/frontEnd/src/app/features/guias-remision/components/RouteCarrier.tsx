@@ -37,10 +37,8 @@ export function RouteCarrier() {
   const [fechaInicio, setFechaInicio] = useState("");
   const { data: tiposDocIdentidad, loading: tiposDocLoading } = useCatalog("/catalogos/tipos-documento-identidad");
 
-  const syncFormCarriers = () => {
-    if (setValue && Array.isArray(carriers)) {
-      setValue("shippingCarriers", carriers);
-    }
+  const syncFormCarriers = (updated: Carrier[]) => {
+    setValue?.("shippingCarriers", updated);
   };
 
   const addCarrier = () => {
@@ -63,8 +61,7 @@ export function RouteCarrier() {
     const updated = [...carriers, newCarrier];
     setCarriers(updated);
     
-    // Sincronizar con formulario
-    setTimeout(() => syncFormCarriers(), 0);
+    syncFormCarriers(updated);
     
     // Limpiar campos
     setModalidad("");
@@ -84,8 +81,7 @@ export function RouteCarrier() {
     }));
     setCarriers(reindexed);
     
-    // Sincronizar con formulario
-    setTimeout(() => syncFormCarriers(), 0);
+    syncFormCarriers(reindexed);
   };
 
   return (

@@ -35,10 +35,8 @@ export function RouteDriver() {
   const [licencia, setLicencia] = useState("");
   const { data: tiposDocIdentidad, loading: tiposDocLoading } = useCatalog("/catalogos/tipos-documento-identidad");
 
-  const syncFormDrivers = () => {
-    if (setValue && Array.isArray(drivers)) {
-      setValue("shippingDrivers", drivers);
-    }
+  const syncFormDrivers = (updated: Driver[]) => {
+    setValue?.("shippingDrivers", updated);
   };
 
   const addDriver = () => {
@@ -61,8 +59,7 @@ export function RouteDriver() {
     const updated = [...drivers, newDriver];
     setDrivers(updated);
     
-    // Sincronizar con formulario
-    setTimeout(() => syncFormDrivers(), 0);
+    syncFormDrivers(updated);
     
     // Limpiar campos
     setTipoConductor("Principal");
@@ -81,8 +78,7 @@ export function RouteDriver() {
     }));
     setDrivers(reindexed);
     
-    // Sincronizar con formulario
-    setTimeout(() => syncFormDrivers(), 0);
+    syncFormDrivers(reindexed);
   };
 
   return (

@@ -11,6 +11,10 @@ function nonEmpty(value: any): boolean {
   return value != null && value !== "";
 }
 
+function firstNonEmpty(...values: any[]): any {
+  return values.find(nonEmpty);
+}
+
 function cleanObject<T extends Record<string, any>>(obj: T): Partial<T> {
   const entries = Object.entries(obj).filter(([, value]) => nonEmpty(value));
   return Object.fromEntries(entries) as Partial<T>;
@@ -29,10 +33,10 @@ function buildItems(values: Values): ShippingItem[] {
       : [];
 
   return source.map((item: any, index: number) => ({
-    NroLinDet: toStringValue(item.NroLinDet ?? item.correlativo ?? index + 1),
-    QtyItem: toStringValue(item.QtyItem ?? item.cantidad ?? "0"),
-    UnmdItem: toStringValue(item.UnmdItem ?? item.unidadMedida ?? "NIU"),
-    NmbItem: toStringValue(item.NmbItem ?? item.descripcion ?? ""),
+    NroLinDet: toStringValue(firstNonEmpty(item.NroLinDet, item.correlativo, index + 1)),
+    QtyItem: toStringValue(firstNonEmpty(item.QtyItem, item.cantidad, "0")),
+    UnmdItem: toStringValue(firstNonEmpty(item.UnmdItem, item.unidadMedida, "NIU")),
+    NmbItem: toStringValue(firstNonEmpty(item.NmbItem, item.descripcion, "")),
   }));
 }
 
@@ -99,21 +103,16 @@ function buildDrivers(values: Values): Array<Record<string, string>> {
   );
 }
 
-function buildAirport(values: Values): Array<Record<string, string>> {
+function buildAirport(values: Values): Record<string, string> {
   const airport = values.shippingAirport;
-  
+
   if (!airport || typeof airport !== "object") {
-    return [];
+    return {};
   }
 
-  return [
-    cleanObject({
-      NroLinPuertoAerop: "1",
-      IdPuertoAerop: toStringValue(airport.codigoPuerto ?? ""),
-      NmbPuertoAerop: toStringValue(airport.nombrePuerto ?? ""),
-      TipoPuertoAerop: toStringValue(airport.tipoPuerto ?? ""),
-    }) as Record<string, string>,
-  ];
+  return cleanObject({
+    CodPueAer: toStringValue(firstNonEmpty(airport.codigoPuerto, airport.CodPueAer, "")),
+  }) as Record<string, string>;
 }
 
 function buildContainers(values: Values): Array<Record<string, string>> {
@@ -161,15 +160,15 @@ export function buildShippingPayload(values: Values) {
   const tipoDocumento = toStringValue(values.docType, "09");
 
   const camposA = cleanObject({
-    CODI_EMPR: toStringValue(values.companyCode ?? "1"),
+    CODI_EMPR: toStringValue(firstNonEmpty(values.companyCode, values.codigoEmpresa, "1")),
     Serie: toStringValue(values.serie ?? "T001"),
     Correlativo: toStringValue(values.correlativo ?? ""),
     FchEmis: toStringValue(values.fechaEmision ?? ""),
     HoraEmision: toStringValue(values.horaEmision ?? ""),
-    TipoRucEmis: toStringValue(values.issuerDocType ?? "6"),
-    RUTEmis: toStringValue(values.issuerDocNumber ?? ""),
-    RznSocEmis: toStringValue(values.issuerSocialName ?? ""),
-    CodigoLocalAnexo: toStringValue(values.localCode ?? values.issuerAnexo ?? "0000"),
+    TipoRucEmis: toStringValue(firstNonEmpty(values.issuerDocType, values.emisorTipoDoc, values.tipoDocEmisor, "6")),
+    RUTEmis: toStringValue(firstNonEmpty(values.issuerDocNumber, values.emisorRuc, values.numeroDocEmisor, "")),
+    RznSocEmis: toStringValue(firstNonEmpty(values.issuerSocialName, values.emisorRazonSocial, values.razonSocialEmisor, "")),
+    CodigoLocalAnexo: toStringValue(firstNonEmpty(values.localCode, values.issuerAnexo, values.emisorCodigoDomicilio, values.anexoEmisor, "0000")),
     TipoRutReceptor: toStringValue(values.receiverDocType ?? ""),
     RUTRecep: toStringValue(values.receiverDocNumber ?? ""),
     RznSocRecep: toStringValue(values.receiverSocialName ?? ""),
@@ -196,12 +195,12 @@ export function buildShippingPayload(values: Values) {
     DirLlegDireccion: toStringValue(values.gDirLlegDireccion ?? ""),
     RucPuntoLlegada: toStringValue(values.gRucPuntoLlegada ?? ""),
     CodigoLocalLlegada: toStringValue(values.gCodigoLocalLlegada ?? ""),
-    RucProveedor: toStringValue(values.gRucProveedor ?? ""),
-    TipoRucProveedor: toStringValue(values.gTipoRucProveedor ?? ""),
-    RazonProveedor: toStringValue(values.gRazonProveedor ?? ""),
-    RucComprador: toStringValue(values.gRucComprador ?? ""),
-    TipoRucComprador: toStringValue(values.gTipoRucComprador ?? ""),
-    RazonComprador: toStringValue(values.gRazonComprador ?? ""),
+    RucProv: toStringValue(values.gRucProveedor ?? ""),
+    TipoRucProv: toStringValue(values.gTipoRucProveedor ?? ""),
+    RznSocProv: toStringValue(values.gRazonProveedor ?? ""),
+    RucComp: toStringValue(values.gRucComprador ?? ""),
+    TipoRucComp: toStringValue(values.gTipoRucComprador ?? ""),
+    RznSocComp: toStringValue(values.gRazonComprador ?? ""),
   });
 
   const camposG1 = cleanObject({
@@ -212,7 +211,7 @@ export function buildShippingPayload(values: Values) {
   const listaE = buildAdditionalData(values);
   const listaG1 = buildCarriers(values);
   const listaG11 = buildDrivers(values);
-  const listaG2 = buildAirport(values);
+  const camposG2 = buildAirport(values);
   const listaG3 = buildContainers(values);
   const listaG4 = buildIndicators(values);
   const listaG5 = buildSecondaryVehicles(values);
@@ -229,13 +228,16 @@ export function buildShippingPayload(values: Values) {
     campos.G1 = camposG1 as Record<string, any>;
   }
 
+  if (Object.keys(camposG2).length > 0) {
+    campos.G2 = camposG2 as Record<string, any>;
+  }
+
   const listas: Record<string, Array<Record<string, any>>> = {
     B: buildItems(values),
     ...(listaD.length > 0 ? { D: listaD } : {}),
     ...(listaE.length > 0 ? { E: listaE } : {}),
     ...(listaG1.length > 0 ? { G1: listaG1 } : {}),
     ...(listaG11.length > 0 ? { G11: listaG11 } : {}),
-    ...(listaG2.length > 0 ? { G2: listaG2 } : {}),
     ...(listaG3.length > 0 ? { G3: listaG3 } : {}),
     ...(listaG4.length > 0 ? { G4: listaG4 } : {}),
     ...(listaG5.length > 0 ? { G5: listaG5 } : {}),

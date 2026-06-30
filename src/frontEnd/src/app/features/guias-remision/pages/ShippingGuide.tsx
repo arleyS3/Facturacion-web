@@ -5,15 +5,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { EmitDocumentDialog } from "@/components/EmitDocumentDialog";
+import type { EmitFormats } from "@/components/EmitDocumentDialog";
 import { GuideInformation } from "@/features/guias-remision/components/GuideInformation";
 import { GuideDetails } from "@/features/guias-remision/components/GuideDetails";
 import { GuideReferences } from "@/features/guias-remision/components/GuideReferences";
 import { GuideRoute } from "@/features/guias-remision/components/GuideRoute";
 import { GuideAdditionalData } from "@/features/guias-remision/components/GuideAdditionalData";
 import { useState } from "react";
+import { sileo } from "sileo";
 import { FormProvider, useForm } from "react-hook-form";
 import { api } from "@/lib/api";
 import buildShippingPayload from "@/lib/buildShippingPayload";
+import buildShippingCanonicalPayload from "@/lib/buildShippingCanonicalPayload";
+import { descargarXml } from "@/lib/xmlService";
 import {
   buildFilenameFromPayload,
   getFilenameFromDisposition,
@@ -23,6 +27,29 @@ import {
   notifyRequestError,
   showServerValidationErrors,
 } from "@/lib/emitErrorNotification";
+
+function getShippingXmlValidationErrors(payload: any): string[] {
+  const traslado = payload.parte_traslado || {};
+  const detalles = Array.isArray(payload.detalles) ? payload.detalles : [];
+  const hasValidItem = detalles.some(
+    (item: any) => String(item.descripcion || "").trim() && Number(item.cantidad) > 0,
+  );
+
+  return [
+    [payload.fecha_emision, "Fecha de emisión"],
+    [payload.receptor_documento, "Documento del receptor"],
+    [payload.receptor_razonSocial, "Razón social del receptor"],
+    [traslado.punto_partida_ubigeo, "Ubigeo de partida"],
+    [traslado.punto_partida_direccion, "Dirección de partida"],
+    [traslado.punto_llegada_ubigeo, "Ubigeo de llegada"],
+    [traslado.punto_llegada_direccion, "Dirección de llegada"],
+    [traslado.fecha_traslado, "Fecha de traslado"],
+  ]
+    .filter(([value]) => !String(value || "").trim())
+    .map(([, label]) => `${label} es requerido`)
+    .concat(Number(traslado.peso_bruto_total) > 0 ? [] : ["Peso bruto total debe ser mayor a cero"])
+    .concat(hasValidItem ? [] : ["Debe incluir al menos un ítem con descripción y cantidad"]);
+}
 
 export function ShippingGuide() {
   const navigate = useNavigate();
@@ -94,25 +121,54 @@ export function ShippingGuide() {
     return filename;
   };
 
-  const emitirGuia = async () => {
+  const generarXml = async (values: Record<string, any>) => {
+    const payload = buildShippingCanonicalPayload(values);
+    const validationErrors = getShippingXmlValidationErrors(payload);
+    if (validationErrors.length) {
+      sileo.error({
+        title: "No se puede generar el XML",
+        description: validationErrors.join("\n"),
+      });
+      return null;
+    }
+
+    const response = await api.post("/comprobantes/generar-xml", payload);
+
+    if (!response.data?.success) {
+      throw new Error(response.data?.error || "No se pudo generar el XML");
+    }
+
+    const filename = `${payload.numero}.xml`;
+    descargarXml(response.data.xml, filename);
+    return filename;
+  };
+
+  const emitirGuia = async (formats: EmitFormats = { xml: false, json: false, txt: true }) => {
     const values = methods.getValues();
     const payload = buildShippingPayload(values);
 
     console.log("[ShippingGuide] PAYLOAD enviado ->", payload);
 
     try {
-      const generarResponse = await api.post("/tramas/generar", payload);
-      console.log("[ShippingGuide] Respuesta /tramas/generar ->", generarResponse.data);
+      if (formats.txt) {
+        const generarResponse = await api.post("/tramas/generar", payload);
+        console.log("[ShippingGuide] Respuesta /tramas/generar ->", generarResponse.data);
 
-      if (
-        hasServerValidationErrors(generarResponse.data) &&
-        showServerValidationErrors(generarResponse.data)
-      ) {
-        return;
+        if (
+          hasServerValidationErrors(generarResponse.data) &&
+          showServerValidationErrors(generarResponse.data)
+        ) {
+          return;
+        }
+
+        const filename = await descargarTxt(payload);
+        console.log(`[ShippingGuide] TXT descargado correctamente: ${filename}`);
       }
 
-      const filename = await descargarTxt(payload);
-      console.log(`[ShippingGuide] TXT descargado correctamente: ${filename}`);
+      if (formats.xml) {
+        const filename = await generarXml(values);
+        if (filename) console.log(`[ShippingGuide] XML descargado correctamente: ${filename}`);
+      }
     } catch (error) {
       console.error("[ShippingGuide] Error al emitir guía ->", error);
       notifyRequestError(error, "No se pudo emitir la guía");
@@ -238,9 +294,7 @@ export function ShippingGuide() {
         open={showEmitDialog} 
         onOpenChange={setShowEmitDialog}
         documentType="shipping"
-        onEmit={() => {
-          void emitirGuia();
-        }}
+        onEmit={emitirGuia}
       />
     </div>
     </FormProvider>

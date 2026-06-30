@@ -109,8 +109,8 @@ export function TransportData() {
               <SelectValue placeholder="Seleccione modalidad" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="01">01 - Transporte Privado</SelectItem>
-              <SelectItem value="02">02 - Transporte Público</SelectItem>
+              <SelectItem value="01">01 - Transporte Público</SelectItem>
+              <SelectItem value="02">02 - Transporte Privado</SelectItem>
             </SelectContent>
           </Select>
         </div>
