@@ -49,6 +49,13 @@
 			<version>10.1.0</version>
 		</dependency>
 
+		<!-- Validación Schematron (reglas de negocio SUNAT) -->
+		<dependency>
+			<groupId>com.helger.schematron</groupId>
+			<artifactId>ph-schematron-pure</artifactId>
+			<version>9.1.1</version>
+		</dependency>
+
 		<!-- Firma digital XML -->
 		<dependency>
 			<groupId>org.apache.santuario</groupId>
