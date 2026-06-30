@@ -21,6 +21,11 @@ public class JwtService {
 
     @PostConstruct
     public void init() {
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException(
+                    "jwt.secret debe tener al menos 32 caracteres (256 bits). Actual: " +
+                    (secret == null ? "null" : secret.length() + " chars"));
+        }
         // Deriva dos keys distintas del mismo secret para evitar que
         // un token de un tipo pueda firmarse con la key del otro.
         this.accessKey = Keys.hmacShaKeyFor((secret + ":access").getBytes());
