@@ -97,6 +97,9 @@ interface Product {
 }
 
 const parseCsvRows = (text: string): string[][] => {
+  // Strip BOM if present
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+
   const rows: string[][] = [];
   let row: string[] = [];
   let cell = "";
@@ -150,6 +153,7 @@ export function ProductsTable() {
   const { data: unidadesMedida, isLoading: unidadesLoading } = useCatalogQuery(
     "/catalogos/unidades-medida-comercial",
   );
+  const { data: sistemasIsc } = useCatalog("/catalogos/sistemas-isc");
 
   // =================================================================
   // CAMPOS NUEVOS EN ESPAÑOL + LEGACY
@@ -264,7 +268,7 @@ export function ProductsTable() {
         rows = toObjectRows(parseCsvRows(text));
       } else {
         const workbook = new ExcelJS.Workbook();
-        await workbook.xlsx.load(buffer);
+        await workbook.xlsx.load(new Uint8Array(buffer));
 
         const worksheet = workbook.worksheets[0];
         if (!worksheet || worksheet.rowCount < 2) {
@@ -272,22 +276,43 @@ export function ProductsTable() {
           return;
         }
 
-        // Leer encabezados de la primera fila
-        const headers: string[] = [];
-        worksheet.getRow(1).eachCell((cell) => {
-          headers.push(String(cell.value ?? "").trim());
+        // Safe cell value — ExcelJS cell.value puede ser objeto (fórmula, rich text)
+        const cellText = (cell: import("exceljs").Cell): string => {
+          const v = cell.value;
+          if (v == null) return "";
+          if (typeof v === "object") return String(cell.text ?? "").trim();
+          return String(v).trim();
+        };
+
+        // Mapa columna → header (solo celdas existentes, evita getCell() que crea celdas fantasma)
+        const headerRow = worksheet.getRow(1);
+        const headerMap = new Map<number, string>();
+        headerRow.eachCell((cell, colNumber) => {
+          const text = cellText(cell);
+          if (text) headerMap.set(colNumber, text);
         });
 
-        // Leer filas de datos
-        for (let i = 2; i <= worksheet.rowCount; i++) {
+        if (headerMap.size === 0) {
+          toast.error("No se encontraron encabezados en la primera fila.");
+          return;
+        }
+
+        // Cachear rowCount ANTES del loop (evita que getCell modifique rowCount)
+        const maxRow = worksheet.rowCount;
+        for (let i = 2; i <= maxRow; i++) {
           const row = worksheet.getRow(i);
           const obj: Record<string, string> = {};
           let hasData = false;
-          headers.forEach((header, idx) => {
-            const val = row.getCell(idx + 1).value;
-            if (val != null) hasData = true;
-            obj[header] = val != null ? String(val).trim() : "";
+
+          // eachCell itera SOLO celdas con valor — evita getCell() que crea celdas vacías
+          row.eachCell((cell, colNumber) => {
+            const header = headerMap.get(colNumber);
+            if (!header) return;
+            const text = cellText(cell);
+            if (text !== "") hasData = true;
+            obj[header] = text;
           });
+
           if (hasData) rows.push(obj);
         }
       }
@@ -351,12 +376,22 @@ export function ProductsTable() {
         };
       });
 
-      const withCalculations = imported.map((p) => calculateProduct(p));
+      // Filtrar filas sin descripción (rowCount incluye filas con formato residual)
+      const withData = imported.filter((p) => p.descripcion.trim() !== "");
+      if (withData.length === 0) {
+        toast.error("No se encontraron filas con datos. Verifica que los headers sean: Descripcion, Cantidad, Precio, Unidad.");
+        return;
+      }
+      const skipCount = imported.length - withData.length;
+      const withCalculations = withData.map((p) => calculateProduct(p));
       setProducts([...products, ...withCalculations]);
-      toast.success(`${rows.length} producto(s) importado(s) correctamente`);
+      const msg = `${withData.length} producto(s) importado(s) correctamente`
+        + (skipCount > 0 ? ` (${skipCount} fila(s) vacía(s) omitida(s))` : "");
+      toast.success(msg);
     } catch (err) {
       console.error("Error al importar archivo:", err);
-      toast.error("Error al leer el archivo. Asegúrate de que sea un Excel (.xlsx) o CSV válido.");
+      const msg = err instanceof Error ? err.message : "Error desconocido";
+      toast.error(`Error al leer el archivo: ${msg}. Verifica que sea .xlsx (no .xls) o CSV válido.`);
     } finally {
       setIsImporting(false);
     }
@@ -837,11 +872,22 @@ export function ProductsTable() {
                                     </Label>
                                     <Select
                                       value={product.tipoAfectacionIGV}
-                                      onValueChange={(value) =>
+                                      onValueChange={(value) => {
+                                        const afecItem =
+                                          tiposAfectacionIgv?.find(
+                                            (i) => i.code === value,
+                                          );
+                                        const codigoTributo =
+                                          afecItem?.extra ?? "1000";
                                         updateProduct(product.id, {
                                           tipoAfectacionIGV: value,
-                                        })
-                                      }
+                                          codigoTributo,
+                                          tasaIGV:
+                                            codigoTributo === "1000"
+                                              ? "18"
+                                              : "0",
+                                        });
+                                      }}
                                     >
                                       <SelectTrigger>
                                         <SelectValue />
@@ -860,13 +906,33 @@ export function ProductsTable() {
                                   </div>
 
                                   <div className="space-y-2">
-                                    <Label className="text-xs">
-                                      Código de Tributo
-                                    </Label>
+                                    <div className="flex items-center gap-1">
+                                      <Label className="text-xs">
+                                        Código de Tributo
+                                      </Label>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <button
+                                            type="button"
+                                            className="text-slate-400"
+                                            aria-label="Información"
+                                          >
+                                            <Info
+                                              className="size-3"
+                                              aria-hidden="true"
+                                            />
+                                          </button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          Se asigna automáticamente según el
+                                          Tipo de Afectación IGV
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    </div>
                                     <Select
                                       value={product.codigoTributo}
+                                      disabled
                                       onValueChange={(value) => {
-                                        // Cuando se selecciona IGV, auto-llenar tasa al 18%
                                         if (value === "1000") {
                                           updateProduct(product.id, {
                                             codigoTributo: value,
@@ -1175,13 +1241,17 @@ export function ProductsTable() {
                       <SelectValue placeholder="Seleccione sistema" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="01">01 - Sistema al Valor</SelectItem>
-                      <SelectItem value="02">
-                        02 - Sistema Específico
-                      </SelectItem>
-                      <SelectItem value="03">
-                        03 - Sistema al Valor (Precio de Venta al Público)
-                      </SelectItem>
+                      {sistemasIsc?.length ? (
+                        sistemasIsc.map((s) => (
+                          <SelectItem key={s.code} value={s.code}>
+                            {s.code} - {s.label}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <SelectItem value="01" disabled>
+                          Cargando...
+                        </SelectItem>
+                      )}
                     </SelectContent>
                   </Select>
                 </div>
