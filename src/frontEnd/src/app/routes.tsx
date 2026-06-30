@@ -10,8 +10,9 @@ import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
-  const token = localStorage.getItem("token");
-  return token ? <Navigate to="/home" replace /> : <>{children}</>;
+  // La cookie httpOnly no es accesible desde JS — siempre renderizamos.
+  // ProtectedRoute dentro de / maneja la redirección si está autenticado.
+  return <>{children}</>;
 };
 
 export const router = createBrowserRouter([

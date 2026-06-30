@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Navigate } from "react-router";
-import { api, REFRESH_TOKEN_KEY, setAccessToken } from "@/lib/api";
+import { api, setAccessToken } from "@/lib/api";
 
 interface Props {
   children: React.ReactNode;
@@ -16,20 +16,14 @@ export const ProtectedRoute = ({ children }: Props) => {
         setAuth("ok");
         return;
       } catch {
-        const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY);
-        if (!refreshToken) {
-          setAuth("fail");
-          return;
-        }
-
         try {
-          const response = await api.post("/auth/refresh", { refreshToken });
+          // El refresh token viaja en cookie httpOnly (path=/api/v1/auth/refresh)
+          const response = await api.post("/auth/refresh");
           setAccessToken(response.data?.accessToken ?? null);
           await api.get("/auth/me");
           setAuth("ok");
         } catch {
           setAccessToken(null);
-          localStorage.removeItem(REFRESH_TOKEN_KEY);
           setAuth("fail");
         }
       }

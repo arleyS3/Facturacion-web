@@ -32,7 +32,9 @@ import com.facturacion.api.security.TokenBlacklistService;
 public class AuthController {
 
     private static final String COOKIE_NAME = "access_token";
+    private static final String REFRESH_COOKIE_NAME = "refresh_token";
     private static final int COOKIE_MAX_AGE = 60 * 60; // 1 hora
+    private static final int REFRESH_MAX_AGE = 60 * 60 * 24 * 7; // 7 días
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
@@ -55,16 +57,38 @@ public class AuthController {
                 .build();
 
         userRepository.save(user);
-        return "Usurio registrado correctamente";
+        return "Usuario registrado correctamente";
     }
 
     private void setCookie(HttpServletResponse response, String value, int maxAge, HttpServletRequest request) {
         ResponseCookie cookie = ResponseCookie.from(COOKIE_NAME, value)
                 .httpOnly(true)
-                .secure(request.isSecure()) // true en HTTPS, false en HTTP (dev)
+                .secure(request.isSecure())
                 .path("/")
                 .maxAge(maxAge)
                 .sameSite("Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private void setRefreshCookie(HttpServletResponse response, String value, HttpServletRequest request) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, value)
+                .httpOnly(true)
+                .secure(request.isSecure())
+                .path("/api/v1/auth/refresh")
+                .maxAge(REFRESH_MAX_AGE)
+                .sameSite(request.isSecure() ? "None" : "Lax")
+                .build();
+        response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+    }
+
+    private void clearRefreshCookie(HttpServletResponse response, HttpServletRequest request) {
+        ResponseCookie cookie = ResponseCookie.from(REFRESH_COOKIE_NAME, "")
+                .httpOnly(true)
+                .secure(request.isSecure())
+                .path("/api/v1/auth/refresh")
+                .maxAge(0)
+                .sameSite(request.isSecure() ? "None" : "Lax")
                 .build();
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
@@ -86,28 +110,43 @@ public class AuthController {
         String refreshToken = jwtService.generateRefreshToken(user.getEmail());
 
         setCookie(httpResponse, accessToken, COOKIE_MAX_AGE, httpRequest);
+        setRefreshCookie(httpResponse, refreshToken, httpRequest);
 
         return ResponseEntity.ok(AuthResponse.builder()
-                .accessToken(accessToken) // también se devuelve en el body para session en memoria
-                .refreshToken(refreshToken)
+                .accessToken(accessToken)
+                .refreshToken(refreshToken) // fallback para entornos sin soporte de cookie cross-origin
                 .build());
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<AuthResponse> refreshToken(
-            @RequestBody RefreshRequest request,
+            @RequestBody(required = false) RefreshRequest request,
             HttpServletRequest httpRequest,
             HttpServletResponse httpResponse) {
 
-        String email = jwtService.extractEmail(request.getRefreshToken());
+        String refreshToken = extractRefreshToken(httpRequest);
+        if (refreshToken == null && request != null) {
+            refreshToken = request.getRefreshToken();
+        }
+        if (refreshToken == null || refreshToken.isBlank()) {
+            throw new RuntimeException("Refresh token requerido");
+        }
+
+        String email = jwtService.extractEmailFromRefresh(refreshToken);
 
         UserEntity user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         String newAccessToken = jwtService.generateToken(user.getEmail(), user.getRole());
-        setCookie(httpResponse, newAccessToken, COOKIE_MAX_AGE, httpRequest);
+        String newRefreshToken = jwtService.generateRefreshToken(user.getEmail());
 
-        return ResponseEntity.ok(new AuthResponse(newAccessToken, request.getRefreshToken()));
+        setCookie(httpResponse, newAccessToken, COOKIE_MAX_AGE, httpRequest);
+        setRefreshCookie(httpResponse, newRefreshToken, httpRequest);
+
+        return ResponseEntity.ok(AuthResponse.builder()
+                .accessToken(newAccessToken)
+                .refreshToken(newRefreshToken)
+                .build());
     }
 
     @GetMapping("/me")
@@ -125,13 +164,25 @@ public class AuthController {
             for (Cookie c : request.getCookies()) {
                 if (COOKIE_NAME.equals(c.getName())) {
                     blacklistService.addToBlacklist(c.getValue());
-                    break;
+                }
+                if (REFRESH_COOKIE_NAME.equals(c.getName())) {
+                    blacklistService.addToBlacklist(c.getValue());
                 }
             }
         }
 
         setCookie(response, "", 0, request);
+        clearRefreshCookie(response, request);
 
         return ResponseEntity.ok("logout exitoso");
+    }
+
+    private String extractRefreshToken(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
+        return java.util.Arrays.stream(request.getCookies())
+                .filter(c -> REFRESH_COOKIE_NAME.equals(c.getName()))
+                .map(Cookie::getValue)
+                .findFirst()
+                .orElse(null);
     }
 }

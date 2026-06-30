@@ -1,63 +1,74 @@
 package com.facturacion.api.security;
 
-import java.security.Key;
-import java.util.Date;
-
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.security.Key;
+import java.util.Date;
 
 @Service
 public class JwtService {
 
     @Value("${jwt.secret}")
     private String secret;
-    private Key key;
+
+    private Key accessKey;
+    private Key refreshKey;
 
     @PostConstruct
-    public void init(){
-        this.key = Keys.hmacShaKeyFor(secret.getBytes());
+    public void init() {
+        // Deriva dos keys distintas del mismo secret para evitar que
+        // un token de un tipo pueda firmarse con la key del otro.
+        this.accessKey = Keys.hmacShaKeyFor((secret + ":access").getBytes());
+        this.refreshKey = Keys.hmacShaKeyFor((secret + ":refresh").getBytes());
     }
 
     public String generateToken(String email, String role) {
-
         return Jwts.builder()
-            .setSubject(email)
-            .claim("role", role)
-            .setIssuedAt(new Date())
-            .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
-            .signWith(key)
-            .compact();
+                .setSubject(email)
+                .claim("role", role)
+                .claim("type", "access")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+                .signWith(accessKey)
+                .compact();
+    }
 
-    }   
+    public String generateRefreshToken(String email) {
+        return Jwts.builder()
+                .setSubject(email)
+                .claim("type", "refresh")
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7))
+                .signWith(refreshKey)
+                .compact();
+    }
 
-    public String extractEmail(String token){
+    /**
+     * Extrae todos los claims de un ACCESS TOKEN.
+     * Lanza excepción si el token está firmado con otra key (ej. refresh).
+     */
+    public Claims extractAllClaims(String token) {
         return Jwts.parserBuilder()
-                .setSigningKey(key)
+                .setSigningKey(accessKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    /**
+     * Extrae el subject (email) de un REFRESH TOKEN.
+     */
+    public String extractEmailFromRefresh(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(refreshKey)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
-    }
-
-    public String extractRole(String token){
-        return Jwts.parserBuilder()
-                .setSigningKey(key)
-                .build().parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
-    }
-
-    public String generateRefreshToken(String email) {
-
-        return Jwts.builder()
-                .setSubject(email)
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 7))
-                .signWith(key)
-                .compact();
     }
 }

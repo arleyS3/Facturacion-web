@@ -60,10 +60,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // 5. Validar y autenticar
+        // 5. Validar y autenticar (solo access tokens, rechazar refresh)
         try {
-            String email = jwtService.extractEmail(token);
-            String role  = jwtService.extractRole(token);
+            var claims = jwtService.extractAllClaims(token);
+            String type = claims.get("type", String.class);
+            if (!"access".equals(type)) {
+                throw new SecurityException("Tipo de token invalido: " + type);
+            }
+
+            String email = claims.getSubject();
+            String role  = claims.get("role", String.class);
 
             if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UsernamePasswordAuthenticationToken authToken =

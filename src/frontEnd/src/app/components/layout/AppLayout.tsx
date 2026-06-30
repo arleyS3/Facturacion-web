@@ -4,6 +4,7 @@ import React from "react";
 import { useLocation, Outlet} from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload } from "lucide-react";
+import { api, setAccessToken } from "@/lib/api";
 
 import {
   DropdownMenu,
@@ -182,12 +183,16 @@ function MobileNavButton({
 
 export function AppLayout() {
   const location = useLocation();
-  const userEmail = localStorage.getItem("user_email") ?? localStorage.getItem("token") ?? "Usuario";
+  const userEmail = localStorage.getItem("user_email") ?? "Usuario";
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     sessionStorage.setItem("navigating", "true");
-    localStorage.removeItem("token");
-    localStorage.removeItem("refreshToken");
+    try {
+      await api.post("/auth/logout");
+    } catch {
+      // si el backend no responde, igual limpiamos local
+    }
+    setAccessToken(null);
     localStorage.removeItem("user_email");
     window.location.href = "/login";
   };

@@ -3,7 +3,7 @@ import { useNavigate, Link } from "react-router";
 import { useForm } from "react-hook-form";
 import { Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 
-import { api, REFRESH_TOKEN_KEY, setAccessToken } from "@/lib/api";
+import { api, setAccessToken } from "@/lib/api";
 import { loginSchema, type LoginFormData } from "@/lib/schemas/login.schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -54,13 +54,11 @@ export const Login: React.FC = () => {
       const response = await api.post("/auth/login", data);
 
       if (response.status === 200) {
-        // Guardar token en memoria (no localStorage) para requests autenticadas
+        // Guardar access token en memoria (no localStorage) para requests autenticadas
         if (response.data?.accessToken) {
           setAccessToken(response.data.accessToken);
         }
-        if (response.data?.refreshToken) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, response.data.refreshToken);
-        }
+        // Refresh token viaja en cookie httpOnly (seteada por el backend)
         if (data.email) {
           localStorage.setItem("user_email", data.email);
         }
