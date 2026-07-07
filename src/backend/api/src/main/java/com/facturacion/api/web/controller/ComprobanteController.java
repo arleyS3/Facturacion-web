@@ -185,9 +185,9 @@ public class ComprobanteController {
             GenerarXmlResult result = estrategia.generarXml(canonico);
             String xml = result.xml();
             
-            // 2. Firmar digitalmente el XML solo si se indica (por defecto true)
+            // 2. Firmar digitalmente el XML si se indica y hay certificado configurado
             String xmlResult = canonico.debeFirmar()
-                ? xmlSignatureService.signXml(xml, canonico.emisorRuc())
+                ? xmlSignatureService.trySignXml(xml, canonico.emisorRuc())
                 : xml;
             
             return Map.of(

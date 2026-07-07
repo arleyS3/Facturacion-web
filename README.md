@@ -1,7 +1,7 @@
 <div align="center">
   <img src="./docs/logo/Logo%20Transparente.png" alt="AutonomiFlow" width="170" />
 
-  # AutonomiFlow
+# AutonomiFlow
 
   <p><strong>Generación y descarga de tramas TXT y XML UBL 2.1 para comprobantes electrónicos.</strong></p>
 
@@ -22,7 +22,7 @@ Repositorio full-stack compuesto por una API REST en Java Spring Boot (`src/back
 <br/>
 
 | Categoría | Tecnología |
-|-----------|------------|
+| ----------- | ------------ |
 | **Lenguaje** | ![Java](https://img.shields.io/badge/Java_21-007396?style=flat-square&logo=openjdk&logoColor=white) |
 | **Framework** | ![Spring Boot](https://img.shields.io/badge/Spring_Boot_4.x-6DB33F?style=flat-square&logo=springboot&logoColor=white) *(Web MVC, Validation)* |
 | **Build** | ![Maven](https://img.shields.io/badge/Maven_Wrapper-C71A36?style=flat-square&logo=apachemaven&logoColor=white) |
@@ -38,7 +38,7 @@ Repositorio full-stack compuesto por una API REST en Java Spring Boot (`src/back
 <br/>
 
 | Categoría | Tecnología |
-|-----------|------------|
+| ----------- | ------------ |
 | **Framework** | ![React](https://img.shields.io/badge/React_18-61DAFB?style=flat-square&logo=react&logoColor=black) ![TypeScript](https://img.shields.io/badge/TypeScript_5-3178C6?style=flat-square&logo=typescript&logoColor=white) |
 | **Build** | ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white) |
 | **Routing** | ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat-square&logo=reactrouter&logoColor=white) |
@@ -61,7 +61,7 @@ Repositorio full-stack compuesto por una API REST en Java Spring Boot (`src/back
 Flujo recomendado para desarrollo, integración y correcciones urgentes.
 
 | Rama | Descripción |
-|------|-------------|
+| ------ | ------------- |
 | `main` | Producción estable. Solo merges desde `develop` o `hotfix/*` aprobados. |
 | `develop` | Integración para la próxima versión. |
 | `feature/<nombre>` | Nuevas funcionalidades (derivan de `develop`). |
@@ -74,6 +74,7 @@ Flujo recomendado para desarrollo, integración y correcciones urgentes.
 ## 📂 Evidencias
 
 Ubicaciones de evidencias:
+
 - Carpeta base del proyecto: [`/docs/evidencias`](./docs/evidencias)
 - Imágenes de flujo Git: [`/git-sim_media/Imagenes`](./git-sim_media/Imagenes)
 - Video de flujo Git: [`/git-sim_media/Videos`](./git-sim_media/Videos)
@@ -89,7 +90,7 @@ Ubicaciones de evidencias:
 ### Video
 
 <video src="./git-sim_media/Videos/flujo-git.mp4" controls width="100%">
-	Tu navegador no soporta la etiqueta de video.
+ Tu navegador no soporta la etiqueta de video.
 </video>
 
 Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa6ZageN674umi7EHmAruQy/view?usp=sharing)
@@ -101,7 +102,7 @@ Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa
 ### Comprobantes Electrónicos (UBL 2.1 / SUNAT)
 
 | Comprobante | Backend | Frontend | Estado |
-|-------------|---------|----------|--------|
+| ------------- | --------- | ---------- | -------- |
 | Factura Electrónica (01) | ✅ XML con InvoiceType, IGV, ISC, descuentos, docs relacionados | ✅ Formulario completo + builder canónico | ✅ Completo |
 | Boleta de Venta (03) | ✅ XML con InvoiceType simplificado | ✅ Mismo formulario que Factura | ✅ Completo |
 | Nota de Crédito (07) | ✅ XML con CreditNoteType, DiscrepancyResponse (catálogo 09), BillingReference | ✅ DocumentoRelacionadoSection + Sustento | ✅ Completo |
@@ -115,7 +116,7 @@ Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa
 - [x] **Descuentos Globales**: Descuentos por ítem y globales con AllowanceCharge
 - [x] **Catálogos SUNAT**: Cacheo con TanStack Query (staleTime 5min, cacheTime 30min)
 - [x] **Monto en Letras**: Generación automática (SON XXX CON YY/100 SOLES)
-- [ ] **OSE Client**: Envío a DBNet con ComponentesSucursalLoad + Base64 UBL
+- [x] **OSE Client**: Firma XMLDSig, ZIP Base64 y envío SOAP `sendBill` a OSE/SUNAT
 - [x] **Importación Excel/CSV**: Carga masiva de productos desde archivo
 - [x] **Login** con JWT
 - [x] **Swagger UI** en `/swagger-ui`
@@ -124,7 +125,7 @@ Enlace directo: [Ver flujo-git.mp4](https://drive.google.com/file/d/14akqxC7xYTa
 ### PRs mergeados
 
 | PR | Feature |
-|----|---------|
+| ---- | --------- |
 | [#12](https://github.com/ArleyUTP/Facturacion-web/pull/12) | Factura Electrónica UBL 2.1 |
 | [#13](https://github.com/ArleyUTP/Facturacion-web/pull/13) | Integración Frontend XML UBL 2.1 |
 | [#14](https://github.com/ArleyUTP/Facturacion-web/pull/14) | Accesibilidad Ventas |
@@ -173,6 +174,149 @@ npm run dev
 ```env
 VITE_API_BASE_URL=http://localhost:8080/api/v1
 ```
+
+---
+
+## 🔐 Firma XML y envío OSE/SUNAT
+
+### Comportamiento por ambiente
+
+| Endpoint | Desarrollo / Sin certificado | Producción / Con certificado |
+|----------|------------------------------|------------------------------|
+| `POST /generar-xml` | XML **sin firma** (se genera igual) | XML firmado con XMLDSig RSA-SHA256 |
+| `POST /ose/enviar-xml` | Error (requiere certificado) | XML firmado + ZIP + `sendBill` |
+
+El endpoint de generación de XML (`/generar-xml`) usa `trySignXml()`: si no hay certificado configurado, genera el XML sin firma y continúa. Esto permite desarrollar y probar el XML aunque aún no tengas el certificado.
+
+### Flujo de envío a OSE/SUNAT
+
+```text
+XML UBL 2.1
+↓
+Firma XMLDSig con certificado PFX/P12 del emisor
+↓
+ZIP con nombre RUC-TIPO-SERIE-CORRELATIVO.ZIP
+↓
+Base64 del ZIP
+↓
+sendBill al OSE/SUNAT
+↓
+CDR base64 o SOAP Fault
+```
+
+### Variables de entorno
+
+| Variable | Uso |
+| ---------- | ----- |
+| `ENCRYPTION_KEY` | Clave de 32 caracteres usada para cifrar la contraseña del certificado en BD. |
+| `OSE_ENDPOINT_URL` | Endpoint SOAP de envío. |
+| `OSE_USERNAME` | Usuario WS-Security. Ejemplo test: `20100119065MODDATOS`. |
+| `OSE_PASSWORD` | Password WS-Security. |
+| `OSE_SOAP_ACTION_SEND_BILL` | SOAPAction de `sendBill`. |
+| `OSE_SOAP_ACTION_GET_STATUS` | SOAPAction de `getStatus`. |
+
+Perfiles comunes:
+
+```env
+# Estela / OSE Test
+OSE_ENDPOINT_URL=https://ose-test.com/ol-ti-itcpe/billService.svc
+OSE_SOAP_ACTION_SEND_BILL=urn:sendBill
+OSE_SOAP_ACTION_GET_STATUS=urn:getStatus
+OSE_USERNAME=20100119065MODDATOS
+OSE_PASSWORD=moddatos
+```
+
+```env
+# SUNAT beta directa
+OSE_ENDPOINT_URL=https://e-beta.sunat.gob.pe/ol-ti-itcpfegem-beta/billService
+OSE_SOAP_ACTION_SEND_BILL=sendBill
+OSE_SOAP_ACTION_GET_STATUS=getStatus
+OSE_USERNAME=20100119065MODDATOS
+OSE_PASSWORD=moddatos
+```
+
+No mezclar endpoint y SOAPAction entre perfiles: si el endpoint es Estela, usar `urn:sendBill`; si es SUNAT beta directa, usar `sendBill`.
+
+### Configurar certificado digital (PFX/P12)
+
+El backend acepta **solo formato PKCS#12 (.pfx o .p12)**. Es el estándar que entregan SUNAT y las entidades autorizadas (CertiSurf, Idenperú, etc.). Almacena el certificado cifrado en la tabla `configuracion_certificado`.
+
+#### 1. Convertir el archivo .pfx a Base64
+
+```bash
+# Linux
+base64 -w 0 certificado.p12 > certificado.p12.base64
+
+# macOS
+base64 -i certificado.p12 -o certificado.p12.base64
+```
+
+#### 2. Guardarlo via API REST
+
+```bash
+curl -X POST http://localhost:8080/api/v1/configuracion-certificado \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "rucEmisor": "20100119065",
+    "certificadoBase64": "PEGAR_BASE64_DEL_PFX",
+    "password": "CONTRASENA_DEL_PFX",
+    "aliasCertificado": "ALIAS_SI_APLICA",
+    "fechaVigencia": "2027-12-31"
+  }'
+```
+
+- `password`: contraseña del archivo .pfx, el backend la cifra automáticamente con AES-256 usando `ENCRYPTION_KEY`.
+- `aliasCertificado`: **opcional**. Si se omite, el sistema usa el primer alias del keystore que contenga una clave privada.
+- `fechaVigencia`: **opcional**. Fecha de expiración del certificado para futuras alertas de renovación.
+
+#### 3. Una vez configurado
+
+El próximo `POST /generar-xml` o `POST /ose/enviar-xml` para ese RUC firmará automáticamente el XML. No requiere reiniciar el servidor ni tocar configuración.
+
+### Certificado de desarrollo vs producción
+
+| | Autofirmado (dev) | Real SUNAT (prod) |
+| --- | --- | --- |
+| **Generación** | `keytool` o `openssl` | Entidad certificadora autorizada |
+| **Aceptación OSE** | ❌ Rechazado | ✅ Aceptado |
+| **Validez** | Técnica (prueba flujo XMLDSig) | Tributaria (comprobante válido) |
+
+```bash
+# Generar autofirmado para desarrollo
+keytool -genkeypair \
+  -alias certificado-dev \
+  -keyalg RSA \
+  -keysize 2048 \
+  -storetype PKCS12 \
+  -keystore certificado-dev.p12 \
+  -validity 365
+```
+
+### Envío XML firmado
+
+El nombre del archivo debe seguir el formato SUNAT:
+
+```text
+RUC-TIPO-SERIE-CORRELATIVO.xml
+20100119065-01-F123-00012506.xml
+```
+
+```bash
+curl -X POST http://localhost:8080/api/v1/ose/enviar-xml \
+  -F "archivo=@20100119065-01-F123-00012506.xml"
+```
+
+El backend valida el nombre del archivo. Si el archivo subido no cumple el formato SUNAT, intenta reconstruirlo desde el XML usando `AccountingSupplierParty`, el tipo de documento y el `cbc:ID`; si no puede reconstruirlo, rechaza el comprobante.
+
+### Gestión desde el frontend (próximamente)
+
+Actualmente la configuración del certificado se realiza via API REST. Está planificada una interfaz en el frontend para:
+
+- Subir el archivo .pfx desde el navegador
+- Ingresar la contraseña
+- Ver estado del certificado (vigente, próximo a vencer, vencido)
+- Eliminar/reemplazar certificado
 
 ---
 

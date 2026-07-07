@@ -4,7 +4,6 @@ import com.facturacion.api.application.comprobante.dto.GenerarXmlResult;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.ubl.builder.factura.FacturaUblBuilder;
 import com.facturacion.api.application.comprobante.ubl.mapper.factura.FacturaUblMapper;
-import com.facturacion.api.application.comprobante.ubl.signature.XmlSignatureService;
 import com.facturacion.api.application.comprobante.validation.ValidacionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -18,7 +17,6 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
 
     private final FacturaUblMapper mapper;
     private final FacturaUblBuilder builder;
-    private final XmlSignatureService signatureService;
     private final ValidacionService validacionService;
 
     /**
@@ -28,7 +26,6 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
     public String codigoSunat() {
         return "01";
     }
-
     /**
      * {@inheritDoc}
      */
@@ -45,18 +42,6 @@ public class FacturaUblStrategy implements UblDocumentoStrategy {
 
         // 4. Serializar a XML
         String xml = builder.serializarFactura(invoiceType);
-
-        // 5. Firmar XML solo si se indica y hay certificado configurado
-        if (canonico.debeFirmar()) {
-            String rucEmisor = canonico.emisorRuc();
-            if (rucEmisor != null && !rucEmisor.isBlank()) {
-                try {
-                    xml = signatureService.signXml(xml, rucEmisor);
-                } catch (Exception e) {
-                    throw new RuntimeException("Error al firmar XML: " + e.getMessage(), e);
-                }
-            }
-        }
 
         return new GenerarXmlResult(xml, validationErrors);
     }

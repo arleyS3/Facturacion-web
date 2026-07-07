@@ -62,7 +62,13 @@ app:
 jwt:
   secret: ${JWT_SECRET}
 
-# OSE (Operador de Servicios Electrónicos) - DBNet / eComprobantes
+# OSE (Operador de Servicios Electrónicos) - SUNAT/OSE SOAP Webservices
 ose:
   endpoint:
-    url: https://pruebas.ecomprobantes.pe/wssCustomerETDLoadBDUBL21/CustomerETDLoadASP.asmx
+    url: ${OSE_ENDPOINT_URL}
+  credentials:
+    username: ${OSE_USERNAME}
+    password: ${OSE_PASSWORD}
+  soap-action:
+    send-bill: ${OSE_SOAP_ACTION_SEND_BILL}
+    get-status: ${OSE_SOAP_ACTION_GET_STATUS}

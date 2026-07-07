@@ -6,309 +6,333 @@ import com.facturacion.api.web.repositories.ConfiguracionCertificadoRepository;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.StringReader;
+import java.security.Key;
 import java.security.KeyStore;
-import java.security.MessageDigest;
 import java.security.PrivateKey;
+import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.security.Signature;
+import java.util.ArrayList;
 import java.util.Base64;
-
+import java.util.List;
+import javax.xml.crypto.dsig.CanonicalizationMethod;
+import javax.xml.crypto.dsig.DigestMethod;
+import javax.xml.crypto.dsig.Reference;
+import javax.xml.crypto.dsig.SignatureMethod;
+import javax.xml.crypto.dsig.SignedInfo;
+import javax.xml.crypto.dsig.Transform;
+import javax.xml.crypto.dsig.XMLSignatureFactory;
+import javax.xml.crypto.dsig.dom.DOMSignContext;
+import javax.xml.crypto.dsig.keyinfo.KeyInfo;
+import javax.xml.crypto.dsig.keyinfo.KeyInfoFactory;
+import javax.xml.crypto.dsig.keyinfo.X509Data;
+import javax.xml.crypto.dsig.spec.C14NMethodParameterSpec;
+import javax.xml.crypto.dsig.spec.TransformParameterSpec;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.Node;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 
 /**
- * Servicio de firma digital para documentos XML UBL.
- *
- * <p>
- * Este servicio es responsable de firmar digitalmente los comprobantes electrónicos
- * antes de enviarlos a SUNAT. Utiliza el estándar XMLDSig (W3C) para garantizar la
- * integridad y autenticidad de los documentos.
- * </p>
- *
- * <p>
- * El flujo de trabajo es el siguiente:
- * <ol>
- *   <li>Se busca la configuración del certificado en la base de datos (tabla configuracion_certificado)</li>
- *   <li>Se decodifica el certificado .pfx desde Base64</li>
- *   <li>Se desencripta la contraseña del certificado</li>
- *   <li>Se carga el keystore PKCS12 con el certificado</li>
- *   <li>Se genera la estructura de firma XMLDSig</li>
- *   <li>Se inserta la firma al inicio del documento XML</li>
- * </ol>
- * </p>
- *
- * <p>
- * El certificado .pfx se almacena en Base64 y la contraseña se encripta usando AES-256.
- * Esto permite una gestión segura de las credenciales desde la base de datos.
- * </p>
- *
- * <p>
- * En caso de error durante la firma, el servicio retorna el XML sin firmar para
- * permitir el debug. En producción, se debería lanzar una excepción.
- * </p>
- *
- * @author Sistema de Facturación
- * @version 1.0.0
- * @since 1.0.0
- * @see <a href="https://www.w3.org/TR/xmldsig-core/">XMLDSig W3C Specification</a>
- * @see <a href="https://buscar.sunat.gob.pe/normativa/_resultanормаbuscada?busqueda=resolucion+comprobantes+electronicos">
- *      Resolución de.sunat sobre Comprobantes Electrónicos</a>
+ * Signs UBL XML documents with the active PKCS12 certificate configured for the issuer RUC.
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class XmlSignatureService {
 
-    /** Repositorio para acceder a la configuración de certificados en la BD */
-    private final ConfiguracionCertificadoRepository configRepository;
+    private static final String EXT_NS = "urn:oasis:names:specification:ubl:schema:xsd:CommonExtensionComponents-2";
+    private static final String CAC_NS = "urn:oasis:names:specification:ubl:schema:xsd:CommonAggregateComponents-2";
+    private static final String CBC_NS = "urn:oasis:names:specification:ubl:schema:xsd:CommonBasicComponents-2";
+    private static final String DS_NS = "http://www.w3.org/2000/09/xmldsig#";
+    private static final String RSA_SHA256 = "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256";
 
-    /** Utilidad para encriptar y desencriptar datos sensibles */
+    private final ConfiguracionCertificadoRepository configRepository;
     private final EncryptionUtil encryptionUtil;
 
     /**
-     * Firma un documento XML usando la configuración del emisor almacenada en la base de datos.
+     * Signs an XML document using the active certificate stored for the issuer RUC.
      *
-     * <p>
-     * Este método es el punto de entrada principal para firmar comprobantes electrónicos.
-     * Busca automáticamente el certificado配置ado para el RUC del emisor.
-     * </p>
-     *
-     * @param xmlDocument contenido XML a firmar, el cual debe ser un documento UBL válido
-     * @param rucEmisor RUC del emisor del comprobante, se usa para buscar su certificado
-     *        en la tabla configuracion_certificado
-     * @return String conteniendo el XML firmado con la estructura XMLDSig
-     * @throws IllegalStateException si no hay certificado configurado para el RUC proporcionado
-     * @throws Exception si ocurre un error durante el proceso de firma (decodificación,
-     *         desencriptación, carga del keystore o generación de firma)
-     * @see #signXmlWithKey(String, PrivateKey, X509Certificate)
+     * @param xmlDocument UBL XML document to sign
+     * @param rucEmisor issuer RUC used to resolve the configured certificate
+     * @return signed UBL XML with ext:UBLExtensions and cac:Signature reference
+     * @throws Exception when certificate configuration or XML signing fails
      */
     public String signXml(String xmlDocument, String rucEmisor) throws Exception {
-        // 1. Buscar configuración del certificado en la BD
         ConfiguracionCertificadoEntity config = configRepository
                 .findByRucEmisorAndActivoTrue(rucEmisor)
                 .orElseThrow(() -> new IllegalStateException(
                         "No hay certificado configurado para RUC: " + rucEmisor));
 
-        // 2. Decodificar certificado desde Base64
-        byte[] certBytes = Base64.getDecoder().decode(config.getCertificadoBase64());
-
-        // 3. Desencriptar la contraseña del certificado
-        String password = encryptionUtil.decrypt(config.getPasswordEncriptada());
-
-        // 4. Cargar el keystore PKCS12 desde los bytes del certificado
-        KeyStore keyStore = KeyStore.getInstance("PKCS12");
-        keyStore.load(new ByteArrayInputStream(certBytes), password.toCharArray());
-
-        // 5. Obtener la clave privada y el certificado del keystore
-        String alias = keyStore.aliases().nextElement();
-        PrivateKey privateKey = (PrivateKey) keyStore.getKey(alias, password.toCharArray());
-        X509Certificate certificate = (X509Certificate) keyStore.getCertificate(alias);
-
-        // 6. Firmar el XML usando la clave privada
-        return signXmlWithKey(xmlDocument, privateKey, certificate);
+        return signXmlWithConfig(xmlDocument, config);
     }
 
     /**
-     * Firma un documento XML usando una clave privada y certificado específicos.
-     *
+     * Intenta firmar el XML con el certificado configurado. Si no hay certificado
+     * activo para el RUC, retorna el XML sin firmar con una advertencia en logs.
      * <p>
-     * Este método implementa la generación de la firma digital XMLDSig. Crea la estructura
-     * de firma conforme al estándar W3C, insertando los siguientes elementos:
-     * </p>
+     * Útil para desarrollo o preview donde la firma no es obligatoria, pero la
+     * infraestructura de firma ya está lista para producción.
      *
-     * <ul>
-     *   <li>{@code SignedInfo}: información de la firma que incluye el método de canonicalización,
-     *       método de firma y referencia al documento</li>
-     *   <li>{@code SignatureValue}: valor de la firma encriptada</li>
-     *   <li>{@code KeyInfo}: información del certificado X.509</li>
-     * </ul>
-     *
-     * <p>
-     * La firma se inserta al inicio del documento XML, dentro del elemento
-     * {@code ext:UBLExtensions}, conforme lo requiere SUNAT para comprobantes electrónicos.
-     * </p>
-     *
-     * <p>
-     * <strong>Nota:</strong> Actualmente el DigestValue y SignatureValue están vacíos como
-     * placeholders. En producción, se debe calcular el hash SHA-256 del documento y encriptarlo
-     * con RSA para generar la firma real.
-     * </p>
-     *
-     * @param xmlDocument contenido XML a firmar, debe ser un documento UBL válido
-     * @param privateKey clave privada del certificado usada para firmar
-     * @param certificate certificado X.509 del emisor, se incluye en KeyInfo
-     * @return String conteniendo el XML con la estructura de firma XMLDSig insertada
-     * @throws Exception si ocurre un error durante el parseo del XML o la generación de la firma
-     * @see <a href="https://www.w3.org/TR/xmldsig-core/#sec-SignedInfo">SignedInfo XMLDSig</a>
-     * @see <a href="https://www.w3.org/TR/xmldsig-core/#sec-KeyInfo">KeyInfo XMLDSig</a>
+     * @param xmlDocument UBL XML document to sign
+     * @param rucEmisor issuer RUC used to resolve the configured certificate
+     * @return signed XML if certificate is configured, unsigned XML otherwise
+     */
+    public String trySignXml(String xmlDocument, String rucEmisor) {
+        var configOpt = configRepository.findByRucEmisorAndActivoTrue(rucEmisor);
+        if (configOpt.isEmpty()) {
+            log.warn("No hay certificado configurado para RUC {} - XML devuelto sin firma", rucEmisor);
+            return xmlDocument;
+        }
+        try {
+            return signXmlWithConfig(xmlDocument, configOpt.get());
+        } catch (Exception e) {
+            log.error("Error al firmar XML para RUC {}: {} - XML devuelto sin firma", rucEmisor, e.getMessage());
+            return xmlDocument;
+        }
+    }
+
+    private String signXmlWithConfig(String xmlDocument, ConfiguracionCertificadoEntity config) throws Exception {
+        byte[] certBytes = Base64.getDecoder().decode(config.getCertificadoBase64().trim());
+        String password = encryptionUtil.decrypt(config.getPasswordEncriptada());
+
+        KeyStore keyStore = KeyStore.getInstance("PKCS12");
+        keyStore.load(new ByteArrayInputStream(certBytes), password.toCharArray());
+
+        String alias = resolveAlias(keyStore, config.getAliasCertificado());
+        Key key = keyStore.getKey(alias, password.toCharArray());
+        if (!(key instanceof PrivateKey privateKey)) {
+            throw new IllegalStateException("El alias del certificado no contiene una clave privada: " + alias);
+        }
+
+        Certificate certificate = keyStore.getCertificate(alias);
+        if (!(certificate instanceof X509Certificate x509Certificate)) {
+            throw new IllegalStateException("El alias del certificado no contiene un certificado X.509: " + alias);
+        }
+
+        return signXmlWithKey(xmlDocument, privateKey, x509Certificate);
+    }
+
+    /**
+     * Signs an XML document with a provided private key and certificate.
      */
     public String signXmlWithKey(
             String xmlDocument,
             PrivateKey privateKey,
             X509Certificate certificate) throws Exception {
         try {
-            // Parsear el documento XML
-            DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
-            dbf.setNamespaceAware(true);
-            dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-            Document doc = dbf.newDocumentBuilder().parse(
-                    new org.xml.sax.InputSource(new StringReader(xmlDocument)));
-
+            Document doc = parseXml(xmlDocument);
             Element root = doc.getDocumentElement();
+            String documentId = textOfFirstDirectChild(root, "ID");
+            String signatureId = buildSignatureId(documentId);
 
-            // ===== 1. Canonicalizar el documento y calcular DigestValue =====
-            // Serializar y canonicalizar el documento
-            ByteArrayOutputStream docCanonicalized = new ByteArrayOutputStream();
-            TransformerFactory tf = TransformerFactory.newInstance();
-            Transformer transformer = tf.newTransformer();
-            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            transformer.transform(new DOMSource(root), new StreamResult(docCanonicalized));
-            
-            // Calcular SHA-256
-            MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-            byte[] digestBytes = sha256.digest(docCanonicalized.toByteArray());
-            String digestValueBase64 = Base64.getEncoder().encodeToString(digestBytes);
-            
-            log.debug("DigestValue calculado: {} chars", digestValueBase64.length());
+            Element extensionContent = ensureUblExtensionContent(doc, root);
+            ensureCacSignatureReference(doc, root, signatureId);
 
-            // ===== 2. Crear estructura de firma =====
-            // Crear elemento Signature
-            Element signatureElement = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "Signature");
-            signatureElement.setAttribute("Id", "SignatureKG");
+            XMLSignatureFactory signatureFactory = XMLSignatureFactory.getInstance("DOM");
+            Reference reference = signatureFactory.newReference(
+                    "",
+                    signatureFactory.newDigestMethod(DigestMethod.SHA256, null),
+                    List.of(signatureFactory.newTransform(Transform.ENVELOPED, (TransformParameterSpec) null)),
+                    null,
+                    null);
+            SignedInfo signedInfo = signatureFactory.newSignedInfo(
+                    signatureFactory.newCanonicalizationMethod(
+                            CanonicalizationMethod.INCLUSIVE,
+                            (C14NMethodParameterSpec) null),
+                    signatureFactory.newSignatureMethod(RSA_SHA256, null),
+                    List.of(reference));
 
-            // Insertar al inicio
-            Node firstChild = root.getFirstChild();
-            if (firstChild != null) {
-                root.insertBefore(signatureElement, firstChild);
-            } else {
-                root.appendChild(signatureElement);
-            }
+            KeyInfo keyInfo = buildKeyInfo(signatureFactory, certificate);
+            DOMSignContext signContext = new DOMSignContext(privateKey, extensionContent);
+            signContext.setDefaultNamespacePrefix("ds");
 
-            // Crear SignedInfo
-            Element signedInfoElement = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "SignedInfo");
-            signatureElement.appendChild(signedInfoElement);
+            signatureFactory.newXMLSignature(signedInfo, keyInfo, null, signatureId, null)
+                    .sign(signContext);
 
-            // CanonicalizationMethod
-            Element canonMethod = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "CanonicalizationMethod");
-            canonMethod.setAttribute("Algorithm", "http://www.w3.org/TR/2001/REC-xml-c14n-20010315");
-            signedInfoElement.appendChild(canonMethod);
-
-            // SignatureMethod (RSA-SHA256)
-            Element sigMethod = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "SignatureMethod");
-            sigMethod.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmldsig-more#rsa-sha256");
-            signedInfoElement.appendChild(sigMethod);
-
-            // Reference
-            Element reference = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "Reference");
-            reference.setAttribute("Id", "reference-doc");
-            reference.setAttribute("URI", "");
-            signedInfoElement.appendChild(reference);
-
-            // DigestMethod
-            Element digestMethod = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "DigestMethod");
-            digestMethod.setAttribute("Algorithm", "http://www.w3.org/2001/04/xmlenc#sha256");
-            reference.appendChild(digestMethod);
-
-            // DigestValue (calculado)
-            Element digestValue = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "DigestValue");
-            digestValue.setTextContent(digestValueBase64);
-            reference.appendChild(digestValue);
-
-            // ===== 3. Calcular SignatureValue =====
-            // Canonicalizar SignedInfo
-            ByteArrayOutputStream signedInfoCanonicalized = new ByteArrayOutputStream();
-            Transformer signedInfoTransformer = tf.newTransformer();
-            signedInfoTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            signedInfoTransformer.transform(new DOMSource(signedInfoElement), 
-                    new StreamResult(signedInfoCanonicalized));
-            
-            // Firmar con RSA-SHA256
-            Signature rsaSignature = Signature.getInstance("SHA256withRSA");
-            rsaSignature.initSign(privateKey);
-            rsaSignature.update(signedInfoCanonicalized.toByteArray());
-            byte[] signatureBytes = rsaSignature.sign();
-            String signatureValueBase64 = Base64.getEncoder().encodeToString(signatureBytes);
-            
-            log.debug("SignatureValue calculado: {} chars", signatureValueBase64.length());
-
-            // SignatureValue
-            Element signatureValue = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "SignatureValue");
-            signatureValue.setAttribute("Id", "signature-value");
-            signatureValue.setTextContent(signatureValueBase64);
-            signatureElement.appendChild(signatureValue);
-
-            // ===== 4. KeyInfo con certificado =====
-            Element keyInfo = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "KeyInfo");
-            signatureElement.appendChild(keyInfo);
-
-            Element x509Data = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "X509Data");
-            keyInfo.appendChild(x509Data);
-
-            Element x509Cert = doc.createElementNS(
-                    "http://www.w3.org/2000/09/xmldsig#", "X509Certificate");
-            x509Cert.setTextContent(Base64.getEncoder().encodeToString(certificate.getEncoded()));
-            x509Data.appendChild(x509Cert);
-
-            // Convertir a String
-            ByteArrayOutputStream result = new ByteArrayOutputStream();
-            Transformer finalTransformer = tf.newTransformer();
-            finalTransformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-            finalTransformer.transform(new DOMSource(doc), new StreamResult(result));
-
-            log.info("XML firmado exitosamente con XMLDSig (RSA-SHA256)");
-            return result.toString();
-
+            log.info("XML UBL firmado exitosamente con XMLDSig (RSA-SHA256)");
+            return serialize(doc);
         } catch (Exception e) {
-            log.error("Error al firmar XML: {}", e.getMessage(), e);
-            throw new RuntimeException("Error al firmar XML: " + e.getMessage(), e);
+            log.error("Error al firmar XML UBL: {}", e.getMessage(), e);
+            throw new RuntimeException("Error al firmar XML UBL: " + e.getMessage(), e);
         }
     }
 
-    /**
-     * Verifica la firma digital de un documento XML.
-     *
-     * <p>
-     * Este método debería validar que la firma digital contenida en el XML
-     * sea auténtica y que el documento no haya sido modificado después de ser firmado.
-     * </p>
-     *
-     * <p>
-     * <strong>Nota:</strong> Este método aún no está implementado. Retorna {@code true}
-     * por defecto para compatibilidad.
-     * </p>
-     *
-     * @param signedXmlDocument el documento XML que contiene la firma a verificar,
-     *        debe haber sido previamente firmado con {@link #signXml(String, String)}
-     * @return {@code true} si la firma es válida, {@code false} en caso contrario.
-     *         Actualmente retorna {@code true} unconditionally ya que la verificación
-     *         no está implementada
-     * @throws Exception si ocurre un error durante el proceso de verificación,
-     *         como parseo inválido del XML
-     * @see #signXml(String, String)
-     */
-    public boolean verifySignature(String signedXmlDocument) throws Exception {
+    public boolean verifySignature(String signedXmlDocument) {
         log.warn("Verificación de firma no implementada - retornando true por defecto");
         return true;
+    }
+
+    private String resolveAlias(KeyStore keyStore, String configuredAlias) throws Exception {
+        if (configuredAlias != null && !configuredAlias.isBlank()) {
+            if (keyStore.containsAlias(configuredAlias)) {
+                return configuredAlias;
+            }
+            throw new IllegalStateException("Alias de certificado no encontrado en el PKCS12: " + configuredAlias);
+        }
+
+        var aliases = keyStore.aliases();
+        while (aliases.hasMoreElements()) {
+            String alias = aliases.nextElement();
+            if (keyStore.isKeyEntry(alias)) {
+                return alias;
+            }
+        }
+        throw new IllegalStateException("El archivo PKCS12 no contiene alias con clave privada");
+    }
+
+    private Document parseXml(String xmlDocument) throws Exception {
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(true);
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        factory.setFeature("http://xml.org/sax/features/external-general-entities", false);
+        factory.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
+        return factory.newDocumentBuilder().parse(new org.xml.sax.InputSource(new StringReader(xmlDocument)));
+    }
+
+    private Element ensureUblExtensionContent(Document doc, Element root) {
+        Element ublExtensions = firstDirectChild(root, EXT_NS, "UBLExtensions");
+        if (ublExtensions == null) {
+            ublExtensions = doc.createElementNS(EXT_NS, "ext:UBLExtensions");
+            root.insertBefore(ublExtensions, firstElementChild(root));
+        }
+
+        Element ublExtension = doc.createElementNS(EXT_NS, "ext:UBLExtension");
+        Element extensionContent = doc.createElementNS(EXT_NS, "ext:ExtensionContent");
+        ublExtension.appendChild(extensionContent);
+        ublExtensions.appendChild(ublExtension);
+        return extensionContent;
+    }
+
+    private void ensureCacSignatureReference(Document doc, Element root, String signatureId) {
+        Element signature = doc.createElementNS(CAC_NS, "cac:Signature");
+        appendTextElement(doc, signature, CBC_NS, "cbc:ID", signatureId);
+
+        Element signatoryParty = doc.createElementNS(CAC_NS, "cac:SignatoryParty");
+        Element partyIdentification = doc.createElementNS(CAC_NS, "cac:PartyIdentification");
+        appendTextElement(doc, partyIdentification, CBC_NS, "cbc:ID", findSupplierRuc(root));
+        signatoryParty.appendChild(partyIdentification);
+
+        String supplierName = findSupplierName(root);
+        if (!supplierName.isBlank()) {
+            Element partyName = doc.createElementNS(CAC_NS, "cac:PartyName");
+            appendTextElement(doc, partyName, CBC_NS, "cbc:Name", supplierName);
+            signatoryParty.appendChild(partyName);
+        }
+        signature.appendChild(signatoryParty);
+
+        Element attachment = doc.createElementNS(CAC_NS, "cac:DigitalSignatureAttachment");
+        Element externalReference = doc.createElementNS(CAC_NS, "cac:ExternalReference");
+        appendTextElement(doc, externalReference, CBC_NS, "cbc:URI", "#" + signatureId);
+        attachment.appendChild(externalReference);
+        signature.appendChild(attachment);
+
+        Node insertionPoint = firstDirectChild(root, CAC_NS, "AccountingSupplierParty");
+        if (insertionPoint == null) {
+            root.appendChild(signature);
+            return;
+        }
+        root.insertBefore(signature, insertionPoint);
+    }
+
+    private KeyInfo buildKeyInfo(XMLSignatureFactory signatureFactory, X509Certificate certificate) throws Exception {
+        KeyInfoFactory keyInfoFactory = signatureFactory.getKeyInfoFactory();
+        List<Object> x509Content = new ArrayList<>();
+        x509Content.add(certificate.getSubjectX500Principal().getName());
+        x509Content.add(certificate);
+        X509Data x509Data = keyInfoFactory.newX509Data(x509Content);
+        return keyInfoFactory.newKeyInfo(List.of(x509Data));
+    }
+
+    private String findSupplierRuc(Element root) {
+        Element supplierParty = firstDescendant(root, CAC_NS, "AccountingSupplierParty");
+        String partyIdentification = textOfFirstDescendant(supplierParty, "ID");
+        if (partyIdentification.matches("\\d{11}")) {
+            return partyIdentification;
+        }
+        String companyId = textOfFirstDescendant(supplierParty, "CompanyID");
+        return companyId.matches("\\d{11}") ? companyId : "";
+    }
+
+    private String findSupplierName(Element root) {
+        Element supplierParty = firstDescendant(root, CAC_NS, "AccountingSupplierParty");
+        String registrationName = textOfFirstDescendant(supplierParty, "RegistrationName");
+        if (!registrationName.isBlank()) {
+            return registrationName;
+        }
+        return textOfFirstDescendant(supplierParty, "Name");
+    }
+
+    private String buildSignatureId(String documentId) {
+        String safeId = documentId == null || documentId.isBlank()
+                ? "document"
+                : documentId.replaceAll("[^A-Za-z0-9_-]", "-");
+        return "S" + safeId;
+    }
+
+    private String textOfFirstDirectChild(Element parent, String localName) {
+        Element child = firstDirectChild(parent, null, localName);
+        return child == null || child.getTextContent() == null ? "" : child.getTextContent().trim();
+    }
+
+    private String textOfFirstDescendant(Element parent, String localName) {
+        Element child = firstDescendant(parent, null, localName);
+        return child == null || child.getTextContent() == null ? "" : child.getTextContent().trim();
+    }
+
+    private Element firstDirectChild(Element parent, String namespace, String localName) {
+        if (parent == null) {
+            return null;
+        }
+        Node child = parent.getFirstChild();
+        while (child != null) {
+            if (child instanceof Element element
+                    && localName.equals(element.getLocalName())
+                    && (namespace == null || namespace.equals(element.getNamespaceURI()))) {
+                return element;
+            }
+            child = child.getNextSibling();
+        }
+        return null;
+    }
+
+    private Element firstDescendant(Element parent, String namespace, String localName) {
+        if (parent == null) {
+            return null;
+        }
+        NodeList nodes = namespace == null
+                ? parent.getElementsByTagNameNS("*", localName)
+                : parent.getElementsByTagNameNS(namespace, localName);
+        return nodes.getLength() == 0 ? null : (Element) nodes.item(0);
+    }
+
+    private Node firstElementChild(Element parent) {
+        Node child = parent.getFirstChild();
+        while (child != null && child.getNodeType() != Node.ELEMENT_NODE) {
+            child = child.getNextSibling();
+        }
+        return child;
+    }
+
+    private void appendTextElement(Document doc, Element parent, String namespace, String qualifiedName, String value) {
+        Element element = doc.createElementNS(namespace, qualifiedName);
+        element.setTextContent(value == null ? "" : value);
+        parent.appendChild(element);
+    }
+
+    private String serialize(Document doc) throws Exception {
+        ByteArrayOutputStream result = new ByteArrayOutputStream();
+        Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
+        transformer.transform(new DOMSource(doc), new StreamResult(result));
+        return result.toString();
     }
 }

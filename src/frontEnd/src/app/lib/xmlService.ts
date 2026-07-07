@@ -83,22 +83,7 @@ export async function generarYDescargarXml(
 ): Promise<GenerarYDescargarXmlResult> {
   const { xml, validationErrors } = await generarXml(formData);
 
-  // Generar nombre de archivo basado en el número de documento
-  const numero = formData.correlativo?.padStart(8, "0") || "00000000";
-  const serie = formData.serie || "F001";
-  const tipoDoc = formData.tipoDocumento || "01";
-
-  // Mapear código a prefijo de archivo
-  const prefijos: Record<string, string> = {
-    "01": "F", // Factura
-    "03": "B", // Boleta
-    "07": "NC", // Nota de Crédito
-    "08": "ND", // Nota de Débito
-    "09": "T", // Guía de Remisión
-  };
-
-  const prefijo = prefijos[tipoDoc] || "F";
-  const nombreArchivo = `${prefijo}${serie}-${numero}.xml`;
+  const nombreArchivo = obtenerNombreArchivoXml(formData);
 
   descargarXml(xml, nombreArchivo);
 
@@ -109,20 +94,37 @@ export async function generarYDescargarXml(
  * Obtiene el nombre de archivo sugerido para el XML.
  */
 export function obtenerNombreArchivoXml(formData: ComprobanteFormData): string {
-  const numero = formData.correlativo?.padStart(8, "0") || "00000000";
-  const serie = formData.serie || "F001";
-  const tipoDoc = formData.tipoDocumento || "01";
+  const ruc = sanitizeFilenamePart(formData.emisorRuc || formData.issuerDocNumber, "sin-ruc");
+  const tipoDoc = sanitizeFilenamePart(toSunatDocumentCode(formData.tipoDocumento || "01"), "01");
+  const serie = sanitizeFilenamePart(formData.serie || "F001", "F001");
+  const correlativo = sanitizeFilenamePart(
+    formData.correlativo?.padStart(8, "0") || "00000000",
+    "00000000",
+  );
 
-  const prefijos: Record<string, string> = {
-    "01": "F",
-    "03": "B",
-    "07": "NC",
-    "08": "ND",
-    "09": "T",
+  return `${ruc}-${tipoDoc}-${serie}-${correlativo}.xml`;
+}
+
+function toSunatDocumentCode(documentType: string): string {
+  const codesByLabel: Record<string, string> = {
+    Factura: "01",
+    Boleta: "03",
+    "Nota de Crédito": "07",
+    "Nota de Débito": "08",
+    "Guía de Remisión": "09",
+    "01": "01",
+    "03": "03",
+    "07": "07",
+    "08": "08",
+    "09": "09",
   };
 
-  const prefijo = prefijos[tipoDoc] || "F";
-  return `${prefijo}${serie}-${numero}.xml`;
+  return codesByLabel[documentType] || "01";
+}
+
+function sanitizeFilenamePart(value: unknown, fallback: string): string {
+  if (typeof value !== "string" || !value.trim()) return fallback;
+  return value.trim().replace(/[^A-Za-z0-9_-]/g, "-");
 }
 
 export default {
