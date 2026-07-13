@@ -65,10 +65,10 @@ jwt:
 # OSE (Operador de Servicios Electrónicos) - SUNAT/OSE SOAP Webservices
 ose:
   endpoint:
-    url: ${OSE_ENDPOINT_URL}
+    url: ${OSE_ENDPOINT_URL:}
   credentials:
-    username: ${OSE_USERNAME}
-    password: ${OSE_PASSWORD}
+    username: ${OSE_USERNAME:}
+    password: ${OSE_PASSWORD:}
   soap-action:
-    send-bill: ${OSE_SOAP_ACTION_SEND_BILL}
-    get-status: ${OSE_SOAP_ACTION_GET_STATUS}
+    send-bill: ${OSE_SOAP_ACTION_SEND_BILL:sendBill}
+    get-status: ${OSE_SOAP_ACTION_GET_STATUS:getStatus}

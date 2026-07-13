@@ -1,8 +1,10 @@
 package com.facturacion.api.application.ose;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -60,6 +62,28 @@ class OseSoapClientTest {
         assertThat(envelope).doesNotContain("putCustomerETDLoadXML");
         assertThat(envelope).doesNotContain("http://www.dbnet.cl");
         assertThat(requestCaptor.getValue().getHeaders().getFirst("SOAPAction")).isEqualTo("sendBill");
+    }
+
+    @Test
+    void sendBillFailsClearlyWhenOseConfigurationIsMissing() {
+        ReflectionTestUtils.setField(client, "endpointUrl", "");
+        ReflectionTestUtils.setField(client, "username", "");
+        ReflectionTestUtils.setField(client, "password", "");
+
+        assertThatThrownBy(() -> client.sendBill("20100119065-01-F123-00012506.ZIP", "UEsDBAoAAAAAA"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("OSE SOAP configuration is incomplete. Set OSE_ENDPOINT_URL, OSE_USERNAME, and OSE_PASSWORD.");
+        verifyNoInteractions(restTemplate);
+    }
+
+    @Test
+    void sendBillFailsBeforeHttpCallWhenSoapActionIsBlank() {
+        ReflectionTestUtils.setField(client, "sendBillSoapAction", "");
+
+        assertThatThrownBy(() -> client.sendBill("20100119065-01-F123-00012506.ZIP", "UEsDBAoAAAAAA"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("OSE SOAPAction configuration is incomplete. Set OSE_SOAP_ACTION_SEND_BILL and OSE_SOAP_ACTION_GET_STATUS.");
+        verifyNoInteractions(restTemplate);
     }
 
     @Test

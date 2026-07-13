@@ -10,8 +10,8 @@ import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import javax.xml.parsers.DocumentBuilderFactory;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -28,10 +28,9 @@ import org.xml.sax.InputSource;
  * SOAP client for SUNAT/OSE Webservices operations.
  */
 @Service
-@RequiredArgsConstructor
-@Slf4j
 public class OseSoapClient {
 
+    private static final Logger log = LoggerFactory.getLogger(OseSoapClient.class);
     private static final String SOAP_ACTION_HEADER = "SOAPAction";
     private static final String SERVICE_NAMESPACE = "http://service.sunat.gob.pe";
     private static final String WSSE_NAMESPACE = "http://docs.oasis-open.org/wss/2004/01/"
@@ -40,6 +39,10 @@ public class OseSoapClient {
     private static final Pattern TICKET_PATTERN = Pattern.compile("(?i)ticket\\s*:\\s*(\\d+)");
 
     private final RestTemplate restTemplate;
+
+    public OseSoapClient(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
 
     @Value("${ose.endpoint.url}")
     private String endpointUrl;
@@ -80,6 +83,8 @@ public class OseSoapClient {
     }
 
     private String postSoap(String envelope, String soapAction, List<String> preferredResultElements) {
+        validateConfiguration();
+        validateSoapAction(soapAction);
         HttpEntity<String> request = new HttpEntity<>(envelope, soapHeaders(soapAction));
 
         log.info("Invocando OSE SOAP {} en {}", soapAction, endpointUrl);
@@ -90,6 +95,24 @@ public class OseSoapClient {
         }
 
         return extractResult(response.getBody(), preferredResultElements);
+    }
+
+    private void validateConfiguration() {
+        if (isBlank(endpointUrl) || isBlank(username) || isBlank(password)) {
+            throw new IllegalStateException(
+                    "OSE SOAP configuration is incomplete. Set OSE_ENDPOINT_URL, OSE_USERNAME, and OSE_PASSWORD.");
+        }
+    }
+
+    private void validateSoapAction(String soapAction) {
+        if (isBlank(soapAction)) {
+            throw new IllegalStateException(
+                    "OSE SOAPAction configuration is incomplete. Set OSE_SOAP_ACTION_SEND_BILL and OSE_SOAP_ACTION_GET_STATUS.");
+        }
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private HttpHeaders soapHeaders(String soapAction) {

@@ -282,16 +282,53 @@ El próximo `POST /generar-xml` o `POST /ose/enviar-xml` para ese RUC firmará a
 | **Aceptación OSE** | ❌ Rechazado | ✅ Aceptado |
 | **Validez** | Técnica (prueba flujo XMLDSig) | Tributaria (comprobante válido) |
 
+> ⚠️ Un certificado autofirmado sirve solo para probar que el XML queda firmado con XMLDSig. El OSE/SUNAT lo rechazará porque no fue emitido por una entidad autorizada.
+
+#### Generar certificado local de demo
+
+El certificado local queda en `.local-certs/`, una carpeta ignorada por Git. No subas ni commitees archivos `.p12`, `.pfx`, `.pem`, `.key`, `.crt` o contraseñas reales.
+
 ```bash
-# Generar autofirmado para desarrollo
 keytool -genkeypair \
-  -alias certificado-dev \
+  -alias autonomiflow-demo \
   -keyalg RSA \
   -keysize 2048 \
   -storetype PKCS12 \
-  -keystore certificado-dev.p12 \
-  -validity 365
+  -keystore .local-certs/autonomiflow-demo-signing.p12 \
+  -storepass changeit \
+  -keypass changeit \
+  -validity 365 \
+  -dname "CN=AutonomiFlow Demo, OU=Dev, O=AutonomiFlow, L=Lima, ST=Lima, C=PE"
 ```
+
+Valores para probar en local:
+
+| Campo | Valor de demo |
+| ----- | ------------- |
+| Archivo | `.local-certs/autonomiflow-demo-signing.p12` |
+| Contraseña | `changeit` |
+| Alias | `autonomiflow-demo` |
+
+#### Cargarlo desde OSE Sender
+
+1. Levantá backend y frontend.
+2. Entrá a **Envío a OSE** (`/ose-sender`).
+3. En **Certificado Digital**, ingresá el RUC emisor y presioná **Consultar**.
+4. Si no hay certificado, presioná **Configurar ahora**.
+5. Seleccioná `.local-certs/autonomiflow-demo-signing.p12`, ingresá la contraseña `changeit` y el alias `autonomiflow-demo`.
+6. Guardá el certificado y generá un XML para ese RUC.
+
+El XML esperado incluirá una firma similar a:
+
+```xml
+<ds:Signature>
+  <ds:SignedInfo>...</ds:SignedInfo>
+  <ds:SignatureValue>...</ds:SignatureValue>
+  <ds:KeyInfo>...</ds:KeyInfo>
+</ds:Signature>
+```
+
+Si intentás enviarlo al OSE/SUNAT, el XML puede estar técnicamente firmado, pero será rechazado por usar un certificado autofirmado de demo.
 
 ### Envío XML firmado
 
