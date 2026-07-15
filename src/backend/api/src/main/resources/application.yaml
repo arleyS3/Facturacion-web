@@ -3,6 +3,7 @@ spring:
     import:
       - optional:file:.env[.properties]
       - optional:file:./src/backend/api/.env[.properties]
+      - optional:file:${user.dir}/src/backend/api/.env[.properties]
   application:
     name: central-fianzas
 
@@ -29,7 +30,7 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     open-in-view: false
     properties:
@@ -43,14 +44,31 @@ springdoc:
   swagger-ui:
     path: /swagger-ui
 
+server:
+  port: 8080
+  forward-headers-strategy: framework
+
 sunat:
   api:
     base-url: ${SUNAT_API_URL}
     token: ${SUNAT_API_TOKEN}
 
-# Server
-server:
-  port: 8080
+# Encriptación de datos sensibles (contraseñas de certificados)
+app:
+  encryption:
+    key: ${ENCRYPTION_KEY}
+  # certificate.default-alias: Eliminado - en prod viene de BD (tabla configuracion_certificado)
 
 jwt:
   secret: ${JWT_SECRET}
+
+# OSE (Operador de Servicios Electrónicos) - SUNAT/OSE SOAP Webservices
+ose:
+  endpoint:
+    url: ${OSE_ENDPOINT_URL:}
+  credentials:
+    username: ${OSE_USERNAME:}
+    password: ${OSE_PASSWORD:}
+  soap-action:
+    send-bill: ${OSE_SOAP_ACTION_SEND_BILL:sendBill}
+    get-status: ${OSE_SOAP_ACTION_GET_STATUS:getStatus}

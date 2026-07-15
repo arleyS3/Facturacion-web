@@ -37,6 +37,32 @@
 			<version>5.4.1</version>
 		</dependency>
 
+		<!-- UBL 2.1 / SUNAT Perú -->
+		<dependency>
+			<groupId>com.helger.ubl</groupId>
+			<artifactId>ph-ubl21</artifactId>
+			<version>10.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.helger.ubl</groupId>
+			<artifactId>ph-ublpe</artifactId>
+			<version>10.1.0</version>
+		</dependency>
+
+		<!-- Validación Schematron (reglas de negocio SUNAT) -->
+		<dependency>
+			<groupId>com.helger.schematron</groupId>
+			<artifactId>ph-schematron-pure</artifactId>
+			<version>9.1.1</version>
+		</dependency>
+
+		<!-- Firma digital XML -->
+		<dependency>
+			<groupId>org.apache.santuario</groupId>
+			<artifactId>xmlsec</artifactId>
+			<version>4.0.4</version>
+		</dependency>
+
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-validation</artifactId>

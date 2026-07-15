@@ -14,13 +14,20 @@ import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
+import {
+  countSelectedFormats,
+  getSelectableEmitFormats,
+  type EmitFormats,
+} from "../lib/emitFormats";
 
 interface EmitDocumentDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   documentType: "sales" | "shipping";
-  onEmit?: () => Promise<void> | void;
+  onEmit?: (formats: EmitFormats) => Promise<void> | void;
 }
+
+export type { EmitFormats };
 
 /**
  * Dialogo para confirmar la emisión y selección de formatos de salida.
@@ -33,9 +40,14 @@ interface EmitDocumentDialogProps {
 export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }: EmitDocumentDialogProps) {
   const methods = useFormContext();
   const [isEmitting, setIsEmitting] = useState(false);
-  const [formats, setFormats] = useState({
-    xml: false,
+  const [formats, setFormats] = useState<EmitFormats>({
+    xml: documentType === "shipping",
     json: false,
+    txt: true,
+  });
+  const selectableFormats = getSelectableEmitFormats(documentType, {
+    xml: true,
+    json: true,
     txt: true,
   });
 
@@ -73,13 +85,14 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
     onOpenChange(false);
 
     try {
-      await onEmit?.();
+      await onEmit?.(selectedFormats);
     } finally {
       setIsEmitting(false);
     }
   };
 
-  const selectedCount = Object.values(formats).filter(Boolean).length;
+  const selectedFormats = getSelectableEmitFormats(documentType, formats);
+  const selectedCount = countSelectedFormats(selectedFormats);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -128,13 +141,13 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
                   id="format-xml"
                   checked={formats.xml}
                   onCheckedChange={(checked) => handleFormatChange('xml', checked as boolean)}
-                  disabled
+                  disabled={!selectableFormats.xml}
                 />
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
                     <Label htmlFor="format-xml" className="font-medium cursor-pointer flex items-center gap-2">
                       <FileCode className="size-4 text-blue-600" />
-                      XML (Obligatorio)
+                      XML
                     </Label>
                     <Badge className="text-xs bg-blue-600">SUNAT</Badge>
                   </div>
@@ -149,8 +162,9 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
               <div className="flex items-start space-x-3 p-3 border rounded-lg hover:bg-slate-50 transition-colors">
                 <Checkbox
                   id="format-json"
-                  checked={formats.json}
+                  checked={selectableFormats.json && formats.json}
                   onCheckedChange={(checked) => handleFormatChange('json', checked as boolean)}
+                  disabled={!selectableFormats.json}
                 />
                 <div className="flex-1">
                   <Label htmlFor="format-json" className="font-medium cursor-pointer flex items-center gap-2">
@@ -190,7 +204,7 @@ export function EmitDocumentDialog({ open, onOpenChange, documentType, onEmit }:
           </Button>
           <Button 
             onClick={handleEmit}
-            disabled={!formats.txt || isEmitting}
+            disabled={selectedCount === 0 || isEmitting}
             className={documentType === "sales" ? "bg-blue-600 hover:bg-blue-700" : "bg-green-600 hover:bg-green-700"}
           >
             {isEmitting ? "Emitiendo..." : "Emitir Documento"}

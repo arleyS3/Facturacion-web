@@ -10,9 +10,11 @@ import com.facturacion.api.web.repositories.MotivoTrasladoRepository;
 import com.facturacion.api.web.repositories.TipoNotaCreditoRepository;
 import com.facturacion.api.web.repositories.TipoNotaDebitoRepository;
 import com.facturacion.api.web.repositories.TipoOperacionRepository;
+import com.facturacion.api.web.repositories.UnidadesMedidaComercialRepository;
 import com.facturacion.api.web.repositories.TipoDocumentoIdentidadRepository;
 import com.facturacion.api.web.repositories.TipoAfectacionIgvRepository;
 import com.facturacion.api.web.repositories.DocumentosRelacionadosTransporteRepository;
+import com.facturacion.api.web.repositories.TipoSistemaIscRepository;
 import lombok.RequiredArgsConstructor;
 
 
@@ -32,6 +34,7 @@ public class CatalogController {
   private final PuertosPeruRepository puertosPeruRepository;
   private final MonedaRepository monedaRepository;
   private final UnidadesMedidaRepository unidadesMedidaRepository;
+  private final UnidadesMedidaComercialRepository unidadesMedidaComercialRepository;
   private final CodigoTipoTributoRepository codigoTipoTributoRepository;
   private final MotivoTrasladoRepository motivoTrasladoRepository;
   private final TipoNotaCreditoRepository tipoNotaCreditoRepository;
@@ -40,6 +43,7 @@ public class CatalogController {
   private final TipoDocumentoIdentidadRepository tipoDocumentoIdentidadRepository;
   private final TipoAfectacionIgvRepository tipoAfectacionIgvRepository;
   private final DocumentosRelacionadosTransporteRepository documentosRelacionadosTransporteRepository;
+  private final TipoSistemaIscRepository tipoSistemaIscRepository;
 
   @GetMapping("/unidades-medida")
   /** Devuelve las unidades de medida disponibles. */
@@ -49,6 +53,13 @@ public class CatalogController {
         .toList();
   }
 
+  @GetMapping("/unidades-medida-comercial")
+  /** Devuelve las unidades de medida comercial disponibles. */
+  public List<CatalogItem> unidadesDeMedidaComercial() {
+    return unidadesMedidaComercialRepository.findAll().stream()
+        .map(u -> CatalogItem.of(u.getCodigo(), u.getDescripcion()))
+        .toList();
+  }
   @GetMapping("/motivos-traslado")
   /** Devuelve los motivos de traslado (catalogo). */
   public List<CatalogItem> motivosTraslado() {
@@ -141,6 +152,14 @@ public class CatalogController {
         .toList();
   }
 
+  @GetMapping("/sistemas-isc")
+  /** Sistemas de ISC (catálogo 08 SUNAT). */
+  public List<CatalogItem> sistemasIsc() {
+    return tipoSistemaIscRepository.findAll().stream()
+        .map(s -> CatalogItem.of(s.getCodigo(), s.getDescripcion()))
+        .toList();
+  }
+
   @GetMapping("/monedas")
   public List<CatalogItem> monedas() {
     return monedaRepository.findAll().stream()
@@ -152,11 +171,11 @@ public class CatalogController {
   /** Devuelve series de ejemplo para el tipo de documento. */
   public List<String> series(@PathVariable String tipoDocumento) {
     return switch (tipoDocumento) {
-      case "Factura", "Nota de débito", "Nota de crédito" -> List.of("F001", "F002", "F003", "F004", "F005");
+      case "Factura", "Nota de débito", "Nota de Débito", "Nota de crédito", "Nota de Crédito" -> List.of("F001", "F002", "F003", "F004", "F005");
       case "Boleta" -> List.of("B001", "B002", "B003", "B004", "B005");
-      case "Guía Remitente","09" -> List.of("T001", "T002", "T003", "T004", "T005");
-      case "Guía Transportista","31" -> List.of("V001", "V002", "V003", "V004", "V005");
-      default -> throw new IllegalStateException("No hay series para dicho valor: " + tipoDocumento);
+      case "Guía Remitente", "Guia de Remision", "09" -> List.of("T001", "T002", "T003", "T004", "T005");
+      case "Guía Transportista", "Guia de Remision Transportista", "31" -> List.of("V001", "V002", "V003", "V004", "V005");
+      default -> List.of();
     };
   }
 }

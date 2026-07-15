@@ -1,0 +1,156 @@
+ID,Fuente,Petición (Tiempo),Método,URL,Código,Razón,RTT,Respuesta (Tamaño del cuerpo),Alerta mayor,Nota,Etiquetas
+1,Proxy,Mon Jun 22 10:33:34 PET 2026,GET,http://clients2.google.com/time/1/current?cup2key=10:5S26IruvVHGKs-V5AAEsmUPbA_Ob50L1OaVqFI9tq7k&cup2hreq=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,200,OK,105,79,,false,JSON
+5,Proxy,Mon Jun 22 10:33:34 PET 2026,GET,https://www.google.com/async/folae?async=_fmt:pb&udm=50&client_locale=es-419,200,OK,214,399,,false,
+8,Proxy,Mon Jun 22 10:33:35 PET 2026,POST,https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard&laf=b64bin,200,OK,329,0,,false,
+10,Proxy,Mon Jun 22 10:33:35 PET 2026,GET,https://facturacion-web-gold.vercel.app/,200,OK,354,437,Medio,false,Script
+12,Proxy,Mon Jun 22 10:33:35 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,200,OK,184,116240,,false,
+14,Proxy,Mon Jun 22 10:33:36 PET 2026,GET,https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap,200,OK,238,17342,Medio,false,Comment
+16,Proxy,Mon Jun 22 10:33:36 PET 2026,POST,https://android.clients.google.com/checkin,200,OK,272,496,Bajo,false,
+18,Proxy,Mon Jun 22 10:33:35 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,200,OK,1376,1506269,Medio,false,"Form,Script,Comment"
+19,Proxy,Mon Jun 22 10:33:37 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,371,30,,false,
+21,Proxy,Mon Jun 22 10:33:37 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,376,30,,false,
+22,Proxy,Mon Jun 22 10:33:37 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,383,30,,false,
+25,Proxy,Mon Jun 22 10:33:38 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSSwmjug-6lbAPQxITDYOoWz0qDAgFEAUYBSADOABIBRIVDc5BTHoqDggCEAIYAiAAMAQ4BkgCIfrHRcl43ugDKYLa02UqEU0lMgIgBA==?alt=proto,200,OK,359,28,Bajo,false,
+29,Proxy,Mon Jun 22 10:35:11 PET 2026,GET,http://clients2.google.com/time/1/current?cup2key=10:LMN048ZLUGd5Hgw2E9aB3wtFzk0UwNOdMU7yxaxhAF4&cup2hreq=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,200,OK,122,79,,false,JSON
+30,Proxy,Mon Jun 22 10:35:11 PET 2026,POST,https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard&laf=b64bin,200,OK,227,0,,false,
+31,Proxy,Mon Jun 22 10:35:11 PET 2026,GET,https://www.google.com/async/folae?async=_fmt:pb&udm=50&client_locale=es-419,200,OK,240,399,,false,
+32,Proxy,Mon Jun 22 10:35:12 PET 2026,GET,https://facturacion-web-gold.vercel.app/,200,OK,116,437,Informativo,false,Script
+33,Proxy,Mon Jun 22 10:35:12 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,200,OK,115,116240,,false,
+34,Proxy,Mon Jun 22 10:35:12 PET 2026,GET,https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap,200,OK,233,17342,,false,Comment
+35,Proxy,Mon Jun 22 10:35:12 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,200,OK,897,1506269,,false,"Form,Script,Comment"
+36,Proxy,Mon Jun 22 10:35:13 PET 2026,POST,https://android.clients.google.com/checkin,200,OK,283,496,,false,
+39,Proxy,Mon Jun 22 10:35:13 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,382,30,,false,
+40,Proxy,Mon Jun 22 10:35:14 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,362,30,,false,
+41,Proxy,Mon Jun 22 10:35:14 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,371,30,,false,
+42,Proxy,Mon Jun 22 10:35:14 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSSwmjug-6lbAPQxITDYOoWz0qDAgFEAUYBSADOABIBRIVDc5BTHoqDggCEAIYAiAAMAQ4BkgCIfrHRcl43ugDKYLa02UqEU0lMgIgBA==?alt=proto,200,OK,371,28,,false,
+43,Proxy,Mon Jun 22 10:35:21 PET 2026,POST,https://optimizationguide-pa.googleapis.com/v1:GetModels?key=AIzaSyBqJZh-7pA44blAaAkH6490hUFOwX0KCYM,200,OK,381,9549,Bajo,false,
+45,Proxy,Mon Jun 22 10:35:23 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778511835&target=OPTIMIZATION_TARGET_NOTIFICATION_PERMISSION_PREDICTIONS,200,OK,369,18571,Medio,false,Comment
+46,Proxy,Mon Jun 22 10:35:23 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1679317318&target=OPTIMIZATION_TARGET_LANGUAGE_DETECTION,200,OK,538,265059,,false,
+47,Proxy,Mon Jun 22 10:35:23 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1673999601&target=OPTIMIZATION_TARGET_PAGE_VISIBILITY,200,OK,592,883094,,false,Comment
+48,Proxy,Mon Jun 22 10:35:24 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778511811&target=OPTIMIZATION_TARGET_GEOLOCATION_PERMISSION_PREDICTIONS,200,OK,234,18962,,false,
+49,Proxy,Mon Jun 22 10:35:23 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=5&target=OPTIMIZATION_TARGET_PAGE_TOPICS_V2,200,OK,751,2200227,,false,Comment
+50,Proxy,Mon Jun 22 10:35:24 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1696268326&target=OPTIMIZATION_TARGET_OMNIBOX_URL_SCORING,200,OK,366,4879,,false,
+51,Proxy,Mon Jun 22 10:35:24 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778598302&target=OPTIMIZATION_TARGET_CLIENT_SIDE_PHISHING,200,OK,598,2746899,,false,
+52,Proxy,Mon Jun 22 10:35:25 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=240731042075&target=OPTIMIZATION_TARGET_SEGMENTATION_COMPOSE_PROMOTION,200,OK,553,118577,,false,Comment
+53,Proxy,Mon Jun 22 10:35:30 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/auth/login,404,Not Found,531,101,,false,
+58,Proxy,Mon Jun 22 10:35:36 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,1150,137,,false,
+59,Proxy,Mon Jun 22 10:37:12 PET 2026,GET,http://clients2.google.com/time/1/current?cup2key=10:g3WfkQJ3uigI0Ik1zDi18QDwRqWEhWkVHvlZbYDgkp0&cup2hreq=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,200,OK,92,81,,false,JSON
+60,Proxy,Mon Jun 22 10:37:12 PET 2026,GET,https://www.google.com/async/folae?async=_fmt:pb&udm=50&client_locale=es-419,200,OK,205,399,,false,
+61,Proxy,Mon Jun 22 10:37:12 PET 2026,POST,https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard&laf=b64bin,200,OK,225,0,,false,
+62,Proxy,Mon Jun 22 10:37:12 PET 2026,GET,https://facturacion-web-gold.vercel.app/,200,OK,115,437,,false,Script
+63,Proxy,Mon Jun 22 10:37:12 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,200,OK,132,116240,,false,
+64,Proxy,Mon Jun 22 10:37:12 PET 2026,GET,https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap,200,OK,234,17342,,false,Comment
+65,Proxy,Mon Jun 22 10:37:12 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,200,OK,841,1506269,,false,"Form,Script,Comment"
+68,Proxy,Mon Jun 22 10:37:14 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSSwmjug-6lbAPQxITDYOoWz0qDAgFEAUYBSADOABIBRIVDc5BTHoqDggCEAIYAiAAMAQ4BkgCIfrHRcl43ugDKYLa02UqEU0lMgIgBA==?alt=proto,200,OK,371,28,,false,
+69,Proxy,Mon Jun 22 10:37:14 PET 2026,POST,https://android.clients.google.com/checkin,200,OK,424,496,,false,
+70,Proxy,Mon Jun 22 10:37:14 PET 2026,POST,https://android.clients.google.com/c2dm/register3,301,Moved Permanently,338,25,,false,
+71,Proxy,Mon Jun 22 10:37:14 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,354,30,,false,
+72,Proxy,Mon Jun 22 10:37:14 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,372,30,,false,
+73,Proxy,Mon Jun 22 10:37:20 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/auth/login,404,Not Found,388,101,,false,JSON
+74,Proxy,Mon Jun 22 10:37:21 PET 2026,POST,https://optimizationguide-pa.googleapis.com/v1:GetModels?key=AIzaSyBqJZh-7pA44blAaAkH6490hUFOwX0KCYM,200,OK,277,9549,,false,
+75,Proxy,Mon Jun 22 10:37:23 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,200,OK,208,116240,,false,Comment
+76,Proxy,Mon Jun 22 10:37:23 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778511835&target=OPTIMIZATION_TARGET_NOTIFICATION_PERMISSION_PREDICTIONS,200,OK,374,18571,,false,Comment
+77,Proxy,Mon Jun 22 10:37:23 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1679317318&target=OPTIMIZATION_TARGET_LANGUAGE_DETECTION,200,OK,614,265059,,false,Comment
+78,Proxy,Mon Jun 22 10:37:24 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1673999601&target=OPTIMIZATION_TARGET_PAGE_VISIBILITY,200,OK,568,883094,,false,Comment
+79,Proxy,Mon Jun 22 10:37:24 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778511811&target=OPTIMIZATION_TARGET_GEOLOCATION_PERMISSION_PREDICTIONS,200,OK,232,18962,,false,
+80,Proxy,Mon Jun 22 10:37:24 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=5&target=OPTIMIZATION_TARGET_PAGE_TOPICS_V2,200,OK,680,2200227,,false,
+81,Proxy,Mon Jun 22 10:37:25 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1696268326&target=OPTIMIZATION_TARGET_OMNIBOX_URL_SCORING,200,OK,405,4879,,false,
+82,Proxy,Mon Jun 22 10:37:25 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778598302&target=OPTIMIZATION_TARGET_CLIENT_SIDE_PHISHING,200,OK,623,2746899,,false,
+83,Proxy,Mon Jun 22 10:37:25 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=240731042075&target=OPTIMIZATION_TARGET_SEGMENTATION_COMPOSE_PROMOTION,200,OK,482,118577,,false,Comment
+84,Proxy,Mon Jun 22 10:37:27 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/auth/login,404,Not Found,465,101,,false,JSON
+85,Proxy,Mon Jun 22 10:37:38 PET 2026,POST,https://android.clients.google.com/c2dm/register3,301,Moved Permanently,337,25,,false,
+86,Proxy,Mon Jun 22 10:37:41 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,1323,137,,false,
+87,Proxy,Mon Jun 22 10:37:43 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,1091,137,,false,
+88,Proxy,Mon Jun 22 10:37:48 PET 2026,POST,https://update.googleapis.com/service/update2/json?cup2key=16:tn37mxzqPqCdd2QCB_tQ8PWAIo3zjEVTS8yt-UW1Lbo&cup2hreq=f683f57105bd454c51face4c5d72f379f1d26dce6bcd5c42f9ff00f43b484858,200,OK,287,309,Bajo,false,JSON
+92,Proxy,Mon Jun 22 10:38:12 PET 2026,POST,https://update.googleapis.com/service/update2/json?cup2key=16:u_bXZK2g1jooUJEgarFQ8k4HEIJgEG4ksPr_EgGMVcg&cup2hreq=53001937a292633510b02947b516dced776211fbde3413d0bec40c200a7c2720,200,OK,239,3926,Bajo,false,JSON
+93,Proxy,Mon Jun 22 10:38:24 PET 2026,POST,https://android.clients.google.com/c2dm/register3,301,Moved Permanently,334,25,,false,
+94,Proxy,Mon Jun 22 10:38:42 PET 2026,GET,http://clients2.google.com/time/1/current?cup2key=10:E56DRjdpG4ZmRexj8_mvpBCbMWVIkOY1b4s7pCL18_w&cup2hreq=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855,200,OK,99,81,,false,JSON
+95,Proxy,Mon Jun 22 10:38:42 PET 2026,POST,https://accounts.google.com/ListAccounts?gpsia=1&source=ChromiumBrowser&json=standard&laf=b64bin,200,OK,63,0,,false,
+96,Proxy,Mon Jun 22 10:38:42 PET 2026,GET,https://www.google.com/async/folae?async=_fmt:pb&udm=50&client_locale=es-419,200,OK,197,407,,false,
+97,Proxy,Mon Jun 22 10:38:43 PET 2026,GET,https://facturacion-web-gold.vercel.app/,200,OK,136,437,,false,Script
+98,Proxy,Mon Jun 22 10:38:43 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,200,OK,193,116240,,false,Comment
+99,Proxy,Mon Jun 22 10:38:43 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,200,OK,354,1506269,,false,
+100,Proxy,Mon Jun 22 10:38:43 PET 2026,GET,https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap,200,OK,251,17342,,false,Comment
+103,Proxy,Mon Jun 22 10:38:44 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSSwmjug-6lbAPQxITDYOoWz0qDAgFEAUYBSADOABIBRIVDc5BTHoqDggCEAIYAiAAMAQ4BkgCIfrHRcl43ugDKYLa02UqEU0lMgIgBA==?alt=proto,200,OK,373,28,,false,
+104,Proxy,Mon Jun 22 10:38:44 PET 2026,POST,https://android.clients.google.com/checkin,200,OK,242,496,,false,
+105,Proxy,Mon Jun 22 10:38:45 PET 2026,POST,https://android.clients.google.com/c2dm/register3,301,Moved Permanently,317,25,,false,
+106,Proxy,Mon Jun 22 10:38:45 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,1081,137,,false,
+107,Proxy,Mon Jun 22 10:38:45 PET 2026,POST,https://android.clients.google.com/c2dm/register3,200,OK,1205,137,,false,
+108,Proxy,Mon Jun 22 10:38:52 PET 2026,POST,https://optimizationguide-pa.googleapis.com/v1:GetModels?key=AIzaSyBqJZh-7pA44blAaAkH6490hUFOwX0KCYM,200,OK,276,9549,,false,
+109,Proxy,Mon Jun 22 10:38:52 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/auth/login,200,OK,605,0,,false,
+110,Proxy,Mon Jun 22 10:38:53 PET 2026,POST,https://facturacion-web.up.railway.app/api/v1/auth/login,200,OK,646,343,Bajo,false,JSON
+113,Proxy,Mon Jun 22 10:38:54 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778511835&target=OPTIMIZATION_TARGET_NOTIFICATION_PERMISSION_PREDICTIONS,200,OK,365,18571,,false,Comment
+114,Proxy,Mon Jun 22 10:38:54 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1679317318&target=OPTIMIZATION_TARGET_LANGUAGE_DETECTION,200,OK,550,265059,,false,
+115,Proxy,Mon Jun 22 10:38:54 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1673999601&target=OPTIMIZATION_TARGET_PAGE_VISIBILITY,200,OK,610,883094,,false,Comment
+116,Proxy,Mon Jun 22 10:38:55 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=5&target=OPTIMIZATION_TARGET_PAGE_TOPICS_V2,200,OK,685,2200227,,false,Comment
+117,Proxy,Mon Jun 22 10:38:55 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778511811&target=OPTIMIZATION_TARGET_GEOLOCATION_PERMISSION_PREDICTIONS,200,OK,266,18962,,false,
+118,Proxy,Mon Jun 22 10:38:55 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1696268326&target=OPTIMIZATION_TARGET_OMNIBOX_URL_SCORING,200,OK,328,4879,,false,
+119,Proxy,Mon Jun 22 10:38:55 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=1778598302&target=OPTIMIZATION_TARGET_CLIENT_SIDE_PHISHING,200,OK,585,2746899,,false,Comment
+120,Proxy,Mon Jun 22 10:38:56 PET 2026,POST,https://update.googleapis.com/service/update2/json?cup2key=16:10t53z7ThhkqZclGxgfQ4FuvxLyyqhq7Vl22XvX8NSY&cup2hreq=bb17771be7ba40c47ffe59836021de88df44ce277678f537a8fc1a2f52d0bb80,200,OK,188,309,,false,
+121,Proxy,Mon Jun 22 10:38:56 PET 2026,GET,https://optimizationguide-pa.googleapis.com/downloads?name=240731042075&target=OPTIMIZATION_TARGET_SEGMENTATION_COMPOSE_PROMOTION,200,OK,652,118577,,false,Comment
+122,Proxy,Mon Jun 22 10:39:08 PET 2026,POST,https://android.clients.google.com/c2dm/register3,429,unknown,342,20,,false,
+123,Proxy,Mon Jun 22 10:39:42 PET 2026,POST,https://update.googleapis.com/service/update2/json?cup2key=16:sA5rQZGNpyTvigd68jwEQdSg3M8D8PSxco_mnyllIQk&cup2hreq=6d11f4e5a536d9d0a8650333db7ac64cecc27b46446e185667c134d6042410df,200,OK,210,3922,,false,JSON
+124,Proxy,Mon Jun 22 10:39:53 PET 2026,GET,https://facturacion-web-gold.vercel.app/sales-documents,200,OK,122,437,Medio,false,Script
+125,Proxy,Mon Jun 22 10:39:53 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,304,Not Modified,112,0,,false,
+126,Proxy,Mon Jun 22 10:39:53 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,304,Not Modified,112,0,,false,
+127,Proxy,Mon Jun 22 10:39:54 PET 2026,GET,https://fonts.gstatic.com/s/jetbrainsmono/v24/tDbv2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yKwBNntkaToggR7BYRbKPxDcwg.woff2,200,OK,209,31432,Medio,false,
+133,Proxy,Mon Jun 22 10:39:54 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSkAEJCKkG5aQAE_ESDQ2RYZVOKgYYASACOAQSDQ2RYZVOKgYYASACOAASCw3hiLclKgQYByAEEhENE7sNZCoKCAcYASABOAZIBhINDQByrwEqBggHGAcgBBIRDchXl9MqCggEGAEgBDgFSAYSEQ2kp4-9KgoIARgBIAA4AEgGIcaxt_0AA8RvKcaxt_0AA8RvMgA=?alt=proto,200,OK,420,88,,false,
+134,Proxy,Mon Jun 22 10:39:54 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-operacion,200,OK,595,0,,false,
+135,Proxy,Mon Jun 22 10:39:54 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/monedas,200,OK,597,0,,false,
+137,Proxy,Mon Jun 22 10:39:54 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-afectacion-igv,200,OK,604,0,,false,
+139,Proxy,Mon Jun 22 10:39:54 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-documento,200,OK,660,0,,false,
+138,Proxy,Mon Jun 22 10:39:54 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/codigos-tipo-tributo,200,OK,643,0,,false,
+140,Proxy,Mon Jun 22 10:39:54 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/unidades-medida-comercial,200,OK,659,0,,false,
+142,Proxy,Mon Jun 22 10:39:55 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-documento,200,OK,381,319,,false,JSON
+143,Proxy,Mon Jun 22 10:39:55 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-afectacion-igv,200,OK,956,1359,,false,JSON
+144,Proxy,Mon Jun 22 10:39:55 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-operacion,200,OK,1090,2635,,false,
+145,Proxy,Mon Jun 22 10:39:55 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/codigos-tipo-tributo,200,OK,1053,132,,false,JSON
+146,Proxy,Mon Jun 22 10:39:55 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/monedas,200,OK,1200,22960,,false,
+147,Proxy,Mon Jun 22 10:39:55 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/unidades-medida-comercial,200,OK,1498,60665,,false,JSON
+148,Proxy,Mon Jun 22 10:40:00 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/series/Factura,200,OK,243,0,,false,
+150,Proxy,Mon Jun 22 10:40:00 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/series/Factura,200,OK,401,36,,false,JSON
+151,Proxy,Mon Jun 22 10:40:58 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-documento-identidad,200,OK,258,0,,false,
+152,Proxy,Mon Jun 22 10:40:58 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSmAEJlaI7Xjkc9W0SDw2SctQPKggIBhgBIAY4BRIPDWrENw4qCAgHGAEgBzgHEg8NDmA18yoICAAYASAHOAUSDw2nizt6KggIARgBIAM4AxIPDQ6dswQqCAgCGAEgATgBEhENyFeX0yoKCAQYASAEOAVIBhIRDaSnj70qCggBGAEgADgASAYhfD-RKHQ3oqIpfD-RKHQ3oqIyAA==?alt=proto,200,OK,353,88,,false,
+153,Proxy,Mon Jun 22 10:40:58 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-documento-identidad,200,OK,565,754,,false,JSON
+154,Proxy,Mon Jun 22 10:41:04 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/sunat?ruc=20100053455,200,OK,256,0,,false,
+155,Proxy,Mon Jun 22 10:41:04 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/sunat?ruc=20100053455,200,OK,550,465,,false,JSON
+156,Proxy,Mon Jun 22 10:41:14 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/departamentos,200,OK,258,0,,false,
+158,Proxy,Mon Jun 22 10:41:14 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSmAEJG0UELY1CNF8SEQ28nJFwKgoIBBgBIAY4AEgGEg8N8omz_yoICAIYASAHOAESDQ2V9atxKgYIARgBIAQSDw0MzeQkKggIBBgBIAM4ABIPDZFhlU4qCBgBIAU4BUgGEhENyFeX0yoKCAQYASAEOAVIBhIRDaSnj70qCggBGAEgADgASAYhfD-RKHQ3oqIpfD-RKHQ3oqIyAA==?alt=proto,200,OK,348,88,Bajo,false,
+159,Proxy,Mon Jun 22 10:41:14 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/departamentos,200,OK,514,1259,,false,JSON
+160,Proxy,Mon Jun 22 10:41:15 PET 2026,POST,https://content-autofill.googleapis.com/v1/forms:vote?alt=proto,200,OK,308,0,,false,
+161,Proxy,Mon Jun 22 10:41:15 PET 2026,POST,https://content-autofill.googleapis.com/v1/forms:vote?alt=proto,200,OK,330,0,,false,
+162,Proxy,Mon Jun 22 10:41:15 PET 2026,POST,https://content-autofill.googleapis.com/v1/forms:vote?alt=proto,200,OK,332,0,,false,
+163,Proxy,Mon Jun 22 10:41:18 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/sunat?ruc=20100053455,200,OK,440,465,,false,JSON
+164,Proxy,Mon Jun 22 10:41:19 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/departamentos,200,OK,343,1259,,false,JSON
+165,Proxy,Mon Jun 22 10:41:19 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/provincias?departamento=LIMA,200,OK,261,0,,false,
+166,Proxy,Mon Jun 22 10:41:19 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/provincias?departamento=LIMA,200,OK,567,491,,false,JSON
+167,Proxy,Mon Jun 22 10:41:20 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/distritos?departamento=LIMA&provincia=LIMA,200,OK,306,0,,false,
+168,Proxy,Mon Jun 22 10:41:20 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/distritos?departamento=LIMA&provincia=LIMA,200,OK,452,0,,false,
+169,Proxy,Mon Jun 22 10:41:20 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/distritos?departamento=LIMA&provincia=LIMA,200,OK,545,2281,,false,JSON
+170,Proxy,Mon Jun 22 10:41:21 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/ubigeo/distritos?departamento=LIMA&provincia=LIMA,200,OK,396,2281,,false,JSON
+171,Proxy,Mon Jun 22 10:41:23 PET 2026,POST,https://chromewebstore.googleapis.com/v2/items/-/storeMetadata:batchGet,200,OK,338,0,Bajo,false,
+176,Proxy,Mon Jun 22 10:41:38 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUS3AEJbsIIsBO4uqUSEQ28nJFwKgoIBBgBIAY4AEgGEg8N8omz_yoICAIYASAHOAESDQ2V9atxKgYIARgBIAQSDw0MzeQkKggIBBgBIAM4ABIPDZFhlU4qCBgBIAU4BUgGEg0NkWGVTioGGAEgADgAEg8NgZDxfCoIGAIgBTgFSAYSEQ1u37YUKgoIBRgBIAQ4BEgGEg8NgZDxfCoIGAIgATgBSAYSEQ3IV5fTKgoIBBgBIAQ4BUgGEhENpKePvSoKCAEYASAAOABIBiGbKz5EvZZKASmbKz5EvZZKATIA?alt=proto,200,OK,271,136,Informativo,false,
+177,Proxy,Mon Jun 22 10:42:03 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/comprobantes/generar-xml,200,OK,245,0,,false,
+179,Proxy,Mon Jun 22 10:42:03 PET 2026,POST,https://facturacion-web.up.railway.app/api/v1/comprobantes/generar-xml,200,OK,982,5621,,false,JSON
+180,Proxy,Mon Jun 22 10:42:41 PET 2026,GET,https://facturacion-web-gold.vercel.app/shipping-guide,200,OK,102,437,Medio,false,Script
+181,Proxy,Mon Jun 22 10:42:41 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,304,Not Modified,101,0,,false,
+182,Proxy,Mon Jun 22 10:42:41 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,304,Not Modified,119,0,,false,
+183,Proxy,Mon Jun 22 10:42:41 PET 2026,POST,https://content-autofill.googleapis.com/v1/forms:vote?alt=proto,200,OK,231,0,,false,
+185,Proxy,Mon Jun 22 10:42:42 PET 2026,GET,https://content-autofill.googleapis.com/v1/pages/ChVDaHJvbWUvMTQ5LjAuNzgyNy4xNTUSxQIJt-HSlmgjBJ4SDQ2RYZVOKgYYASACOAQSDQ2RYZVOKgYYASACOAASCw3hiLclKgQYByAEEg8NknLUDyoICAYYASAGOAUSDw1qxDcOKggIBxgBIAc4BxIPDQ5gNfMqCAgAGAEgBzgFEg8Np4s7eioICAEYASADOAMSDw10ruvOKggIBBgBIAA4ABINDVqd2lcqBggBGAcgAxIPDbx0CowqCAgAGAcgATgFEg8NFLLpDSoICAYYAiADOAESDw2JfwXzKggIBxgCIAc4ARIPDdq9MTgqCAgBGAIgAzgFEg8N-Jj4qSoICAIYByAAOAMSDw1t_qJTKggIBRgBIAI4BhIPDfgdaFQqCAgHGAEgBTgCEg8NVDJquioICAUYASAGOAQSDw0xdw_IKggIARgBIAY4ASFmpeHfgVyErylmpeHfgVyErzIA?alt=proto,200,OK,259,220,,false,
+187,Proxy,Mon Jun 22 10:42:42 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/series/09,200,OK,528,0,,false,
+188,Proxy,Mon Jun 22 10:42:42 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/catalogos/motivos-traslado,200,OK,536,0,,false,
+189,Proxy,Mon Jun 22 10:42:42 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-documento-identidad,200,OK,826,754,,false,JSON
+190,Proxy,Mon Jun 22 10:42:42 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/monedas,200,OK,844,22960,,false,
+191,Proxy,Mon Jun 22 10:42:42 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/series/09,200,OK,402,36,,false,JSON
+192,Proxy,Mon Jun 22 10:42:42 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/motivos-traslado,200,OK,485,778,,false,
+193,Proxy,Mon Jun 22 10:42:44 PET 2026,GET,https://facturacion-web-gold.vercel.app/sales-documents,200,OK,116,437,,false,Script
+194,Proxy,Mon Jun 22 10:42:44 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-BfCxFwFw.css,304,Not Modified,94,0,,false,
+195,Proxy,Mon Jun 22 10:42:44 PET 2026,GET,https://facturacion-web-gold.vercel.app/assets/index-jAPwrUIc.js,304,Not Modified,103,0,,false,
+197,Proxy,Mon Jun 22 10:42:45 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-documento,200,OK,336,319,,false,JSON
+198,Proxy,Mon Jun 22 10:42:45 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-afectacion-igv,200,OK,481,1359,,false,
+199,Proxy,Mon Jun 22 10:42:45 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/tipos-operacion,200,OK,554,2635,,false,JSON
+200,Proxy,Mon Jun 22 10:42:45 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/codigos-tipo-tributo,200,OK,974,132,,false,JSON
+201,Proxy,Mon Jun 22 10:42:45 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/monedas,200,OK,1023,22960,,false,
+202,Proxy,Mon Jun 22 10:42:45 PET 2026,GET,https://facturacion-web.up.railway.app/api/v1/catalogos/unidades-medida-comercial,200,OK,1227,60665,,false,JSON
+203,Proxy,Mon Jun 22 10:42:51 PET 2026,OPTIONS,https://facturacion-web.up.railway.app/api/v1/tramas/generar,200,OK,257,0,,false,
+205,Proxy,Mon Jun 22 10:42:52 PET 2026,POST,https://facturacion-web.up.railway.app/api/v1/tramas/generar,400,Bad Request,459,320,,false,JSON

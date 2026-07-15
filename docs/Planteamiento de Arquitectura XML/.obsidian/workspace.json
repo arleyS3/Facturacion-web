@@ -1,0 +1,200 @@
+{
+  "main": {
+    "id": "096b91658108aee8",
+    "type": "split",
+    "children": [
+      {
+        "id": "6f3e05754d758f2a",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "c71ee1c989ba923e",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Arquitectura/Rama XML UBL - Factura 01.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "Rama XML UBL - Factura 01"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "vertical"
+  },
+  "left": {
+    "id": "9af81025e9aa3cbf",
+    "type": "split",
+    "children": [
+      {
+        "id": "ae9092456a57880f",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "77865bc6ef011889",
+            "type": "leaf",
+            "state": {
+              "type": "file-explorer",
+              "state": {
+                "sortOrder": "alphabetical",
+                "autoReveal": false
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Explorador de archivos"
+            }
+          },
+          {
+            "id": "8b4ad7ae03470ee2",
+            "type": "leaf",
+            "state": {
+              "type": "search",
+              "state": {
+                "query": "",
+                "matchingCase": false,
+                "explainSearch": false,
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical"
+              },
+              "icon": "lucide-search",
+              "title": "Buscar"
+            }
+          },
+          {
+            "id": "2df0f6e57a4e1f4c",
+            "type": "leaf",
+            "state": {
+              "type": "bookmarks",
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Marcadores"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300
+  },
+  "right": {
+    "id": "db7db2f834c79ec1",
+    "type": "split",
+    "children": [
+      {
+        "id": "f9490734b69c59c8",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "7e036ec48a72f063",
+            "type": "leaf",
+            "state": {
+              "type": "backlink",
+              "state": {
+                "file": "Arquitectura/Plan de Implementacion por Ramas XML UBL.md",
+                "collapseAll": false,
+                "extraContext": false,
+                "sortOrder": "alphabetical",
+                "showSearch": false,
+                "searchQuery": "",
+                "backlinkCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-coming-in",
+              "title": "Enlaces entrantes de Plan de Implementacion por Ramas XML UBL"
+            }
+          },
+          {
+            "id": "642f4166a47e1ece",
+            "type": "leaf",
+            "state": {
+              "type": "outgoing-link",
+              "state": {
+                "file": "Arquitectura/Plan de Implementacion por Ramas XML UBL.md",
+                "linksCollapsed": false,
+                "unlinkedCollapsed": true
+              },
+              "icon": "links-going-out",
+              "title": "Enlaces salientes de Plan de Implementacion por Ramas XML UBL"
+            }
+          },
+          {
+            "id": "72a0cf181ac65bbd",
+            "type": "leaf",
+            "state": {
+              "type": "tag",
+              "state": {
+                "sortOrder": "frequency",
+                "useHierarchy": true,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-tags",
+              "title": "Etiquetas"
+            }
+          },
+          {
+            "id": "7a42617f9730907f",
+            "type": "leaf",
+            "state": {
+              "type": "all-properties",
+              "state": {
+                "sortOrder": "frequency",
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-archive",
+              "title": "Todas las propiedades"
+            }
+          },
+          {
+            "id": "ecd2be91ef1bb716",
+            "type": "leaf",
+            "state": {
+              "type": "outline",
+              "state": {
+                "file": "Arquitectura/Plan de Implementacion por Ramas XML UBL.md",
+                "followCursor": false,
+                "showSearch": false,
+                "searchQuery": ""
+              },
+              "icon": "lucide-list",
+              "title": "Esquema de Plan de Implementacion por Ramas XML UBL"
+            }
+          }
+        ]
+      }
+    ],
+    "direction": "horizontal",
+    "width": 300,
+    "collapsed": true
+  },
+  "left-ribbon": {
+    "hiddenItems": {
+      "switcher:Abrir selector rápido": false,
+      "graph:Abrir vista gráfica": false,
+      "canvas:Crear nuevo lienzo": false,
+      "daily-notes:Abrir la nota de hoy": false,
+      "templates:Insertar plantilla": false,
+      "command-palette:Abrir paleta de comandos": false,
+      "bases:Crear nueva base": false
+    }
+  },
+  "active": "c71ee1c989ba923e",
+  "lastOpenFiles": [
+    "Arquitectura/Arquitectura de Desarrollo.md",
+    "Arquitectura/Plan de Implementacion por Ramas XML UBL.md",
+    "Documentación/Flujo de Facturacion.md",
+    "Documentación/Enlaces de Informacion.md",
+    "Documentación/BoletaXML.md",
+    "Documentación/FacturaXML.md",
+    "Documentación/Ph-ubl.md",
+    "Efact.md",
+    "Documentación/FirmaDigital.md",
+    "EDICOM.md",
+    "Documentación/Nota de Debito.md"
+  ]
+}

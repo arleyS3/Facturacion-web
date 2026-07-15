@@ -4,6 +4,7 @@ target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+resultado/
 
 ### STS ###
 .apt_generated
@@ -44,6 +45,12 @@ build/
 /.env.test.local
 /.env.production.local
 
+### Package Managers ###
+# pnpm (usamos pnpm — lockfile trackeado para Vercel)
+# pnpm-lock.yaml
+# npm (no usamos npm)
+package-lock.json
+
 ### Monorepo (any level) ###
 **/node_modules/
 **/dist/
@@ -54,3 +61,33 @@ build/
 ### IDEs in subfolders ###
 **/.vscode/
 **/.idea/
+
+### Graphify
+graphify-out/**
+
+### Local signing certificates
+.local-certs/
+*.p12
+*.pfx
+*.pem
+*.key
+*.crt
+*.csr
+
+### Obsidian
+.obsidian
+
+### SDD / Skill Registry
+.atl/
+
+### Pi runtime
+.pi/
+**/.pi/
+
+### OS files
+.DS_Store
+Thumbs.db
+
+### AI Agent artifacts
+AGENTS.md
+openspec/

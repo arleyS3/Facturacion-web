@@ -56,7 +56,6 @@ public class PlantillaService {
                 a.put("TipoOperacion", "0101");
                 a.put("CantidadItem", "");
                 a.put("FormaPago", "Contado");
-                a.put("MontoNetoPendPago", "");
                 a.put("MntNeto", "");
                 a.put("MntExe", "0.00");
                 a.put("MntExo", "0.00");

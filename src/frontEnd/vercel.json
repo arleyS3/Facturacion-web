@@ -1,15 +1,9 @@
 {
-  "routes": [
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://facturacion-web.up.railway.app/api/:path*"
     },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/.*",
-      "dest": "/index.html"
-    }
+    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
