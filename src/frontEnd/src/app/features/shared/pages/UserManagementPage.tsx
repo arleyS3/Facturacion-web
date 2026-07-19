@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Plus, Trash2, Shield, User as UserIcon, Loader2, Search, UserPlus } from "lucide-react";
+import { Trash2, Shield, User as UserIcon, Loader2, Search, UserPlus, AlertTriangle } from "lucide-react";
 import api from "@/lib/api";
 
 import {
@@ -13,6 +13,7 @@ import {
   TableCell,
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
@@ -56,9 +57,14 @@ export function UserManagementPage() {
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  // State para eliminar usuario
+  // State para eliminar usuario (individual)
   const [deleteTarget, setDeleteTarget] = useState<UserItem | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  // State para eliminar masivo
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -129,6 +135,37 @@ export function UserManagementPage() {
     }
   };
 
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredUsers.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredUsers.map((u) => u.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    setBulkDeleting(true);
+    try {
+      await api.post("/auth/users/bulk-delete", Array.from(selectedIds));
+      setUsers((prev) => prev.filter((u) => !selectedIds.has(u.id)));
+      setSelectedIds(new Set());
+      setBulkDeleteOpen(false);
+    } catch (err: any) {
+      alert(err?.response?.data?.error || "No se pudieron eliminar los usuarios seleccionados.");
+    } finally {
+      setBulkDeleting(false);
+    }
+  };
+
   const filteredUsers = users.filter((u) => {
     const matchesSearch = u.email.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesRole = roleFilter === "ALL" || u.role === roleFilter;
@@ -177,6 +214,29 @@ export function UserManagementPage() {
         </Select>
       </div>
 
+      {/* Barra de acciones masivas */}
+      {selectedIds.size > 0 && (
+        <div className="flex items-center justify-between bg-primary/5 border border-primary/20 rounded-xl px-5 py-3">
+          <span className="text-sm font-medium text-foreground">
+            {selectedIds.size} usuario{selectedIds.size !== 1 ? "s" : ""} seleccionado{selectedIds.size !== 1 ? "s" : ""}
+          </span>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={() => setSelectedIds(new Set())}>
+              Cancelar
+            </Button>
+            <Button
+              variant="destructive"
+              size="sm"
+              className="gap-2 cursor-pointer"
+              onClick={() => setBulkDeleteOpen(true)}
+            >
+              <Trash2 className="size-4" />
+              Eliminar seleccionados
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Tabla */}
       <div className="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
         {loading ? (
@@ -195,6 +255,13 @@ export function UserManagementPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-12">
+                  <Checkbox
+                    checked={filteredUsers.length > 0 && selectedIds.size === filteredUsers.length}
+                    onCheckedChange={toggleSelectAll}
+                    aria-label="Seleccionar todos"
+                  />
+                </TableHead>
                 <TableHead>Usuario / Email</TableHead>
                 <TableHead>Rol Asignado</TableHead>
                 <TableHead>Fecha de Registro</TableHead>
@@ -203,7 +270,17 @@ export function UserManagementPage() {
             </TableHeader>
             <TableBody>
               {filteredUsers.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow
+                  key={user.id}
+                  className={selectedIds.has(user.id) ? "bg-primary/5" : undefined}
+                >
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedIds.has(user.id)}
+                      onCheckedChange={() => toggleSelect(user.id)}
+                      aria-label={`Seleccionar ${user.email}`}
+                    />
+                  </TableCell>
                   <TableCell className="font-medium">
                     <div className="flex items-center gap-3">
                       <div className="size-9 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-xs">
@@ -331,7 +408,7 @@ export function UserManagementPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Modal Confirmar Eliminar */}
+      {/* Modal Confirmar Eliminar (individual) */}
       <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -350,6 +427,46 @@ export function UserManagementPage() {
             <Button variant="destructive" onClick={handleDeleteUser} disabled={deleting}>
               {deleting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
               Eliminar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Confirmar Eliminar Masivo */}
+      <Dialog open={bulkDeleteOpen} onOpenChange={setBulkDeleteOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-destructive flex items-center gap-2">
+              <AlertTriangle className="size-5" />
+              ¿Eliminar {selectedIds.size} usuarios?
+            </DialogTitle>
+            <DialogDescription>
+              Vas a eliminar <strong>{selectedIds.size} cuentas de usuario</strong> de forma permanente.
+              Esta acción no se puede deshacer.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-48 overflow-y-auto border rounded-lg p-3 space-y-1 text-sm">
+            {users
+              .filter((u) => selectedIds.has(u.id))
+              .map((u) => (
+                <div key={u.id} className="flex items-center gap-2 text-muted-foreground">
+                  <UserIcon className="size-3.5 shrink-0" />
+                  <span>{u.email}</span>
+                  <Badge variant="outline" className="ml-auto text-xs">
+                    {u.role === "ADMIN" ? "Admin" : "User"}
+                  </Badge>
+                </div>
+              ))}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleBulkDelete} disabled={bulkDeleting}>
+              {bulkDeleting ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+              Eliminar {selectedIds.size} usuarios
             </Button>
           </DialogFooter>
         </DialogContent>

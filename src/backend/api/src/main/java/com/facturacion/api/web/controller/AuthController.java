@@ -279,6 +279,35 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "Usuario eliminado correctamente"));
     }
 
+    @PostMapping("/users/bulk-delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUsersBulk(@RequestBody List<UUID> ids, @AuthenticationPrincipal String email) {
+        if (ids == null || ids.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Lista de IDs vacia"));
+        }
+        var requester = userRepository.findByEmail(email);
+        UUID requesterId = requester.map(UserEntity::getId).orElse(null);
+
+        List<UUID> toDelete = ids.stream()
+                .filter(id -> !id.equals(requesterId))
+                .collect(Collectors.toList());
+
+        if (toDelete.isEmpty()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No puedes eliminar tu propia cuenta"));
+        }
+
+        List<UUID> existing = userRepository.findAllById(toDelete).stream()
+                .map(UserEntity::getId)
+                .collect(Collectors.toList());
+
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Ningun usuario encontrado"));
+        }
+
+        userRepository.deleteAllById(existing);
+        return ResponseEntity.ok(Map.of("message", existing.size() + " usuarios eliminados correctamente"));
+    }
+
     @PostMapping("/logout")
     public ResponseEntity<String> logout(
             HttpServletRequest request,
