@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.facturacion.api.web.dto.AuthResponse;
 import com.facturacion.api.web.dto.LoginRequest;
+import com.facturacion.api.web.dto.MeResponse;
 import com.facturacion.api.web.dto.RefreshRequest;
 import com.facturacion.api.web.dto.RegisterRequest;
 import com.facturacion.api.web.models.UserEntity;
@@ -16,12 +17,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 import java.util.Map;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
@@ -177,9 +183,32 @@ public class AuthController {
     }
 
     @GetMapping("/me")
-    public ResponseEntity<String> me(@AuthenticationPrincipal String email) {
+    public ResponseEntity<?> me(@AuthenticationPrincipal String email) {
         if (email == null) return ResponseEntity.status(401).build();
-        return ResponseEntity.ok(email);
+        var user = userRepository.findByEmail(email);
+        if (user.isEmpty()) return ResponseEntity.status(404).build();
+        return ResponseEntity.ok(new MeResponse(user.get().getEmail(), user.get().getRole()));
+    }
+
+    @PatchMapping("/users/{id}/role")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateRole(@PathVariable UUID id, @RequestBody Map<String, String> body,
+                                         @AuthenticationPrincipal String email) {
+        var target = userRepository.findById(id);
+        if (target.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+        }
+        var requester = userRepository.findByEmail(email);
+        if (requester.isPresent() && requester.get().getId().equals(id)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No puedes autodegradarte"));
+        }
+        String newRole = body.get("role");
+        if (newRole == null || (!newRole.equals("ADMIN") && !newRole.equals("USER"))) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Rol invalido"));
+        }
+        target.get().setRole(newRole);
+        userRepository.save(target.get());
+        return ResponseEntity.ok(Map.of("message", "Rol actualizado a " + newRole));
     }
 
     @PostMapping("/logout")
