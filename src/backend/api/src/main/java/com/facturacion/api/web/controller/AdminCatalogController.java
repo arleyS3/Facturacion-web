@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -23,6 +24,13 @@ public class AdminCatalogController {
     private static final Set<String> IGV_TYPES = Set.of("tipos-afectacion-igv");
 
     private final Map<String, JpaRepository<?, Long>> repos;
+    private final TipoOperacionRepository tipoOperacionRepo;
+    private final TipoNotaCreditoRepository tipoNotaCreditoRepo;
+    private final TipoNotaDebitoRepository tipoNotaDebitoRepo;
+    private final TipoSistemaIscRepository tipoSistemaIscRepo;
+    private final TipoAfectacionIgvRepository tipoAfectacionIgvRepo;
+    private final TipoDocumentoIdentidadRepository tipoDocumentoIdentidadRepo;
+    private final MotivoTrasladoRepository motivoTrasladoRepo;
 
     public AdminCatalogController(
             TipoOperacionRepository tipoOperacionRepository,
@@ -32,6 +40,13 @@ public class AdminCatalogController {
             TipoAfectacionIgvRepository tipoAfectacionIgvRepository,
             TipoDocumentoIdentidadRepository tipoDocumentoIdentidadRepository,
             MotivoTrasladoRepository motivoTrasladoRepository) {
+        this.tipoOperacionRepo = tipoOperacionRepository;
+        this.tipoNotaCreditoRepo = tipoNotaCreditoRepository;
+        this.tipoNotaDebitoRepo = tipoNotaDebitoRepository;
+        this.tipoSistemaIscRepo = tipoSistemaIscRepository;
+        this.tipoAfectacionIgvRepo = tipoAfectacionIgvRepository;
+        this.tipoDocumentoIdentidadRepo = tipoDocumentoIdentidadRepository;
+        this.motivoTrasladoRepo = motivoTrasladoRepository;
         this.repos = Map.of(
                 "tipos-operacion", tipoOperacionRepository,
                 "tipos-nota-credito", tipoNotaCreditoRepository,
@@ -81,6 +96,34 @@ public class AdminCatalogController {
         } catch (DataIntegrityViolationException e) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "El codigo ya existe"));
         }
+    }
+
+    @GetMapping("/{tipo}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> listar(@PathVariable String tipo) {
+        var repo = resolveRepo(tipo);
+        if (repo == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tipo de catalogo invalido: " + tipo));
+        }
+        var all = findAllIncludingInactive(tipo);
+        return ResponseEntity.ok(all.stream().map(this::toResponse).toList());
+    }
+
+    @PatchMapping("/{tipo}/{id}/reactivar")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> reactivar(@PathVariable String tipo, @PathVariable Long id) {
+        var repo = resolveRepo(tipo);
+        if (repo == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tipo de catalogo invalido: " + tipo));
+        }
+        var entity = findByIdIncludingInactive(tipo, id);
+        if (entity == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Registro no encontrado"));
+        }
+        setActivo(entity, true);
+        JpaRepository repoCast = repo;
+        repoCast.save(entity);
+        return ResponseEntity.ok(toResponse(entity));
     }
 
     @DeleteMapping("/{tipo}/{id}")
@@ -225,4 +268,41 @@ public class AdminCatalogController {
             default -> throw new IllegalArgumentException("Tipo de entidad desconocido");
         };
     }
+
+    private List<?> findAllIncludingInactive(String tipo) {
+        return switch (tipo) {
+            case "tipos-operacion" -> tipoOperacionRepo.findAllIncludingInactive();
+            case "tipos-nota-credito" -> tipoNotaCreditoRepo.findAllIncludingInactive();
+            case "tipos-nota-debito" -> tipoNotaDebitoRepo.findAllIncludingInactive();
+            case "sistemas-isc" -> tipoSistemaIscRepo.findAllIncludingInactive();
+            case "tipos-afectacion-igv" -> tipoAfectacionIgvRepo.findAllIncludingInactive();
+            case "tipos-documento-identidad" -> tipoDocumentoIdentidadRepo.findAllIncludingInactive();
+            case "motivos-traslado" -> motivoTrasladoRepo.findAllIncludingInactive();
+            default -> throw new IllegalArgumentException("Tipo de catalogo invalido: " + tipo);
+        };
+    }
+
+    private Object findByIdIncludingInactive(String tipo, Long id) {
+        return switch (tipo) {
+            case "tipos-operacion" -> tipoOperacionRepo.findByIdIncludingInactive(id);
+            case "tipos-nota-credito" -> tipoNotaCreditoRepo.findByIdIncludingInactive(id);
+            case "tipos-nota-debito" -> tipoNotaDebitoRepo.findByIdIncludingInactive(id);
+            case "sistemas-isc" -> tipoSistemaIscRepo.findByIdIncludingInactive(id);
+            case "tipos-afectacion-igv" -> tipoAfectacionIgvRepo.findByIdIncludingInactive(id);
+            case "tipos-documento-identidad" -> tipoDocumentoIdentidadRepo.findByIdIncludingInactive(id);
+            case "motivos-traslado" -> motivoTrasladoRepo.findByIdIncludingInactive(id);
+            default -> throw new IllegalArgumentException("Tipo de catalogo invalido: " + tipo);
+        };
+    }
+
+    private void setActivo(Object entity, boolean activo) {
+        if (entity instanceof TipoOperacionEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoNotaCreditoEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoNotaDebitoEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoSistemaIscEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoAfectacionIgvEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoDocumentoIdentidadEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof MotivoTrasladoEntity e) { e.setActivo(activo); e.setActualizadoAt(LocalDateTime.now()); }
+    }
+
 }
