@@ -5,10 +5,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.facturacion.api.web.dto.AuthResponse;
+import com.facturacion.api.web.dto.CreateUserRequest;
 import com.facturacion.api.web.dto.LoginRequest;
 import com.facturacion.api.web.dto.MeResponse;
 import com.facturacion.api.web.dto.RefreshRequest;
 import com.facturacion.api.web.dto.RegisterRequest;
+import com.facturacion.api.web.dto.UserResponse;
 import com.facturacion.api.web.models.UserEntity;
 import com.facturacion.api.web.repositories.UserRepository;
 
@@ -23,8 +25,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -213,6 +218,65 @@ public class AuthController {
         target.get().setRole(newRole);
         userRepository.save(target.get());
         return ResponseEntity.ok(Map.of("message", "Rol actualizado a " + newRole));
+    }
+
+    @GetMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<UserResponse>> listUsers() {
+        List<UserResponse> users = userRepository.findAll().stream()
+                .map(u -> UserResponse.builder()
+                        .id(u.getId())
+                        .email(u.getEmail())
+                        .role(u.getRole() != null ? u.getRole() : "USER")
+                        .createdAt(u.getCreatedAt())
+                        .build())
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
+    }
+
+    @PostMapping("/users")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createUser(@RequestBody CreateUserRequest request) {
+        if (request.getEmail() == null || request.getEmail().isBlank() ||
+            request.getPassword() == null || request.getPassword().isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Email y contraseña son requeridos"));
+        }
+        if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("error", "El usuario ya existe"));
+        }
+        String role = (request.getRole() != null && (request.getRole().equals("ADMIN") || request.getRole().equals("USER")))
+                ? request.getRole()
+                : "USER";
+
+        UserEntity user = UserEntity.builder()
+                .email(request.getEmail())
+                .password(passwordEncoder.encode(request.getPassword()))
+                .role(role)
+                .build();
+
+        userRepository.save(user);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .build());
+    }
+
+    @DeleteMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable UUID id, @AuthenticationPrincipal String email) {
+        var target = userRepository.findById(id);
+        if (target.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+        }
+        var requester = userRepository.findByEmail(email);
+        if (requester.isPresent() && requester.get().getId().equals(id)) {
+            return ResponseEntity.badRequest().body(Map.of("error", "No puedes eliminar tu propia cuenta"));
+        }
+        userRepository.deleteById(id);
+        return ResponseEntity.ok(Map.of("message", "Usuario eliminado correctamente"));
     }
 
     @PostMapping("/logout")
