@@ -13,6 +13,7 @@ import { AlertCircle } from "lucide-react";
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import { CatalogCombobox } from "@/components/shared/CatalogCombobox";
+import { DatePicker } from "@/components/shared/DatePicker";
 import { useEffect, useRef, useState } from "react";
 
 interface DocumentHeaderProps {
@@ -401,16 +402,14 @@ export function DocumentHeader({
                 Usar fecha actual automáticamente
               </Label>
             </div>
-            <Input
-              type="date"
-              value={fechaEmision}
-              onChange={(e) => {
-                setFechaEmision(e.target.value);
-                setValue?.("fechaEmision", e.target.value);
+            <DatePicker
+              value={useFechaActual ? new Date().toISOString().slice(0, 10) : fechaEmision}
+              onChange={(value) => {
+                setFechaEmision(value);
+                setValue?.("fechaEmision", value);
                 setUseFechaActual(false);
               }}
               disabled={useFechaActual}
-              className={`h-9 ${useFechaActual ? "bg-slate-50" : ""}`}
             />
           </div>
 

@@ -2,11 +2,11 @@ import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { FileText, Calendar, ChevronDown, ChevronUp, HelpCircle } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { DocumentHeader } from "@/components/shared/DocumentHeader";
+import { DatePicker } from "@/components/shared/DatePicker";
 
 // Catálogo de leyendas según SUNAT
 const CATALOGO_LEYENDAS = [
@@ -169,12 +169,10 @@ export function DocumentSection() {
             <Label htmlFor="fechaVencimiento" className="text-sm font-medium">
               Fecha de Vencimiento
             </Label>
-            <Input
-              id="fechaVencimiento"
-              type="date"
+            <DatePicker
               value={fechaVencimiento}
-              onChange={(e) => handleFechaVencimientoChange(e.target.value)}
-              className="h-10"
+              onChange={handleFechaVencimientoChange}
+              placeholder="Seleccione fecha de vencimiento"
             />
             <p className="text-xs text-muted-foreground">
               Fecha límite de pago del documento (opcional)

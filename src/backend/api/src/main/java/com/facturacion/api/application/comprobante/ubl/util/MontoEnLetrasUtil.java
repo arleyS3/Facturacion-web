@@ -204,15 +204,14 @@ public final class MontoEnLetrasUtil {
         }
 
         if (n <= 19) {
-            return "DIECI" + UNIDADES[n - 10].toLowerCase();
+            return "DIECI" + UNIDADES[n - 10];
         }
 
         if (n < 30) {
             if (n == 20) {
                 return DECENAS[2]; // VEINTE
             }
-            String unidad = UNIDADES[n - 20].toLowerCase();
-            return "VEINTI" + unidad;
+            return "VEINTI" + UNIDADES[n - 20];
         }
 
         int decena = n / 10;
@@ -222,7 +221,7 @@ public final class MontoEnLetrasUtil {
             return DECENAS[decena];
         }
 
-        return DECENAS[decena] + " Y " + (unidad == 1 ? "UN" : UNIDADES[unidad].toLowerCase());
+        return DECENAS[decena] + " Y " + (unidad == 1 ? "UN" : UNIDADES[unidad]);
     }
 
     /**
