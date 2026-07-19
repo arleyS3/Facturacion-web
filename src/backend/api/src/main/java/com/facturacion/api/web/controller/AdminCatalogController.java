@@ -1,0 +1,228 @@
+package com.facturacion.api.web.controller;
+
+import com.facturacion.api.web.dto.CatalogCrudRequest;
+import com.facturacion.api.web.dto.CatalogResponse;
+import com.facturacion.api.web.models.*;
+import com.facturacion.api.web.repositories.*;
+import jakarta.validation.Valid;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.Set;
+
+@RestController
+@RequestMapping("/api/v1/admin/catalogos")
+public class AdminCatalogController {
+
+    private static final Set<String> IGV_TYPES = Set.of("tipos-afectacion-igv");
+
+    private final Map<String, JpaRepository<?, Long>> repos;
+
+    public AdminCatalogController(
+            TipoOperacionRepository tipoOperacionRepository,
+            TipoNotaCreditoRepository tipoNotaCreditoRepository,
+            TipoNotaDebitoRepository tipoNotaDebitoRepository,
+            TipoSistemaIscRepository tipoSistemaIscRepository,
+            TipoAfectacionIgvRepository tipoAfectacionIgvRepository,
+            TipoDocumentoIdentidadRepository tipoDocumentoIdentidadRepository,
+            MotivoTrasladoRepository motivoTrasladoRepository) {
+        this.repos = Map.of(
+                "tipos-operacion", tipoOperacionRepository,
+                "tipos-nota-credito", tipoNotaCreditoRepository,
+                "tipos-nota-debito", tipoNotaDebitoRepository,
+                "sistemas-isc", tipoSistemaIscRepository,
+                "tipos-afectacion-igv", tipoAfectacionIgvRepository,
+                "tipos-documento-identidad", tipoDocumentoIdentidadRepository,
+                "motivos-traslado", motivoTrasladoRepository
+        );
+    }
+
+    @PostMapping("/{tipo}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> crear(@PathVariable String tipo, @Valid @RequestBody CatalogCrudRequest request) {
+        var repo = resolveRepo(tipo);
+        if (repo == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tipo de catalogo invalido: " + tipo));
+        }
+        try {
+            var entity = createEntity(tipo, request);
+            JpaRepository repoCast = repo;
+            var saved = repoCast.save(entity);
+            return ResponseEntity.status(HttpStatus.CREATED).body(toResponse(saved));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "El codigo ya existe"));
+        }
+    }
+
+    @PutMapping("/{tipo}/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> actualizar(@PathVariable String tipo, @PathVariable Long id,
+                                        @Valid @RequestBody CatalogCrudRequest request) {
+        var repo = resolveRepo(tipo);
+        if (repo == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tipo de catalogo invalido: " + tipo));
+        }
+        var opt = repo.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Registro no encontrado"));
+        }
+        try {
+            var entity = opt.get();
+            updateEntity(entity, request);
+            JpaRepository repoCast = repo;
+            var saved = repoCast.save(entity);
+            return ResponseEntity.ok(toResponse(saved));
+        } catch (DataIntegrityViolationException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "El codigo ya existe"));
+        }
+    }
+
+    @DeleteMapping("/{tipo}/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> desactivar(@PathVariable String tipo, @PathVariable Long id) {
+        var repo = resolveRepo(tipo);
+        if (repo == null) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Tipo de catalogo invalido: " + tipo));
+        }
+        var opt = repo.findById(id);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Registro no encontrado"));
+        }
+        var entity = opt.get();
+        if (entity instanceof TipoOperacionEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoNotaCreditoEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoNotaDebitoEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoSistemaIscEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoAfectacionIgvEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof TipoDocumentoIdentidadEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        else if (entity instanceof MotivoTrasladoEntity e) { e.setActivo(false); e.setActualizadoAt(LocalDateTime.now()); }
+        JpaRepository repoCast = repo;
+        repoCast.save(entity);
+        return ResponseEntity.noContent().build();
+    }
+
+    // -- helpers --
+
+    private JpaRepository<?, Long> resolveRepo(String tipo) {
+        return repos.get(tipo);
+    }
+
+    private Object createEntity(String tipo, CatalogCrudRequest request) {
+        Object entity;
+        switch (tipo) {
+            case "tipos-operacion" -> {
+                var e = new TipoOperacionEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            case "tipos-nota-credito" -> {
+                var e = new TipoNotaCreditoEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            case "tipos-nota-debito" -> {
+                var e = new TipoNotaDebitoEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            case "sistemas-isc" -> {
+                var e = new TipoSistemaIscEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            case "tipos-afectacion-igv" -> {
+                var e = new TipoAfectacionIgvEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setCodigoTributario(request.getCodigoTributario());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            case "tipos-documento-identidad" -> {
+                var e = new TipoDocumentoIdentidadEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            case "motivos-traslado" -> {
+                var e = new MotivoTrasladoEntity();
+                e.setCodigo(request.getCodigo());
+                e.setDescripcion(request.getDescripcion());
+                e.setActivo(true);
+                e.setCreadoAt(LocalDateTime.now());
+                e.setActualizadoAt(LocalDateTime.now());
+                entity = e;
+            }
+            default -> throw new IllegalArgumentException("Tipo de catalogo invalido: " + tipo);
+        }
+        return entity;
+    }
+
+    private void updateEntity(Object entity, CatalogCrudRequest request) {
+        if (entity instanceof TipoOperacionEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setActualizadoAt(LocalDateTime.now());
+        } else if (entity instanceof TipoNotaCreditoEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setActualizadoAt(LocalDateTime.now());
+        } else if (entity instanceof TipoNotaDebitoEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setActualizadoAt(LocalDateTime.now());
+        } else if (entity instanceof TipoSistemaIscEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setActualizadoAt(LocalDateTime.now());
+        } else if (entity instanceof TipoAfectacionIgvEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setCodigoTributario(request.getCodigoTributario());
+            e.setActualizadoAt(LocalDateTime.now());
+        } else if (entity instanceof TipoDocumentoIdentidadEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setActualizadoAt(LocalDateTime.now());
+        } else if (entity instanceof MotivoTrasladoEntity e) {
+            e.setDescripcion(request.getDescripcion());
+            e.setActualizadoAt(LocalDateTime.now());
+        }
+    }
+
+    private CatalogResponse toResponse(Object entity) {
+        if (entity instanceof TipoAfectacionIgvEntity e) {
+            return new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), e.getCodigoTributario());
+        }
+        return switch (entity) {
+            case TipoOperacionEntity e -> new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), null);
+            case TipoNotaCreditoEntity e -> new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), null);
+            case TipoNotaDebitoEntity e -> new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), null);
+            case TipoSistemaIscEntity e -> new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), null);
+            case TipoDocumentoIdentidadEntity e -> new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), null);
+            case MotivoTrasladoEntity e -> new CatalogResponse(e.getId(), e.getCodigo(), e.getDescripcion(), e.getActivo(), null);
+            default -> throw new IllegalArgumentException("Tipo de entidad desconocido");
+        };
+    }
+}
