@@ -3,7 +3,7 @@
 import React from "react";
 import { useLocation, Outlet, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload } from "lucide-react";
+import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload, Settings } from "lucide-react";
 import { api, setAccessToken } from "@/lib/api";
 
 import {
@@ -188,6 +188,24 @@ export function AppLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const userEmail = localStorage.getItem("user_email") ?? "Usuario";
+  const [userRole, setUserRole] = React.useState<string | null>(
+    localStorage.getItem("user_role"),
+  );
+
+  // Fetch role from /auth/me on mount if not cached
+  React.useEffect(() => {
+    if (!localStorage.getItem("user_role")) {
+      api
+        .get<{ email: string; role: string }>("/auth/me")
+        .then((res) => {
+          setUserRole(res.data.role);
+          localStorage.setItem("user_role", res.data.role);
+        })
+        .catch(() => {
+          // Silently fail — menu item is UX convenience, not security
+        });
+    }
+  }, []);
 
   const handleLogout = async () => {
     sessionStorage.setItem("navigating", "true");
@@ -198,6 +216,7 @@ export function AppLayout() {
     }
     setAccessToken(null);
     localStorage.removeItem("user_email");
+    localStorage.removeItem("user_role");
     window.location.href = "/login";
   };
 
@@ -258,7 +277,18 @@ export function AppLayout() {
                 <Upload className="size-4" />
                 Enviar a OSE
               </DropdownMenuItem>
-              <DropdownMenuSeparator />
+              {userRole === "ADMIN" && (
+                <>
+                  <DropdownMenuItem
+                    onClick={() => handleNavigation("/catalog-management", navigate)}
+                    className="cursor-pointer"
+                  >
+                    <Settings className="size-4" />
+                    Mantenimientos
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                </>
+              )}
               <DropdownMenuItem
                 variant="destructive"
                 onClick={handleLogout}
