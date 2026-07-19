@@ -53,8 +53,7 @@ import {
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
 import { useFormContext } from "react-hook-form";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
+import { CatalogCombobox } from "@/components/shared/CatalogCombobox";
 import ExcelJS from "exceljs";
 import type { CatalogItem } from "@/hooks/useCatalog";
 import { toast } from "sonner";
@@ -651,62 +650,24 @@ export function ProductsTable() {
                           />
                         </TableCell>
                         <TableCell>
-                          <Autocomplete
+                          <CatalogCombobox
+                            value={product.unidadMedida || "NIU"}
                             options={unidadesMedida ?? []}
-                            getOptionLabel={(option: CatalogItem) =>
-                              `${option.code} - ${option.label}`
+                            loading={unidadesLoading}
+                            disabled={unidadesLoading && !(unidadesMedida?.length)}
+                            placeholder={
+                              unidadesLoading
+                                ? "Cargando..."
+                                : "Buscar unidad..."
                             }
-                            value={
-                              unidadesMedida?.find(
-                                (u) => u.code === product.unidadMedida,
-                              ) ?? null
-                            }
-                            onChange={(_e, newValue) =>
+                            searchPlaceholder="Buscar unidad..."
+                            emptyMessage="No se encontraron unidades"
+                            triggerClassName="h-9 w-full justify-between text-sm"
+                            onValueChange={(code) =>
                               updateProduct(product.id, {
-                                unidadMedida: newValue?.code ?? "NIU",
+                                unidadMedida: code || "NIU",
                               })
                             }
-                            isOptionEqualToValue={(option, value) =>
-                              option.code === value.code
-                            }
-                            loading={unidadesLoading}
-                            size="small"
-                            popupIcon={null}
-                            sx={{
-                              "& .MuiInputBase-root": {
-                                borderRadius: "0.5rem",
-                                border: "1px solid #e5e7eb",
-                                backgroundColor: "#fff",
-                                fontSize: "0.875rem",
-                                minHeight: "2.25rem",
-                                paddingLeft: 0.5,
-                              },
-                              "& .Mui-focused .MuiOutlinedInput-notchedOutline":
-                                {
-                                  borderColor: "#2563eb",
-                                  boxShadow: "0 0 0 2px #bfdbfe",
-                                },
-                              "& .MuiOutlinedInput-notchedOutline": {
-                                border: "none",
-                              },
-                              "& .MuiAutocomplete-endAdornment": {
-                                display: "none",
-                              },
-                              "& .MuiInputBase-input": {
-                                padding: "0.25rem 0.5rem",
-                              },
-                            }}
-                            renderInput={(params) => (
-                              <TextField
-                                {...params}
-                                placeholder={
-                                  unidadesLoading
-                                    ? "Cargando..."
-                                    : "Buscar unidad..."
-                                }
-                                InputLabelProps={{ shrink: false }}
-                              />
-                            )}
                           />
                         </TableCell>
                         <TableCell>

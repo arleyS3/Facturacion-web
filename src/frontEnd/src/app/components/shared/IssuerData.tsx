@@ -4,6 +4,12 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  FormField,
+  FormItem,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 
 import { useCatalog } from "@/hooks/useCatalog";
 import { fetchRuc } from "@/lib/sunat";
@@ -191,138 +197,152 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
       {/* Form Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Tipo de Documento */}
-        <div className="space-y-2">
-          <Label htmlFor="issuer-doc-type">
-            Tipo de Documento
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          {methods ? (
-            <Select
-              value={emisorTipoDoc || methods.watch("tipoDocEmisor")}
-              onValueChange={(v) => {
-                if (setValue) {
-                  // Nuevo nombre en español
-                  setValue("emisorTipoDoc", v);
-                  // Legacy (para buildPayload)
-                  setValue("tipoDocEmisor", v);
-                }
-              }}
-              defaultValue={opcionesFiltradas?.[0]?.code}
-              disabled={soloRucObligatorio}
-            >
-              <SelectTrigger id="issuer-doc-type" className="h-10">
-                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
-              </SelectTrigger>
-              <SelectContent>
-                {opcionesFiltradas && opcionesFiltradas.length
-                  ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
-                      <SelectItem key={opt.code} value={opt.code}>
-                        {opt.label}
-                      </SelectItem>
-                    ))
-                  : (
-                    <>
-                      <SelectItem value="6">RUC</SelectItem>
-                      <SelectItem value="1">DNI</SelectItem>
-                      <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                      <SelectItem value="7">Pasaporte</SelectItem>
-                    </>
-                  )}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select defaultValue={opcionesFiltradas?.[0]?.code ?? "6"} disabled={soloRucObligatorio}>
-              <SelectTrigger id="issuer-doc-type" className="h-10">
-                <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
-              </SelectTrigger>
-              <SelectContent>
-                {opcionesFiltradas && opcionesFiltradas.length
-                  ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
-                      <SelectItem key={opt.code} value={opt.code}>
-                        {opt.label}
-                      </SelectItem>
-                    ))
-                  : (
-                    <>
-                      <SelectItem value="6">RUC</SelectItem>
-                      <SelectItem value="1">DNI</SelectItem>
-                      <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                      <SelectItem value="7">Pasaporte</SelectItem>
-                    </>
-                  )}
-              </SelectContent>
-            </Select>
+        <FormField
+          name="emisorTipoDoc"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="issuer-doc-type">
+                Tipo de Documento
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <FormControl>
+                {methods ? (
+                  <Select
+                    value={emisorTipoDoc || methods.watch("tipoDocEmisor")}
+                    onValueChange={(v) => {
+                      if (setValue) {
+                        setValue("emisorTipoDoc", v);
+                        setValue("tipoDocEmisor", v);
+                      }
+                    }}
+                    defaultValue={opcionesFiltradas?.[0]?.code}
+                    disabled={soloRucObligatorio}
+                  >
+                    <SelectTrigger id="issuer-doc-type" className="h-10">
+                      <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcionesFiltradas && opcionesFiltradas.length
+                        ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
+                            <SelectItem key={opt.code} value={opt.code}>
+                              {opt.label}
+                            </SelectItem>
+                          ))
+                        : (
+                          <>
+                            <SelectItem value="6">RUC</SelectItem>
+                            <SelectItem value="1">DNI</SelectItem>
+                            <SelectItem value="4">Carnet de Extranjería</SelectItem>
+                            <SelectItem value="7">Pasaporte</SelectItem>
+                          </>
+                        )}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select defaultValue={opcionesFiltradas?.[0]?.code ?? "6"} disabled={soloRucObligatorio}>
+                    <SelectTrigger id="issuer-doc-type" className="h-10">
+                      <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcionesFiltradas && opcionesFiltradas.length
+                        ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
+                            <SelectItem key={opt.code} value={opt.code}>
+                              {opt.label}
+                            </SelectItem>
+                          ))
+                        : (
+                          <>
+                            <SelectItem value="6">RUC</SelectItem>
+                            <SelectItem value="1">DNI</SelectItem>
+                            <SelectItem value="4">Carnet de Extranjería</SelectItem>
+                            <SelectItem value="7">Pasaporte</SelectItem>
+                          </>
+                        )}
+                    </SelectContent>
+                  </Select>
+                )}
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* Número de Documento */}
-        <div className="space-y-2">
-          <Label htmlFor="issuer-doc-number">
-            Número de Documento
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <div className="relative">
-            <Input 
-              id="issuer-doc-number" 
-              placeholder="20123456789"
-              className="font-mono h-10 pr-10"
-              maxLength={11}
-              value={emisorRuc || numeroDocumento}
-              onChange={(e) => {
-                const val = e.target.value.trim();
-                setNumeroDocumento(val);
-                if (methods && methods.setValue) {
-                  // Nuevo nombre en español
-                  methods.setValue("emisorRuc", val);
-                  // Legacy (para buildPayload)
-                  methods.setValue("numeroDocEmisor", val);
-                }
-              }}
-              aria-describedby={cargandoRuc ? "doc-loading" : errorRuc ? "doc-error" : undefined}
-            />
-            {cargandoRuc && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        <FormField
+          name="emisorRuc"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="issuer-doc-number">
+                Número de Documento
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <div className="relative">
+                <Input 
+                  id="issuer-doc-number" 
+                  placeholder="20123456789"
+                  className="font-mono h-10 pr-10"
+                  maxLength={11}
+                  value={emisorRuc || numeroDocumento}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    setNumeroDocumento(val);
+                    if (methods && methods.setValue) {
+                      methods.setValue("emisorRuc", val);
+                      methods.setValue("numeroDocEmisor", val);
+                    }
+                  }}
+                  aria-describedby={cargandoRuc ? "doc-loading" : errorRuc ? "doc-error" : undefined}
+                />
+                {cargandoRuc && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {cargandoRuc && (
-            <p id="doc-loading" className="text-xs text-muted-foreground flex items-center gap-1">
-              <Loader2 className="size-3 animate-spin" />
-              Consultando RUC en SUNAT...
-            </p>
+              {cargandoRuc && (
+                <p id="doc-loading" className="text-xs text-muted-foreground flex items-center gap-1">
+                  <Loader2 className="size-3 animate-spin" />
+                  Consultando RUC en SUNAT...
+                </p>
+              )}
+              {errorRuc && (
+                <p id="doc-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
+                  <Info className="size-3" />
+                  {errorRuc}
+                </p>
+              )}
+              <FormMessage />
+            </FormItem>
           )}
-          {errorRuc && (
-            <p id="doc-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
-              <Info className="size-3" />
-              {errorRuc}
-            </p>
-          )}
-        </div>
+        />
 
         {/* Razón Social */}
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="issuer-social-name">
-            Razón Social
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <Input 
-            id="issuer-social-name" 
-            placeholder="Nombre o razón social del emisor"
-            className="uppercase h-10"
-            value={emisorRazonSocial || razonSocialLocal}
-            onChange={(e) => {
-              const v = e.target.value;
-              setRazonSocialLocal(v);
-              if (methods && methods.setValue) {
-                // Nuevo nombre en español
-                methods.setValue("emisorRazonSocial", v);
-                // Legacy (para buildPayload)
-                methods.setValue("razonSocialEmisor", v);
-              }
-            }}
-          />
-        </div>
+        <FormField
+          name="emisorRazonSocial"
+          render={() => (
+            <FormItem className="space-y-2 md:col-span-2">
+              <Label htmlFor="issuer-social-name">
+                Razón Social
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <Input 
+                id="issuer-social-name" 
+                placeholder="Nombre o razón social del emisor"
+                className="uppercase h-10"
+                value={emisorRazonSocial || razonSocialLocal}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setRazonSocialLocal(v);
+                  if (methods && methods.setValue) {
+                    methods.setValue("emisorRazonSocial", v);
+                    methods.setValue("razonSocialEmisor", v);
+                  }
+                }}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Nombre Comercial */}
         <div className="space-y-2 md:col-span-2">
@@ -348,28 +368,32 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
         </div>
 
         {/* Dirección */}
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="issuer-address">
-            Dirección
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <Input
-            id="issuer-address"
-            placeholder="Dirección del establecimiento"
-            className="h-10"
-            value={emisorDireccion || direccionLocal}
-            onChange={(e) => {
-              const v = e.target.value;
-              setDireccionLocal(v);
-              if (methods && methods.setValue) {
-                // Nuevo nombre en español
-                methods.setValue("emisorDireccion", v);
-                // Legacy (para buildPayload)
-                methods.setValue("direccionEmisor", v);
-              }
-            }}
-          />
-        </div>
+        <FormField
+          name="emisorDireccion"
+          render={() => (
+            <FormItem className="space-y-2 md:col-span-2">
+              <Label htmlFor="issuer-address">
+                Dirección
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <Input
+                id="issuer-address"
+                placeholder="Dirección del establecimiento"
+                className="h-10"
+                value={emisorDireccion || direccionLocal}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setDireccionLocal(v);
+                  if (methods && methods.setValue) {
+                    methods.setValue("emisorDireccion", v);
+                    methods.setValue("direccionEmisor", v);
+                  }
+                }}
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* Sección de Anexo - Simplificada */}

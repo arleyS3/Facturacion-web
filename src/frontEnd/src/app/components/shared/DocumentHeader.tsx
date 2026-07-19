@@ -12,8 +12,7 @@ import { AlertCircle } from "lucide-react";
 
 import { useCatalog } from "@/hooks/useCatalog";
 import { useCatalogQuery } from "@/hooks/useCatalogQuery";
-import Autocomplete from "@mui/material/Autocomplete";
-import TextField from "@mui/material/TextField";
+import { CatalogCombobox } from "@/components/shared/CatalogCombobox";
 import { useEffect, useRef, useState } from "react";
 
 interface DocumentHeaderProps {
@@ -236,8 +235,6 @@ export function DocumentHeader({
   })();
 
   const monedaValue = methods?.watch?.("moneda") || "";
-  const selectedMoneda =
-    opcionesMoneda.find((m) => m.code === monedaValue) || null;
   const codigoEmpresaValue = watchedCompanyCode ?? codigoEmpresaLocal;
 
   return (
@@ -490,57 +487,19 @@ export function DocumentHeader({
 
             <div className="space-y-2">
               <Label htmlFor="moneda">Moneda</Label>
-              <Autocomplete
+              <CatalogCombobox
                 id="moneda"
+                value={monedaValue || "PEN"}
                 options={opcionesMoneda}
-                getOptionLabel={(option) => `${option.code} - ${option.label}`}
-                value={selectedMoneda}
-                onChange={(_e, newValue) => {
-                  setValue?.("moneda", newValue ? newValue.code : "");
-                }}
-                isOptionEqualToValue={(option, value) =>
-                  option.code === value.code
-                }
                 loading={monedasLoading}
-                disabled={monedasLoading}
-                size="small"
-                popupIcon={null}
-                sx={{
-                  "& .MuiInputBase-root": {
-                    borderRadius: "0.5rem",
-                    border: "1px solid #e5e7eb",
-                    backgroundColor: "#fff",
-                    fontSize: "1rem",
-                    minHeight: "2.5rem",
-                    paddingLeft: 0.5,
-                    boxShadow: "none",
-                    transition: "border-color 0.2s",
-                  },
-                  "& .MuiInputBase-root.Mui-focused": {
-                    borderColor: "#2563eb",
-                    boxShadow: "0 0 0 2px #bfdbfe",
-                  },
-                  "& .MuiOutlinedInput-notchedOutline": {
-                    border: "none",
-                  },
-                  "& .MuiAutocomplete-endAdornment": {
-                    display: "none",
-                  },
-                  "& .MuiInputBase-input": {
-                    padding: "0.5rem 0.75rem",
-                  },
-                }}
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    placeholder={
-                      monedasLoading ? "Cargando..." : "Seleccione moneda"
-                    }
-                    label=""
-                    InputLabelProps={{ shrink: false }}
-                    className="bg-white border border-slate-200 rounded-lg focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-200 text-base"
-                  />
-                )}
+                disabled={monedasLoading && opcionesMoneda.length === 0}
+                placeholder={
+                  monedasLoading ? "Cargando..." : "Seleccione moneda"
+                }
+                searchPlaceholder="Buscar moneda..."
+                emptyMessage="No se encontraron monedas"
+                triggerClassName="h-10 w-full justify-between text-base"
+                onValueChange={(code) => setValue?.("moneda", code)}
               />
             </div>
 

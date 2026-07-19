@@ -8,6 +8,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { useFormContext } from "react-hook-form";
 import { useCatalog } from "@/hooks/useCatalog";
 import type { ComprobanteFormData } from "@/lib/schemas/comprobante.schema";
@@ -48,7 +53,10 @@ export function DocumentoRelacionadoSection({ type }: DocumentoRelacionadoSectio
 
   const actualizarNumero = (serie: string, correlativo: string) => {
     const numero = correlativo ? `${serie}-${correlativo}` : serie;
-    setValue("documentoRelacionado.numeroDocumento", numero);
+    setValue("documentoRelacionado.numeroDocumento", numero, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
   };
 
   return (
@@ -65,35 +73,50 @@ export function DocumentoRelacionadoSection({ type }: DocumentoRelacionadoSectio
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Tipo de Documento Ref.</Label>
-          <Select
-            value={tipoDocumento}
-            onValueChange={(v) =>
-              setValue("documentoRelacionado.tipoDocumento", v)
-            }
-          >
-            <SelectTrigger className="h-9 min-h-[44px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="01">01 - Factura</SelectItem>
-              <SelectItem value="03">03 - Boleta de Venta</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField
+          name="documentoRelacionado.tipoDocumento"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label className="text-xs font-medium">Tipo de Documento Ref.</Label>
+              <Select
+                value={tipoDocumento}
+                onValueChange={(v) =>
+                  setValue("documentoRelacionado.tipoDocumento", v, {
+                    shouldDirty: true,
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger className="h-9 min-h-[44px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="01">01 - Factura</SelectItem>
+                  <SelectItem value="03">03 - Boleta de Venta</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-        <div className="space-y-2">
-          <Label className="text-xs font-medium">Serie Ref.</Label>
-          <Input
-            className="h-9 font-mono uppercase"
-            placeholder="F001"
-            value={serieRef}
-            onChange={(e) =>
-              actualizarNumero(e.target.value.toUpperCase(), correlativoRef)
-            }
-          />
-        </div>
+        <FormField
+          name="documentoRelacionado.numeroDocumento"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label className="text-xs font-medium">Serie Ref.</Label>
+              <Input
+                className="h-9 font-mono uppercase"
+                placeholder="F001"
+                value={serieRef}
+                onChange={(e) =>
+                  actualizarNumero(e.target.value.toUpperCase(), correlativoRef)
+                }
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="space-y-2">
           <Label className="text-xs font-medium">Correlativo Ref.</Label>
@@ -107,28 +130,36 @@ export function DocumentoRelacionadoSection({ type }: DocumentoRelacionadoSectio
         </div>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs font-medium">Motivo ({catalogoLabel})</Label>
-        <Select
-          value={codigoMotivo}
-          onValueChange={(v) =>
-            setValue("documentoRelacionado.codigoMotivo", v)
-          }
-          disabled={catalogoLoading}
-        >
-          <SelectTrigger className="h-9 min-h-[44px]" aria-label="Motivo">
-            <SelectValue placeholder={catalogoLoading ? "Cargando..." : "Seleccione motivo"} />
-          </SelectTrigger>
-          <SelectContent>
-            {catalogo?.map((m) => (
-              <SelectItem key={m.code} value={m.code}>
-                {m.code} - {m.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <p className="text-xs text-muted-foreground">Seleccione el motivo de la nota</p>
-      </div>
+      <FormField
+        name="documentoRelacionado.codigoMotivo"
+        render={() => (
+          <FormItem className="space-y-2">
+            <Label className="text-xs font-medium">Motivo ({catalogoLabel})</Label>
+            <Select
+              value={codigoMotivo}
+              onValueChange={(v) =>
+                setValue("documentoRelacionado.codigoMotivo", v, {
+                  shouldDirty: true,
+                  shouldValidate: true,
+                })
+              }
+              disabled={catalogoLoading}
+            >
+              <SelectTrigger className="h-9 min-h-[44px]" aria-label="Motivo">
+                <SelectValue placeholder={catalogoLoading ? "Cargando..." : "Seleccione motivo"} />
+              </SelectTrigger>
+              <SelectContent>
+                {catalogo?.map((m) => (
+                  <SelectItem key={m.code} value={m.code}>
+                    {m.code} - {m.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
 
       {serieRef && correlativoRef && (
         <div className="text-xs text-amber-700 bg-amber-100 rounded px-3 py-2">

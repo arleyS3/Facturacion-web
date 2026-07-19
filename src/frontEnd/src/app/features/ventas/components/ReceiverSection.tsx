@@ -10,6 +10,12 @@ import {
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  FormField,
+  FormItem,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useCatalog } from "@/hooks/useCatalog";
 import { api } from "@/lib/api";
@@ -474,254 +480,289 @@ export function ReceiverSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {/* Tipo de Documento */}
-        <div className="space-y-2">
-          <Label htmlFor="receiver-doc-type">
-            Tipo de Documento
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          {methods ? (
-            <Select
-              value={receptorTipoDoc || methods.watch("tipoDocReceptor")}
-              onValueChange={(v) => {
-                if (setValue) {
-                  // Nuevo nombre en español
-                  setValue("receptorTipoDoc", v);
-                  // Legacy (para buildPayload)
-                  setValue("tipoDocReceptor", v);
-                }
-              }}
-              defaultValue={opcionesFiltradas?.[0]?.code}
-              disabled={soloRucReceptor}
-            >
-              <SelectTrigger id="receiver-doc-type" className="h-10">
-                <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
-              </SelectTrigger>
-              <SelectContent>
-                {opcionesFiltradas && opcionesFiltradas.length ? (
-                  opcionesFiltradas.map((opt) => (
-                    <SelectItem key={opt.code} value={opt.code}>
-                      {opt.label}
-                    </SelectItem>
-                  ))
+        <FormField
+          name="receptorTipoDoc"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="receiver-doc-type">
+                Tipo de Documento
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <FormControl>
+                {methods ? (
+                  <Select
+                    value={receptorTipoDoc || methods.watch("tipoDocReceptor")}
+                    onValueChange={(v) => {
+                      if (setValue) {
+                        setValue("receptorTipoDoc", v);
+                        setValue("tipoDocReceptor", v);
+                      }
+                    }}
+                    defaultValue={opcionesFiltradas?.[0]?.code}
+                    disabled={soloRucReceptor}
+                  >
+                    <SelectTrigger id="receiver-doc-type" className="h-10">
+                      <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcionesFiltradas && opcionesFiltradas.length ? (
+                        opcionesFiltradas.map((opt) => (
+                          <SelectItem key={opt.code} value={opt.code}>
+                            {opt.label}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="6">RUC</SelectItem>
+                          <SelectItem value="1">DNI</SelectItem>
+                          <SelectItem value="4">Carnet de Extranjería</SelectItem>
+                          <SelectItem value="7">Pasaporte</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                 ) : (
-                  <>
-                    <SelectItem value="6">RUC</SelectItem>
-                    <SelectItem value="1">DNI</SelectItem>
-                    <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                    <SelectItem value="7">Pasaporte</SelectItem>
-                  </>
+                  <Select defaultValue={opcionesFiltradas?.[0]?.code} disabled={soloRucReceptor}>
+                    <SelectTrigger id="receiver-doc-type" className="h-10">
+                      <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {opcionesFiltradas && opcionesFiltradas.length ? (
+                        opcionesFiltradas.map((opt) => (
+                          <SelectItem key={opt.code} value={opt.code}>
+                            {opt.label}
+                          </SelectItem>
+                        ))
+                      ) : (
+                        <>
+                          <SelectItem value="6">RUC</SelectItem>
+                          <SelectItem value="1">DNI</SelectItem>
+                          <SelectItem value="4">Carnet de Extranjería</SelectItem>
+                          <SelectItem value="7">Pasaporte</SelectItem>
+                        </>
+                      )}
+                    </SelectContent>
+                  </Select>
                 )}
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select defaultValue={opcionesFiltradas?.[0]?.code} disabled={soloRucReceptor}>
-              <SelectTrigger id="receiver-doc-type" className="h-10">
-                <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
-              </SelectTrigger>
-              <SelectContent>
-                {opcionesFiltradas && opcionesFiltradas.length ? (
-                  opcionesFiltradas.map((opt) => (
-                    <SelectItem key={opt.code} value={opt.code}>
-                      {opt.label}
-                    </SelectItem>
-                  ))
-                ) : (
-                  <>
-                    <SelectItem value="6">RUC</SelectItem>
-                    <SelectItem value="1">DNI</SelectItem>
-                    <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                    <SelectItem value="7">Pasaporte</SelectItem>
-                  </>
-                )}
-              </SelectContent>
-            </Select>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
+        />
 
         {/* Número de Documento */}
-        <div className="space-y-2">
-          <Label htmlFor="receiver-doc-number">
-            Número de Documento
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <div className="relative">
-            <Input
-              id="receiver-doc-number"
-              placeholder="20545990998"
-              className="font-mono h-10 pr-10"
-              autoComplete="off"
-              inputMode="numeric"
-              value={receptorDocumento || numeroDocumento}
-              onChange={(e) => {
-                const val = e.target.value.trim();
-                setNumeroDocumento(val);
-                if (methods && methods.setValue) {
-                  // Nuevo nombre en español
-                  methods.setValue("receptorDocumento", val);
-                  // Legacy (para buildPayload)
-                  methods.setValue("numeroDocReceptor", val);
-                }
-              }}
-              aria-describedby={cargandoRuc ? "doc-loading" : errorRuc ? "doc-error" : undefined}
-            />
-            {cargandoRuc && (
-              <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <Loader2 className="size-4 animate-spin text-muted-foreground" />
+        <FormField
+          name="receptorDocumento"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="receiver-doc-number">
+                Número de Documento
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="receiver-doc-number"
+                  placeholder="20545990998"
+                  className="font-mono h-10 pr-10"
+                  autoComplete="off"
+                  inputMode="numeric"
+                  value={receptorDocumento || numeroDocumento}
+                  onChange={(e) => {
+                    const val = e.target.value.trim();
+                    setNumeroDocumento(val);
+                    if (methods && methods.setValue) {
+                      methods.setValue("receptorDocumento", val);
+                      methods.setValue("numeroDocReceptor", val);
+                    }
+                  }}
+                  aria-describedby={cargandoRuc ? "doc-loading" : errorRuc ? "doc-error" : undefined}
+                />
+                {cargandoRuc && (
+                  <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                    <Loader2 className="size-4 animate-spin text-muted-foreground" />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {cargandoRuc && (
-            <p id="doc-loading" className="text-xs text-muted-foreground flex items-center gap-1" aria-live="polite">
-              <Loader2 className="size-3 animate-spin" aria-hidden="true" />
-              Consultando RUC en SUNAT…
-            </p>
+              {cargandoRuc && (
+                <p id="doc-loading" className="text-xs text-muted-foreground flex items-center gap-1" aria-live="polite">
+                  <Loader2 className="size-3 animate-spin" aria-hidden="true" />
+                  Consultando RUC en SUNAT…
+                </p>
+              )}
+              {errorRuc && (
+                <p id="doc-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
+                  <Info className="size-3" />
+                  {errorRuc}
+                </p>
+              )}
+              <FormMessage />
+            </FormItem>
           )}
-          {errorRuc && (
-            <p id="doc-error" className="text-xs text-destructive flex items-center gap-1" role="alert">
-              <Info className="size-3" />
-              {errorRuc}
-            </p>
-          )}
-        </div>
+        />
 
         {/* Razón Social */}
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="receiver-social-name">
-            Razón Social
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <div className="flex items-center gap-3">
-            <Input
-              id="receiver-social-name"
-              className="flex-1 h-10 uppercase"
-              value={receptorRazonSocial || razonSocialLocal}
-              onChange={(e) => {
-                const v = e.target.value;
-                setRazonSocialLocal(v);
-                if (methods && methods.setValue) {
-                  // Nuevo nombre en español
-                  methods.setValue("receptorRazonSocial", v);
-                  // Legacy (para buildPayload)
-                  methods.setValue("razonSocialReceptor", v);
-                }
-                if (v !== "-") setNoCorresponde(false);
-              }}
-              disabled={noCorresponde}
-              placeholder="Nombre o razón social del receptor"
-            />
-            <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
-              <Checkbox
-                id="no-corres"
-                checked={noCorresponde}
-                onCheckedChange={handleNoCorrespondeChange}
-                className="shrink-0"
-              />
-              <Label htmlFor="no-corres" className="text-sm cursor-pointer whitespace-nowrap">
-                No corresponde
+        <FormField
+          name="receptorRazonSocial"
+          render={() => (
+            <FormItem className="space-y-2 md:col-span-2">
+              <Label htmlFor="receiver-social-name">
+                Razón Social
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-            </div>
-          </div>
-        </div>
+              <div className="flex items-center gap-3">
+                <Input
+                  id="receiver-social-name"
+                  className="flex-1 h-10 uppercase"
+                  value={receptorRazonSocial || razonSocialLocal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRazonSocialLocal(v);
+                    if (methods && methods.setValue) {
+                      methods.setValue("receptorRazonSocial", v);
+                      methods.setValue("razonSocialReceptor", v);
+                    }
+                    if (v !== "-") setNoCorresponde(false);
+                  }}
+                  disabled={noCorresponde}
+                  placeholder="Nombre o razón social del receptor"
+                />
+                <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
+                  <Checkbox
+                    id="no-corres"
+                    checked={noCorresponde}
+                    onCheckedChange={handleNoCorrespondeChange}
+                    className="shrink-0"
+                  />
+                  <Label htmlFor="no-corres" className="text-sm cursor-pointer whitespace-nowrap">
+                    No corresponde
+                  </Label>
+                </div>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Departamento */}
-        <div className="space-y-2">
-          <Label htmlFor="receiver-department">
-            Departamento
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <Select
-            value={receiverDepartment}
-            onValueChange={(v) => {
-              pendingUbigeoRef.current = null;
-              setReceiverDepartmentLocal(v);
-              methods?.setValue?.("receiverDepartment", v);
-            }}
-          >
-            <SelectTrigger id="receiver-department" className="h-10">
-              <SelectValue placeholder={depsLoading ? "Cargando…" : "Seleccione departamento"} />
-            </SelectTrigger>
-            <SelectContent>
-              {departments && departments.length
-                ? departments.map((opt) => (
-                    <SelectItem key={opt.code} value={opt.code}>
-                      {opt.label}
-                    </SelectItem>
-                  ))
-                : null}
-            </SelectContent>
-          </Select>
-        </div>
+        <FormField
+          name="receptorDepartamento"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="receiver-department">
+                Departamento
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <Select
+                value={receiverDepartment}
+                onValueChange={(v) => {
+                  pendingUbigeoRef.current = null;
+                  setReceiverDepartmentLocal(v);
+                  methods?.setValue?.("receptorDepartamento", v);
+                  methods?.setValue?.("receiverDepartment", v);
+                }}
+              >
+                <SelectTrigger id="receiver-department" className="h-10">
+                  <SelectValue placeholder={depsLoading ? "Cargando…" : "Seleccione departamento"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {departments && departments.length
+                    ? departments.map((opt) => (
+                        <SelectItem key={opt.code} value={opt.code}>
+                          {opt.label}
+                        </SelectItem>
+                      ))
+                    : null}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Provincia */}
-        <div className="space-y-2">
-          <Label htmlFor="receiver-province">
-            Provincia
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <Select
-            value={receiverProvince}
-            onValueChange={(v) => {
-              pendingUbigeoRef.current = null;
-              setReceiverProvinceLocal(v);
-              methods?.setValue?.("receiverProvince", v);
-              (async () => {
-                try {
-                  const res = await api.get<CatalogItem[]>(
-                    `/catalogos/ubigeo/distritos?departamento=${encodeURIComponent(receiverDepartment)}&provincia=${encodeURIComponent(v)}`,
-                  );
-                  setManualDistricts(res.data || []);
-                } catch (err) {
-                  console.error("eager districts fetch error", err);
-                }
-              })();
-            }}
-            disabled={!receiverDepartment}
-          >
-            <SelectTrigger id="receiver-province" className="h-10">
-              <SelectValue placeholder={provLoading ? "Cargando…" : "Seleccione provincia"} />
-            </SelectTrigger>
-            <SelectContent>
-              {provinces && provinces.length
-                ? provinces.map((opt) => (
+        <FormField
+          name="receptorProvincia"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="receiver-province">
+                Provincia
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <Select
+                value={receiverProvince}
+                onValueChange={(v) => {
+                  pendingUbigeoRef.current = null;
+                  setReceiverProvinceLocal(v);
+                  methods?.setValue?.("receptorProvincia", v);
+                  methods?.setValue?.("receiverProvince", v);
+                  (async () => {
+                    try {
+                      const res = await api.get<CatalogItem[]>(
+                        `/catalogos/ubigeo/distritos?departamento=${encodeURIComponent(receiverDepartment)}&provincia=${encodeURIComponent(v)}`,
+                      );
+                      setManualDistricts(res.data || []);
+                    } catch (err) {
+                      console.error("eager districts fetch error", err);
+                    }
+                  })();
+                }}
+                disabled={!receiverDepartment}
+              >
+                <SelectTrigger id="receiver-province" className="h-10">
+                  <SelectValue placeholder={provLoading ? "Cargando…" : "Seleccione provincia"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {provinces && provinces.length
+                    ? provinces.map((opt) => (
+                        <SelectItem key={opt.code} value={opt.code}>
+                          {opt.label}
+                        </SelectItem>
+                      ))
+                    : null}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        {/* Distrito */}
+        <FormField
+          name="receptorDistrito"
+          render={() => (
+            <FormItem className="space-y-2">
+              <Label htmlFor="receiver-district">
+                Distrito
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <Select
+                value={receiverDistrict}
+                onValueChange={(v) => {
+                  setReceiverDistrictLocal(v);
+                  methods?.setValue?.("receptorDistrito", v);
+                  methods?.setValue?.("receiverDistrict", v);
+                  methods?.setValue?.("receiverUbigeo", v);
+                }}
+                disabled={!receiverProvince}
+              >
+                <SelectTrigger id="receiver-district" className="h-10">
+                  <SelectValue placeholder={distLoading ? "Cargando…" : "Seleccione distrito"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {(districts && districts.length
+                    ? districts
+                    : manualDistricts || []
+                  ).map((opt) => (
                     <SelectItem key={opt.code} value={opt.code}>
                       {opt.label}
                     </SelectItem>
-                  ))
-                : null}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Distrito */}
-        <div className="space-y-2">
-          <Label htmlFor="receiver-district">
-            Distrito
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <Select
-            value={receiverDistrict}
-            onValueChange={(v) => {
-              setReceiverDistrictLocal(v);
-              methods?.setValue?.("receiverDistrict", v);
-              methods?.setValue?.("receiverUbigeo", v);
-            }}
-            disabled={!receiverProvince}
-          >
-            <SelectTrigger id="receiver-district" className="h-10">
-              <SelectValue placeholder={distLoading ? "Cargando…" : "Seleccione distrito"} />
-            </SelectTrigger>
-            <SelectContent>
-              {(districts && districts.length
-                ? districts
-                : manualDistricts || []
-              ).map((opt) => (
-                <SelectItem key={opt.code} value={opt.code}>
-                  {opt.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         {/* Ubigeo */}
         <div className="space-y-2">
@@ -744,28 +785,32 @@ export function ReceiverSection() {
         </div>
 
         {/* Dirección */}
-        <div className="space-y-2 md:col-span-2">
-          <Label htmlFor="receiver-address">
-            Dirección
-            <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-          </Label>
-          <Input
-            id="receiver-address"
-            className="h-10"
-            value={receptorDireccion || direccionLocal}
-            onChange={(e) => {
-              const v = e.target.value;
-              setDireccionLocal(v);
-              if (methods && methods.setValue) {
-                // Nuevo nombre en español
-                methods.setValue("receptorDireccion", v);
-                // Legacy (para buildPayload)
-                methods.setValue("direccionReceptor", v);
-              }
-            }}
-            placeholder="Dirección del receptor"
-          />
-        </div>
+        <FormField
+          name="receptorDireccion"
+          render={() => (
+            <FormItem className="space-y-2 md:col-span-2">
+              <Label htmlFor="receiver-address">
+                Dirección
+                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+              </Label>
+              <Input
+                id="receiver-address"
+                className="h-10"
+                value={receptorDireccion || direccionLocal}
+                onChange={(e) => {
+                  const v = e.target.value;
+                  setDireccionLocal(v);
+                  if (methods && methods.setValue) {
+                    methods.setValue("receptorDireccion", v);
+                    methods.setValue("direccionReceptor", v);
+                  }
+                }}
+                placeholder="Dirección del receptor"
+              />
+              <FormMessage />
+            </FormItem>
+          )}
+        />
       </div>
 
       {/* Código de Autorización - Solo Factura/Boleta */}
@@ -811,30 +856,36 @@ export function ReceiverSection() {
                 Describa el motivo de la nota
               </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="tipo-nota">
-                Tipo de Nota
-                <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
-              </Label>
-              <Select
-                value={methods.watch("tipoNota") ?? ""}
-                onValueChange={(v) => methods.setValue("tipoNota", v)}
-                disabled={tiposNotaLoading}
-              >
-                <SelectTrigger id="tipo-nota" className="h-10">
-                  <SelectValue placeholder={tiposNotaLoading ? "Cargando…" : "Seleccione tipo"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {tiposNota && tiposNota.length
-                    ? tiposNota.map((opt) => (
-                        <SelectItem key={opt.code} value={opt.code}>
-                          {opt.label}
-                        </SelectItem>
-                      ))
-                    : null}
-                </SelectContent>
-              </Select>
-            </div>
+            <FormField
+              name="tipoNota"
+              render={() => (
+                <FormItem className="space-y-2">
+                  <Label htmlFor="tipo-nota">
+                    Tipo de Nota
+                    <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
+                  </Label>
+                  <Select
+                    value={methods.watch("tipoNota") ?? ""}
+                    onValueChange={(v) => methods.setValue("tipoNota", v)}
+                    disabled={tiposNotaLoading}
+                  >
+                    <SelectTrigger id="tipo-nota" className="h-10">
+                      <SelectValue placeholder={tiposNotaLoading ? "Cargando…" : "Seleccione tipo"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {tiposNota && tiposNota.length
+                        ? tiposNota.map((opt) => (
+                            <SelectItem key={opt.code} value={opt.code}>
+                              {opt.label}
+                            </SelectItem>
+                          ))
+                        : null}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
           </CardContent>
         </Card>
       )}
