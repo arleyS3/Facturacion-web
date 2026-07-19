@@ -3,7 +3,7 @@
 import React from "react";
 import { useLocation, Outlet, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload, Settings } from "lucide-react";
+import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload, Settings, Users } from "lucide-react";
 import { api, setAccessToken } from "@/lib/api";
 
 import {
@@ -279,6 +279,13 @@ export function AppLayout() {
               </DropdownMenuItem>
               {userRole === "ADMIN" && (
                 <>
+                  <DropdownMenuItem
+                    onClick={() => handleNavigation("/user-management", navigate)}
+                    className="cursor-pointer"
+                  >
+                    <Users className="size-4" />
+                    Usuarios y Roles
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => handleNavigation("/catalog-management", navigate)}
                     className="cursor-pointer"

@@ -6,8 +6,10 @@ import { SalesDocuments } from "@/features/ventas/pages/SalesDocuments";
 import { ShippingGuide } from "@/features/guias-remision/pages/ShippingGuide";
 import { OseSender } from "@/features/shared/pages/OseSender";
 import { CatalogManagementPage } from "@/features/shared/pages/CatalogManagementPage";
+import { UserManagementPage } from "@/features/shared/pages/UserManagementPage";
 import { NotFound } from "@/features/shared/pages/NotFound";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
+import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
 
 const PublicRoute = ({ children }: { children: React.ReactNode }) => {
@@ -49,7 +51,22 @@ export const router = createBrowserRouter([
       { path: "sales-documents", element: <SalesDocuments /> },
       { path: "shipping-guide", element: <ShippingGuide /> },
       { path: "ose-sender", element: <OseSender /> },
-      { path: "catalog-management", element: <CatalogManagementPage /> },
+      {
+        path: "catalog-management",
+        element: (
+          <AdminRoute>
+            <CatalogManagementPage />
+          </AdminRoute>
+        ),
+      },
+      {
+        path: "user-management",
+        element: (
+          <AdminRoute>
+            <UserManagementPage />
+          </AdminRoute>
+        ),
+      },
     ],
   },
 
