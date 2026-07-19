@@ -192,19 +192,18 @@ export function AppLayout() {
     localStorage.getItem("user_role"),
   );
 
-  // Fetch role from /auth/me on mount if not cached
+  // Sync role from /auth/me on mount to reflect any backend role changes
   React.useEffect(() => {
-    if (!localStorage.getItem("user_role")) {
-      api
-        .get<{ email: string; role: string }>("/auth/me")
-        .then((res) => {
-          setUserRole(res.data.role);
-          localStorage.setItem("user_role", res.data.role);
-        })
-        .catch(() => {
-          // Silently fail — menu item is UX convenience, not security
-        });
-    }
+    api
+      .get<{ email: string; role: string }>("/auth/me")
+      .then((res) => {
+        const role = res.data?.role || "USER";
+        setUserRole(role);
+        localStorage.setItem("user_role", role);
+      })
+      .catch(() => {
+        // Silently fail — menu item is UX convenience, not security
+      });
   }, []);
 
   const handleLogout = async () => {

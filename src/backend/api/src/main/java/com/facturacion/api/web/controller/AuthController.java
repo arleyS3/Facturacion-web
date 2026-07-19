@@ -187,7 +187,11 @@ public class AuthController {
         if (email == null) return ResponseEntity.status(401).build();
         var user = userRepository.findByEmail(email);
         if (user.isEmpty()) return ResponseEntity.status(404).build();
-        return ResponseEntity.ok(new MeResponse(user.get().getEmail(), user.get().getRole()));
+        String role = user.get().getRole();
+        if (role == null || role.isBlank()) {
+            role = "USER";
+        }
+        return ResponseEntity.ok(new MeResponse(user.get().getEmail(), role));
     }
 
     @PatchMapping("/users/{id}/role")
