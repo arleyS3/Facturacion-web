@@ -2,18 +2,49 @@
 
 import React from "react";
 import {
-  ChevronDown,
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Search,
+  Plus,
+  Loader2,
+  Trash2,
   Eye,
   EyeOff,
-  Loader2,
-  Search,
-  Shield,
-  ShieldAlert,
-  ShieldCheck,
-  Trash2,
+  RefreshCw,
+  FileCheck,
+  Building2,
+  Calendar,
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 interface CertificadoInfo {
@@ -23,109 +54,83 @@ interface CertificadoInfo {
   activo?: boolean;
   fechaVigencia?: string;
   creadoAt?: string;
+  mensaje?: string;
 }
 
 const formatDate = (iso?: string) => {
-  if (!iso) return "";
+  if (!iso) return "No registrada";
   try {
-    return new Intl.DateTimeFormat("es-PE", { dateStyle: "long" }).format(new Date(iso));
+    return new Intl.DateTimeFormat("es-PE", {
+      dateStyle: "medium",
+    }).format(new Date(iso));
   } catch {
     return iso;
   }
 };
 
 const getVencimientoInfo = (fecha?: string) => {
-  if (!fecha) return null;
+  if (!fecha) return { label: "Sin vigencia", color: "text-slate-500" };
   const vence = new Date(fecha);
   const hoy = new Date();
   const diff = vence.getTime() - hoy.getTime();
   const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  if (dias < 0) return { label: `Vencido desde hace ${Math.abs(dias)} días`, color: "text-red-600" };
+  if (dias < 0) return { label: `Vencido (${Math.abs(dias)}d)`, color: "text-red-600" };
   if (dias === 0) return { label: "Vence hoy", color: "text-red-600" };
-  if (dias <= 30) return { label: `Vence en ${dias} días`, color: "text-amber-600" };
-  return { label: `Vence: ${formatDate(fecha)}`, color: "text-muted-foreground" };
+  if (dias <= 30) return { label: `Vence en ${dias}d`, color: "text-amber-600" };
+  return { label: `Válido hasta ${formatDate(fecha)}`, color: "text-emerald-600" };
 };
 
 export function CertificadoConfig() {
-  const [certificado, setCertificado] = React.useState<CertificadoInfo | null>(null);
-  const [cargandoCert, setCargandoCert] = React.useState(false);
-  const [consultaRuc, setConsultaRuc] = React.useState("");
-  const [certFile, setCertFile] = React.useState<File | null>(null);
-  const [certPassword, setCertPassword] = React.useState("");
+  const [certificados, setCertificados] = React.useState<CertificadoInfo[]>([]);
+  const [cargandoLista, setCargandoLista] = React.useState(true);
+  const [searchTerm, setSearchTerm] = React.useState("");
+
+  // Modal de Subida / Modificación
+  const [dialogOpen, setDialogOpen] = React.useState(false);
   const [certRuc, setCertRuc] = React.useState("");
   const [certAlias, setCertAlias] = React.useState("");
+  const [certPassword, setCertPassword] = React.useState("");
+  const [certFechaVigencia, setCertFechaVigencia] = React.useState("");
+  const [certFile, setCertFile] = React.useState<File | null>(null);
   const [showPassword, setShowPassword] = React.useState(false);
   const [guardandoCert, setGuardandoCert] = React.useState(false);
-  const [eliminandoCert, setEliminandoCert] = React.useState(false);
+  const [togglingRuc, setTogglingRuc] = React.useState<string | null>(null);
 
-  /* ── API ── */
-
-  const consultarCertificado = async () => {
-    if (consultaRuc.length !== 11) return;
-
-    setCargandoCert(true);
-    setCertificado(null);
+  const cargarCertificados = React.useCallback(async () => {
+    setCargandoLista(true);
     try {
-      const res = await api.get(`/configuracion-certificado/${consultaRuc}`);
-      setCertificado(res.data);
+      const res = await api.get<CertificadoInfo[]>("/configuracion-certificado");
+      setCertificados(res.data || []);
     } catch (err: any) {
-      if (err.response?.status === 404) {
-        setCertificado(null);
-      } else {
-        toast.error(err.response?.data?.message || "Error al consultar certificado");
-      }
+      console.error("Error al cargar lista de certificados", err);
+      toast.error("No se pudo cargar la lista de certificados");
     } finally {
-      setCargandoCert(false);
+      setCargandoLista(false);
     }
-  };
+  }, []);
 
-  const abrirFormConfig = (ruc: string) => {
-    setCertRuc(ruc);
-    setCertFile(null);
-    setCertPassword("");
+  React.useEffect(() => {
+    void cargarCertificados();
+  }, [cargarCertificados]);
+
+  const abrirModalNuevo = () => {
+    setCertRuc("");
     setCertAlias("");
+    setCertPassword("");
+    setCertFechaVigencia("");
+    setCertFile(null);
+    setShowPassword(false);
+    setDialogOpen(true);
   };
 
-  const guardarCertificado = async () => {
-    if (!certFile || !certPassword || !certRuc) return;
-
-    setGuardandoCert(true);
-    try {
-      const base64 = await fileToBase64(certFile);
-
-      const payload: Record<string, string> = {
-        rucEmisor: certRuc,
-        certificadoBase64: base64,
-        password: certPassword,
-      };
-      if (certAlias.trim()) payload.aliasCertificado = certAlias.trim();
-
-      const res = await api.post("/configuracion-certificado", payload);
-      setCertificado(res.data);
-      setConsultaRuc(certRuc);
-      toast.success("Certificado guardado exitosamente");
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Error al guardar certificado";
-      toast.error(msg);
-    } finally {
-      setGuardandoCert(false);
-    }
-  };
-
-  const eliminarCertificado = async () => {
-    if (!certificado?.rucEmisor) return;
-
-    setEliminandoCert(true);
-    try {
-      await api.delete(`/configuracion-certificado/${certificado.rucEmisor}`);
-      setCertificado(null);
-      toast.success("Certificado eliminado");
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Error al eliminar certificado";
-      toast.error(msg);
-    } finally {
-      setEliminandoCert(false);
-    }
+  const abrirModalEditar = (cert: CertificadoInfo) => {
+    setCertRuc(cert.rucEmisor);
+    setCertAlias(cert.aliasCertificado || "");
+    setCertPassword("");
+    setCertFechaVigencia(cert.fechaVigencia ? cert.fechaVigencia.split("T")[0] : "");
+    setCertFile(null);
+    setShowPassword(false);
+    setDialogOpen(true);
   };
 
   const fileToBase64 = (file: File): Promise<string> => {
@@ -140,325 +145,472 @@ export function CertificadoConfig() {
     });
   };
 
+  const guardarCertificado = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!certRuc || certRuc.length !== 11) {
+      toast.error("El RUC emisor debe tener exactamente 11 dígitos");
+      return;
+    }
+    if (!certFile) {
+      toast.error("Debe seleccionar el archivo .pfx o .p12 del certificado");
+      return;
+    }
+    if (!certPassword) {
+      toast.error("Ingrese la contraseña del certificado");
+      return;
+    }
+
+    setGuardandoCert(true);
+    try {
+      const base64 = await fileToBase64(certFile);
+      const payload: Record<string, string> = {
+        rucEmisor: certRuc,
+        certificadoBase64: base64,
+        password: certPassword,
+      };
+      if (certAlias.trim()) payload.aliasCertificado = certAlias.trim();
+      if (certFechaVigencia) payload.fechaVigencia = certFechaVigencia;
+
+      const res = await api.post<CertificadoInfo>("/configuracion-certificado", payload);
+
+      toast.success(res.data.mensaje || "Certificado guardado y activado exitosamente");
+      setDialogOpen(false);
+      await cargarCertificados();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || err.message || "Error al guardar el certificado";
+      toast.error(msg);
+    } finally {
+      setGuardandoCert(false);
+    }
+  };
+
+  const toggleEstado = async (rucEmisor: string, estadoActual?: boolean) => {
+    setTogglingRuc(rucEmisor);
+    try {
+      const nuevoEstado = !Boolean(estadoActual);
+      const res = await api.put<CertificadoInfo>(
+        `/configuracion-certificado/${rucEmisor}/estado?activo=${nuevoEstado}`
+      );
+      toast.success(res.data.mensaje || `Certificado ${nuevoEstado ? "activado" : "desactivado"}`);
+      await cargarCertificados();
+    } catch (err: any) {
+      const msg = err.response?.data?.message || "Error al cambiar el estado del certificado";
+      toast.error(msg);
+    } finally {
+      setTogglingRuc(null);
+    }
+  };
+
+  const eliminarCertificado = async (rucEmisor: string) => {
+    if (!confirm(`¿Está seguro de desactivar el certificado para RUC ${rucEmisor}?`)) return;
+
+    try {
+      const res = await api.delete<CertificadoInfo>(`/configuracion-certificado/${rucEmisor}`);
+      toast.success(res.data.mensaje || "Certificado desactivado");
+      await cargarCertificados();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || "Error al desactivar el certificado");
+    }
+  };
+
+  const certificadosFiltrados = certificados.filter(
+    (c) =>
+      c.rucEmisor.includes(searchTerm) ||
+      (c.aliasCertificado && c.aliasCertificado.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const totalCertificados = certificados.length;
+  const totalActivos = certificados.filter((c) => c.activo).length;
+  const totalInactivos = totalCertificados - totalActivos;
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-10 space-y-8">
-      {/* ── Header ── */}
-      <div className="flex items-center gap-3">
-        <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center">
-          <Shield className="size-5 text-primary" />
+    <div className="container mx-auto px-4 py-8 space-y-6 max-w-6xl">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="p-3 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-400/20 dark:text-blue-400">
+            <Shield className="size-6" aria-hidden="true" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Certificados Digitales
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Gestión de certificados PKCS#12 (.pfx) para la firma electrónica UBL
+            </p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Certificado Digital</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            Gestioná tu certificado digital para firmar comprobantes electrónicos
-          </p>
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={cargarCertificados}
+            disabled={cargandoLista}
+            className="gap-2"
+          >
+            <RefreshCw className={`size-4 ${cargandoLista ? "animate-spin" : ""}`} />
+            Actualizar
+          </Button>
+          <Button size="sm" onClick={abrirModalNuevo} className="gap-2 bg-blue-600 hover:bg-blue-700">
+            <Plus className="size-4" />
+            Nuevo Certificado
+          </Button>
         </div>
       </div>
 
-      {/* ════════════════════════════════════════════ */}
-      {/* SECCIÓN CERTIFICADO DIGITAL                  */}
-      {/* ════════════════════════════════════════════ */}
-      <section
-        aria-label="Configuración del certificado digital"
-        className="bg-card border border-border rounded-xl overflow-hidden"
-      >
-        <div className="flex items-center justify-between gap-4 px-6 py-4 border-b border-border">
-          <div className="flex items-center gap-3 min-w-0">
-            <div
-              className={`size-10 rounded-lg flex items-center justify-center shrink-0 ${
-                certificado
-                  ? "bg-green-100 dark:bg-green-900/30"
-                  : "bg-muted"
-              }`}
-            >
-              {cargandoCert ? (
-                <Loader2 className="size-5 animate-spin text-muted-foreground" />
-              ) : certificado ? (
-                <ShieldCheck className="size-5 text-green-600 dark:text-green-400" />
-              ) : (
-                <Shield className="size-5 text-muted-foreground" />
-              )}
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="shadow-sm">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">Total Registrados</p>
+              <h2 className="text-2xl font-bold mt-1">{totalCertificados}</h2>
             </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold text-foreground truncate">
-                Certificado Digital
+            <div className="p-2.5 bg-muted rounded-lg">
+              <FileCheck className="size-5 text-muted-foreground" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-emerald-200 dark:border-emerald-900/50">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase">
+                Activos para Firma
+              </p>
+              <h2 className="text-2xl font-bold mt-1 text-emerald-700 dark:text-emerald-300">
+                {totalActivos}
               </h2>
-              {cargandoCert ? (
-                <p className="text-xs text-muted-foreground mt-0.5">Consultando...</p>
-              ) : certificado ? (
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-                  <span className="text-xs text-green-700 dark:text-green-400 font-medium">
-                    Configurado para RUC {certificado.rucEmisor}
-                  </span>
-                  {(() => {
-                    const info = getVencimientoInfo(certificado.fechaVigencia);
-                    return info ? (
-                      <span className={`text-xs ${info.color} dark:opacity-90`}>{info.label}</span>
-                    ) : null;
-                  })()}
-                  {certificado.aliasCertificado && (
-                    <span className="text-xs text-muted-foreground">
-                      Alias: {certificado.aliasCertificado}
-                    </span>
-                  )}
-                </div>
-              ) : (
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  No hay certificado configurado
+            </div>
+            <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
+              <ShieldCheck className="size-5 text-emerald-600 dark:text-emerald-400" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase">Inactivos / Desactivados</p>
+              <h2 className="text-2xl font-bold mt-1 text-slate-700 dark:text-slate-300">
+                {totalInactivos}
+              </h2>
+            </div>
+            <div className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
+              <ShieldAlert className="size-5 text-slate-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Main Table Card */}
+      <Card className="shadow-md border border-slate-200 dark:border-slate-800">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <CardTitle className="text-base font-semibold">Lista de Certificados</CardTitle>
+              <CardDescription className="text-xs">
+                Certificados guardados en el sistema organizados por RUC Emisor
+              </CardDescription>
+            </div>
+            <div className="relative w-full sm:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar por RUC o alias..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-9 text-xs"
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="p-0">
+          {cargandoLista ? (
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3">
+              <Loader2 className="size-6 animate-spin text-blue-600" />
+              <p className="text-sm">Cargando certificados...</p>
+            </div>
+          ) : certificadosFiltrados.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground gap-3">
+              <Shield className="size-10 text-slate-300 dark:text-slate-700" />
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {searchTerm ? "No se encontraron certificados" : "No hay certificados registrados"}
                 </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {searchTerm
+                    ? "Intente buscar con otro RUC o alias"
+                    : "Haga clic en 'Nuevo Certificado' para subir el primer archivo PKCS#12 (.pfx)"}
+                </p>
+              </div>
+              {!searchTerm && (
+                <Button size="sm" onClick={abrirModalNuevo} className="mt-2 gap-2">
+                  <Plus className="size-4" />
+                  Agregar Certificado
+                </Button>
               )}
             </div>
-          </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                  <TableRow>
+                    <TableHead className="w-[180px]">RUC Emisor</TableHead>
+                    <TableHead className="w-[200px]">Alias</TableHead>
+                    <TableHead className="w-[140px]">Estado</TableHead>
+                    <TableHead className="w-[180px]">Vigencia</TableHead>
+                    <TableHead className="w-[140px]">Registrado</TableHead>
+                    <TableHead className="text-right w-[140px]">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {certificadosFiltrados.map((cert) => {
+                    const venc = getVencimientoInfo(cert.fechaVigencia);
+                    const isToggling = togglingRuc === cert.rucEmisor;
 
-          <div className="flex items-center gap-2 shrink-0">
-            {certificado && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={eliminarCertificado}
-                disabled={eliminandoCert}
-                className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:border-red-800 dark:hover:bg-red-950"
+                    return (
+                      <TableRow key={cert.rucEmisor} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                        {/* RUC */}
+                        <TableCell className="font-mono text-sm font-semibold text-foreground">
+                          <div className="flex items-center gap-2">
+                            <Building2 className="size-4 text-blue-600 shrink-0" />
+                            <span>{cert.rucEmisor}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* Alias */}
+                        <TableCell className="text-sm">
+                          <span className="text-slate-700 dark:text-slate-300 font-medium">
+                            {cert.aliasCertificado || `certificado-${cert.rucEmisor}`}
+                          </span>
+                        </TableCell>
+
+                        {/* Estado (Switch Interactivo) */}
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Switch
+                              checked={Boolean(cert.activo)}
+                              disabled={isToggling}
+                              onCheckedChange={() => toggleEstado(cert.rucEmisor, cert.activo)}
+                              aria-label={`Cambiar estado del certificado RUC ${cert.rucEmisor}`}
+                            />
+                            <Badge
+                              variant={cert.activo ? "default" : "secondary"}
+                              className={
+                                cert.activo
+                                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                                  : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                              }
+                            >
+                              {isToggling ? "Actualizando..." : cert.activo ? "Activo" : "Inactivo"}
+                            </Badge>
+                          </div>
+                        </TableCell>
+
+                        {/* Vigencia */}
+                        <TableCell>
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <Calendar className="size-3.5 text-muted-foreground shrink-0" />
+                            <span className={venc.color}>{venc.label}</span>
+                          </div>
+                        </TableCell>
+
+                        {/* Fecha Creación */}
+                        <TableCell className="text-xs text-muted-foreground">
+                          {formatDate(cert.creadoAt)}
+                        </TableCell>
+
+                        {/* Acciones */}
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => abrirModalEditar(cert)}
+                              title="Reemplazar / Modificar certificado"
+                              className="h-8 px-2 text-xs"
+                            >
+                              <RefreshCw className="size-3.5 mr-1" />
+                              Reemplazar
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => eliminarCertificado(cert.rucEmisor)}
+                              title="Desactivar certificado"
+                              className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                            >
+                              <Trash2 className="size-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Modal Dialog para Agregar / Reemplazar Certificado */}
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="size-5 text-blue-600" />
+              {certificados.some((c) => c.rucEmisor === certRuc)
+                ? "Reemplazar Certificado Digital"
+                : "Nuevo Certificado Digital"}
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              Cargue el archivo PKCS#12 (.pfx / .p12) provisto por SUNAT o la Entidad Certificadora.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={guardarCertificado} className="space-y-4 py-2">
+            {/* RUC Emisor */}
+            <div className="space-y-1.5">
+              <Label htmlFor="modal-ruc" className="text-xs font-semibold">
+                RUC del Emisor <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="modal-ruc"
+                placeholder="20100119065"
+                maxLength={11}
+                value={certRuc}
+                onChange={(e) => setCertRuc(e.target.value.replace(/\D/g, ""))}
+                className="font-mono text-sm h-10"
+                required
+              />
+            </div>
+
+            {/* Archivo .pfx / .p12 */}
+            <div className="space-y-1.5">
+              <Label htmlFor="modal-file" className="text-xs font-semibold">
+                Archivo del Certificado (.pfx / .p12) <span className="text-destructive">*</span>
+              </Label>
+              <div
+                onClick={() => document.getElementById("modal-file")?.click()}
+                className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-5 cursor-pointer hover:border-blue-500 transition-colors bg-slate-50/50 dark:bg-slate-900/50 flex flex-col items-center justify-center gap-2 text-center"
               >
-                {eliminandoCert ? (
-                  <Loader2 className="size-4 animate-spin" />
+                {certFile ? (
+                  <>
+                    <FileCheck className="size-8 text-blue-600" />
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{certFile.name}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {(certFile.size / 1024).toFixed(1)} KB
+                      </p>
+                    </div>
+                  </>
                 ) : (
-                  <Trash2 className="size-4" />
+                  <>
+                    <Shield className="size-8 text-muted-foreground" />
+                    <div>
+                      <p className="text-xs font-medium text-foreground">
+                        Haga clic para examinar su equipo
+                      </p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        Formatos soportados: .pfx o .p12
+                      </p>
+                    </div>
+                  </>
                 )}
-                <span className="hidden sm:inline">Eliminar</span>
-              </Button>
-            )}
-          </div>
-        </div>
-
-        {/* ── Formulario de configuración ── */}
-        <div className="p-6 space-y-5">
-          <h3 className="text-sm font-semibold text-foreground">
-            {certificado && certificado.rucEmisor === certRuc
-              ? "Reemplazar certificado"
-              : "Configurar certificado"}
-          </h3>
-
-          {/* RUC */}
-          <div className="space-y-1.5">
-            <label htmlFor="cert-ruc" className="text-sm font-medium text-foreground">
-              RUC del emisor
-            </label>
-            <input
-              id="cert-ruc"
-              type="text"
-              maxLength={11}
-              placeholder="20100119065"
-              value={certRuc}
-              onChange={(e) => setCertRuc(e.target.value.replace(/\D/g, ""))}
-              className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-
-          {/* Archivo .pfx */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="cert-file"
-              className="flex flex-col items-center justify-center gap-2.5 border-2 border-dashed border-border rounded-lg p-6 cursor-pointer hover:border-primary/50 transition-colors bg-background"
-            >
-              {certFile ? (
-                <>
-                  <ShieldCheck className="size-8 text-primary" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground">{certFile.name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {(certFile.size / 1024).toFixed(1)} KB
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      setCertFile(null);
-                    }}
-                    className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
-                  >
-                    Quitar archivo
-                  </button>
-                </>
-              ) : (
-                <>
-                  <Shield className="size-8 text-muted-foreground" />
-                  <div className="text-center">
-                    <p className="text-sm font-medium text-foreground">
-                      Seleccioná el archivo .pfx del certificado
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      Archivo PKCS#12 (.pfx o .p12) emitido por SUNAT o entidad autorizada
-                    </p>
-                  </div>
-                </>
-              )}
-              <input
-                id="cert-file"
-                type="file"
-                accept=".pfx,.p12"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    if (!file.name.endsWith(".pfx") && !file.name.endsWith(".p12")) {
-                      toast.error("El archivo debe ser .pfx o .p12");
-                      return;
-                    }
-                    setCertFile(file);
-                  }
-                }}
-              />
-            </label>
-          </div>
-
-          {/* Contraseña */}
-          <div className="space-y-1.5">
-            <label htmlFor="cert-password" className="text-sm font-medium text-foreground">
-              Contraseña del certificado
-            </label>
-            <div className="relative">
-              <input
-                id="cert-password"
-                type={showPassword ? "text" : "password"}
-                placeholder="Contraseña del archivo .pfx"
-                value={certPassword}
-                onChange={(e) => setCertPassword(e.target.value)}
-                autoComplete="new-password"
-                className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 pr-10 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword((prev) => !prev)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                tabIndex={-1}
-              >
-                {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-              </button>
-            </div>
-          </div>
-
-          {/* Alias (opcional) */}
-          <div className="space-y-1.5">
-            <label htmlFor="cert-alias" className="text-sm font-medium text-foreground">
-              Alias <span className="text-muted-foreground font-normal">(opcional)</span>
-            </label>
-            <input
-              id="cert-alias"
-              type="text"
-              placeholder="certificado-empresa"
-              value={certAlias}
-              onChange={(e) => setCertAlias(e.target.value)}
-              className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <p className="text-xs text-muted-foreground">
-              Si se omite, se usa el primer alias con clave privada del .pfx
-            </p>
-          </div>
-
-          {/* Botones */}
-          <div className="flex items-center gap-3 pt-2">
-            <Button
-              onClick={guardarCertificado}
-              disabled={guardandoCert || !certFile || !certPassword || certRuc.length !== 11}
-            >
-              {guardandoCert ? (
-                <>
-                  <Loader2 className="size-4 animate-spin" />
-                  Guardando...
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="size-4" />
-                  {certificado ? "Reemplazar certificado" : "Guardar certificado"}
-                </>
-              )}
-            </Button>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            La contraseña se cifra con AES-256 antes de almacenarse. El certificado se usa
-            automáticamente al generar XML o enviar a OSE.
-          </p>
-        </div>
-
-        {/* ── Consultar certificado existente (colapsable) ── */}
-        <details className="border-t border-border group">
-          <summary className="px-6 py-3 text-sm font-medium text-muted-foreground hover:text-foreground cursor-pointer select-none flex items-center gap-2 list-none [&::-webkit-details-marker]:hidden">
-            <ChevronDown className="size-4 transition-transform group-open:rotate-180" />
-            <span>Consultar certificado existente</span>
-          </summary>
-          <div className="px-6 pb-4 space-y-4">
-            <div className="flex items-end gap-3">
-              <div className="flex-1 space-y-1.5">
-                <label htmlFor="cert-consulta-ruc" className="text-sm font-medium text-foreground">
-                  RUC del emisor
-                </label>
                 <input
-                  id="cert-consulta-ruc"
-                  type="text"
-                  maxLength={11}
-                  placeholder="20100119065"
-                  value={consultaRuc}
-                  onChange={(e) => setConsultaRuc(e.target.value.replace(/\D/g, ""))}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && consultaRuc.length === 11) consultarCertificado();
+                  id="modal-file"
+                  type="file"
+                  accept=".pfx,.p12"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) {
+                      if (!f.name.endsWith(".pfx") && !f.name.endsWith(".p12")) {
+                        toast.error("El archivo debe tener extensión .pfx o .p12");
+                        return;
+                      }
+                      setCertFile(f);
+                    }
                   }}
-                  className="flex h-10 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                 />
               </div>
-              <Button
-                variant="secondary"
-                onClick={consultarCertificado}
-                disabled={consultaRuc.length !== 11 || cargandoCert}
-              >
-                {cargandoCert ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <Search className="size-4" />
-                )}
-                Consultar
-              </Button>
             </div>
 
-            {certificado && (
-              <div className="flex items-center gap-2 rounded-lg bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 p-3">
-                <ShieldCheck className="size-4.5 text-green-600 dark:text-green-400 shrink-0" />
-                <div className="text-sm text-green-800 dark:text-green-300 flex-1">
-                  <p className="font-medium">
-                    Certificado configurado para RUC {certificado.rucEmisor}
-                  </p>
-                  {(() => {
-                    const info = getVencimientoInfo(certificado.fechaVigencia);
-                    return info ? (
-                      <p className="text-xs mt-0.5">{info.label}</p>
-                    ) : null;
-                  })()}
-                  {certificado.aliasCertificado && (
-                    <p className="text-xs mt-0.5 opacity-80">
-                      Alias: {certificado.aliasCertificado}
-                    </p>
-                  )}
-                </div>
+            {/* Contraseña */}
+            <div className="space-y-1.5">
+              <Label htmlFor="modal-password" className="text-xs font-semibold">
+                Contraseña del Certificado <span className="text-destructive">*</span>
+              </Label>
+              <div className="relative">
+                <Input
+                  id="modal-password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Contraseña del archivo .pfx"
+                  value={certPassword}
+                  onChange={(e) => setCertPassword(e.target.value)}
+                  className="pr-10 h-10"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                >
+                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                </button>
               </div>
-            )}
+            </div>
 
-            {consultaRuc.length === 11 && !cargandoCert && !certificado && (
-              <div className="flex items-center gap-2 rounded-lg bg-muted/50 border border-border p-3">
-                <ShieldAlert className="size-4.5 text-muted-foreground shrink-0" />
-                <p className="text-sm text-muted-foreground flex-1">
-                  No hay certificado configurado para este RUC.
-                </p>
-                <Button size="sm" onClick={() => abrirFormConfig(consultaRuc)}>
-                  Configurar ahora
-                </Button>
+            {/* Alias opcional */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="modal-alias" className="text-xs font-semibold">
+                  Alias (Opcional)
+                </Label>
+                <Input
+                  id="modal-alias"
+                  placeholder="autonomiflow-demo"
+                  value={certAlias}
+                  onChange={(e) => setCertAlias(e.target.value)}
+                  className="h-9 text-xs"
+                />
               </div>
-            )}
-          </div>
-        </details>
-      </section>
+              <div className="space-y-1.5">
+                <Label htmlFor="modal-vigencia" className="text-xs font-semibold">
+                  Fecha de Vigencia (Opcional)
+                </Label>
+                <Input
+                  id="modal-vigencia"
+                  type="date"
+                  value={certFechaVigencia}
+                  onChange={(e) => setCertFechaVigencia(e.target.value)}
+                  className="h-9 text-xs"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="pt-3 gap-2">
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={guardandoCert}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={guardandoCert} className="bg-blue-600 hover:bg-blue-700">
+                {guardandoCert ? (
+                  <>
+                    <Loader2 className="size-4 mr-2 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck className="size-4 mr-2" />
+                    Guardar y Activar
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+export default CertificadoConfig;

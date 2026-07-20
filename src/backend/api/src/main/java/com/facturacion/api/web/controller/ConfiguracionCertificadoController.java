@@ -124,18 +124,19 @@ public class ConfiguracionCertificadoController {
                     "Error al procesar la contraseña");
         }
         
-        // Buscar si existe configuración previa para este RUC
-        var existente = certificadoRepository.findByRucEmisorAndActivoTrue(request.getRucEmisor());
+        // Buscar si existe configuración previa para este RUC (activa o inactiva)
+        var existente = certificadoRepository.findByRucEmisor(request.getRucEmisor());
         
         ConfiguracionCertificadoEntity certificado;
         LocalDateTime ahora = LocalDateTime.now();
         
         if (existente.isPresent()) {
-            // Actualizar existente
+            // Actualizar existente y reactivar automáticamente
             certificado = existente.get();
             certificado.setCertificadoBase64(certBase64);
             certificado.setPasswordEncriptada(passwordEncriptada);
-            if (request.getAliasCertificado() != null) {
+            certificado.setActivo(true);
+            if (request.getAliasCertificado() != null && !request.getAliasCertificado().isBlank()) {
                 certificado.setAliasCertificado(request.getAliasCertificado());
             }
             if (request.getFechaVigencia() != null && !request.getFechaVigencia().isEmpty()) {
@@ -146,7 +147,7 @@ public class ConfiguracionCertificadoController {
                 }
             }
             certificado.setActualizadoAt(ahora);
-            log.info("Actualizando certificado existente para RUC: {}", request.getRucEmisor());
+            log.info("Actualizando y reactivando certificado para RUC: {}", request.getRucEmisor());
         } else {
             // Crear nuevo
             String alias = request.getAliasCertificado() != null && !request.getAliasCertificado().isEmpty()
@@ -190,7 +191,7 @@ public class ConfiguracionCertificadoController {
                 .creadoAt(certificado.getCreadoAt() != null 
                         ? certificado.getCreadoAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
                         : null)
-                .mensaje("Certificado guardado exitosamente")
+                .mensaje("Certificado guardado y activado exitosamente")
                 .build();
         
         log.info("Certificado guardado exitosamente para RUC: {}", request.getRucEmisor());
@@ -198,31 +199,45 @@ public class ConfiguracionCertificadoController {
     }
 
     /**
+     * Lista todos los certificados registrados en el sistema.
+     * 
+     * @return Lista de certificados
+     */
+    @Operation(summary = "Listar todos los certificados",
+            description = "Devuelve la lista completa de certificados digitales configurados en el sistema.")
+    @GetMapping
+    public ResponseEntity<java.util.List<ConfiguracionCertificadoResponse>> listarCertificados() {
+        log.info("Listando todos los certificados registrados");
+        var lista = certificadoRepository.findAllByOrderByCreadoAtDesc().stream()
+                .map(c -> ConfiguracionCertificadoResponse.builder()
+                        .id(c.getId())
+                        .rucEmisor(c.getRucEmisor())
+                        .aliasCertificado(c.getAliasCertificado())
+                        .activo(c.getActivo())
+                        .fechaVigencia(c.getFechaVigencia() != null 
+                                ? c.getFechaVigencia().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
+                                : null)
+                        .creadoAt(c.getCreadoAt() != null 
+                                ? c.getCreadoAt().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) 
+                                : null)
+                        .mensaje(Boolean.TRUE.equals(c.getActivo()) ? "Certificado activo" : "Certificado inactivo")
+                        .build())
+                .toList();
+        return ResponseEntity.ok(lista);
+    }
+
+    /**
      * Consulta la configuración del certificado para un RUC específico.
-     * 
-     * <p>
-     * Devuelve los datos del certificado almacenado (sin la contraseña ni el certificado Base64).
-     * </p>
-     * 
-     * @param rucEmisor RUC del emisor
-     * @return datos de configuración del certificado
      */
     @Operation(summary = "Consultar certificado",
             description = "Consulta la configuración del certificado digital para un RUC específico")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Certificado encontrado",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ConfiguracionCertificadoResponse.class))),
-            @ApiResponse(responseCode = "404", description = "No hay certificado configurado para este RUC",
-                    content = @Content(mediaType = "application/json"))
-    })
     @GetMapping("/{rucEmisor}")
     public ResponseEntity<ConfiguracionCertificadoResponse> obtenerCertificado(
             @PathVariable String rucEmisor) {
         
         log.info("Consultando certificado para RUC: {}", rucEmisor);
         
-        var certificado = certificadoRepository.findByRucEmisorAndActivoTrue(rucEmisor);
+        var certificado = certificadoRepository.findByRucEmisor(rucEmisor);
         
         if (certificado.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
@@ -249,31 +264,57 @@ public class ConfiguracionCertificadoController {
     }
 
     /**
-     * Elimina (desactiva) la configuración del certificado para un RUC.
-     * 
-     * <p>
-     * No elimina físicamente el registro, solo lo marca como inactivo.
-     * </p>
+     * Alterna o establece el estado activo/inactivo de un certificado.
      * 
      * @param rucEmisor RUC del emisor
-     * @return respuesta de éxito
+     * @param activo Nuevo estado activo (opcional, si es null invierte el estado actual)
+     * @return respuesta con el nuevo estado
+     */
+    @Operation(summary = "Cambiar estado de certificado",
+            description = "Activa o desactiva la configuración del certificado digital para un RUC")
+    @PutMapping("/{rucEmisor}/estado")
+    public ResponseEntity<ConfiguracionCertificadoResponse> cambiarEstadoCertificado(
+            @PathVariable String rucEmisor,
+            @RequestParam(required = false) Boolean activo) {
+        
+        log.info("Cambiando estado de certificado para RUC: {}", rucEmisor);
+        
+        var certificado = certificadoRepository.findByRucEmisor(rucEmisor);
+        
+        if (certificado.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
+                    "No hay certificado configurado para RUC: " + rucEmisor);
+        }
+        
+        ConfiguracionCertificadoEntity c = certificado.get();
+        boolean nuevoEstado = activo != null ? activo : !Boolean.TRUE.equals(c.getActivo());
+        c.setActivo(nuevoEstado);
+        c.setActualizadoAt(LocalDateTime.now());
+        certificadoRepository.save(c);
+        
+        ConfiguracionCertificadoResponse response = ConfiguracionCertificadoResponse.builder()
+                .id(c.getId())
+                .rucEmisor(c.getRucEmisor())
+                .aliasCertificado(c.getAliasCertificado())
+                .activo(nuevoEstado)
+                .mensaje(nuevoEstado ? "Certificado activado exitosamente" : "Certificado desactivado exitosamente")
+                .build();
+        
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * Elimina (desactiva) la configuración del certificado para un RUC.
      */
     @Operation(summary = "Eliminar certificado",
             description = "Desactiva la configuración del certificado digital para un RUC")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Certificado eliminado exitosamente",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ConfiguracionCertificadoResponse.class))),
-            @ApiResponse(responseCode = "404", description = "No hay certificado configurado para este RUC",
-                    content = @Content(mediaType = "application/json"))
-    })
     @DeleteMapping("/{rucEmisor}")
     public ResponseEntity<ConfiguracionCertificadoResponse> eliminarCertificado(
             @PathVariable String rucEmisor) {
         
         log.info("Eliminando certificado para RUC: {}", rucEmisor);
         
-        var certificado = certificadoRepository.findByRucEmisorAndActivoTrue(rucEmisor);
+        var certificado = certificadoRepository.findByRucEmisor(rucEmisor);
         
         if (certificado.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, 
@@ -290,7 +331,7 @@ public class ConfiguracionCertificadoController {
                 .rucEmisor(c.getRucEmisor())
                 .aliasCertificado(c.getAliasCertificado())
                 .activo(false)
-                .mensaje("Certificado eliminado exitosamente")
+                .mensaje("Certificado desactivado exitosamente")
                 .build();
         
         return ResponseEntity.ok(response);
