@@ -346,11 +346,11 @@ curl -X POST http://localhost:8080/api/v1/ose/enviar-xml \
 
 El backend valida el nombre del archivo. Si el archivo subido no cumple el formato SUNAT, intenta reconstruirlo desde el XML usando `AccountingSupplierParty`, el tipo de documento y el `cbc:ID`; si no puede reconstruirlo, rechaza el comprobante.
 
-### Gestión desde el frontend (próximamente)
+### Gestión desde el frontend
 
-Actualmente la configuración del certificado se realiza via API REST. Está planificada una interfaz en el frontend para:
+La configuración del certificado se realiza desde el frontend en **Envío a OSE** (`/ose-sender`):
 
-- Subir el archivo .pfx desde el navegador
+- Subir el archivo .pfx/.p12 desde el navegador
 - Ingresar la contraseña
 - Ver estado del certificado (vigente, próximo a vencer, vencido)
 - Eliminar/reemplazar certificado
