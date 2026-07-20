@@ -1,6 +1,7 @@
 import { Users, Loader2, Info } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Select,
   SelectContent,
@@ -617,22 +618,26 @@ export function ReceiverSection() {
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
               <div className="flex items-center gap-3">
-                <Input
-                  id="receiver-social-name"
-                  className="flex-1 h-10 uppercase"
-                  value={receptorRazonSocial || razonSocialLocal}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    setRazonSocialLocal(v);
-                    if (methods && methods.setValue) {
-                      methods.setValue("receptorRazonSocial", v);
-                      methods.setValue("razonSocialReceptor", v);
-                    }
-                    if (v !== "-") setNoCorresponde(false);
-                  }}
-                  disabled={noCorresponde}
-                  placeholder="Nombre o razón social del receptor"
-                />
+                {cargandoRuc ? (
+                  <Skeleton className="h-10 flex-1 bg-muted rounded-md" />
+                ) : (
+                  <Input
+                    id="receiver-social-name"
+                    className="flex-1 h-10 uppercase"
+                    value={receptorRazonSocial || razonSocialLocal}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setRazonSocialLocal(v);
+                      if (methods && methods.setValue) {
+                        methods.setValue("receptorRazonSocial", v);
+                        methods.setValue("razonSocialReceptor", v);
+                      }
+                      if (v !== "-") setNoCorresponde(false);
+                    }}
+                    disabled={noCorresponde}
+                    placeholder="Nombre o razón social del receptor"
+                  />
+                )}
                 <div className="flex items-center gap-2 px-3 py-2 bg-muted rounded-md">
                   <Checkbox
                     id="no-corres"
@@ -659,28 +664,32 @@ export function ReceiverSection() {
                 Departamento
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Select
-                value={receiverDepartment}
-                onValueChange={(v) => {
-                  pendingUbigeoRef.current = null;
-                  setReceiverDepartmentLocal(v);
-                  methods?.setValue?.("receptorDepartamento", v);
-                  methods?.setValue?.("receiverDepartment", v);
-                }}
-              >
-                <SelectTrigger id="receiver-department" className="h-10">
-                  <SelectValue placeholder={depsLoading ? "Cargando…" : "Seleccione departamento"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments && departments.length
-                    ? departments.map((opt) => (
-                        <SelectItem key={opt.code} value={opt.code}>
-                          {opt.label}
-                        </SelectItem>
-                      ))
-                    : null}
-                </SelectContent>
-              </Select>
+              {cargandoRuc ? (
+                <Skeleton className="h-10 w-full bg-muted rounded-md" />
+              ) : (
+                <Select
+                  value={receiverDepartment}
+                  onValueChange={(v) => {
+                    pendingUbigeoRef.current = null;
+                    setReceiverDepartmentLocal(v);
+                    methods?.setValue?.("receptorDepartamento", v);
+                    methods?.setValue?.("receiverDepartment", v);
+                  }}
+                >
+                  <SelectTrigger id="receiver-department" className="h-10">
+                    <SelectValue placeholder={depsLoading ? "Cargando…" : "Seleccione departamento"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {departments && departments.length
+                      ? departments.map((opt) => (
+                          <SelectItem key={opt.code} value={opt.code}>
+                            {opt.label}
+                          </SelectItem>
+                        ))
+                      : null}
+                  </SelectContent>
+                </Select>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -695,39 +704,43 @@ export function ReceiverSection() {
                 Provincia
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Select
-                value={receiverProvince}
-                onValueChange={(v) => {
-                  pendingUbigeoRef.current = null;
-                  setReceiverProvinceLocal(v);
-                  methods?.setValue?.("receptorProvincia", v);
-                  methods?.setValue?.("receiverProvince", v);
-                  (async () => {
-                    try {
-                      const res = await api.get<CatalogItem[]>(
-                        `/catalogos/ubigeo/distritos?departamento=${encodeURIComponent(receiverDepartment)}&provincia=${encodeURIComponent(v)}`,
-                      );
-                      setManualDistricts(res.data || []);
-                    } catch (err) {
-                      console.error("eager districts fetch error", err);
-                    }
-                  })();
-                }}
-                disabled={!receiverDepartment}
-              >
-                <SelectTrigger id="receiver-province" className="h-10">
-                  <SelectValue placeholder={provLoading ? "Cargando…" : "Seleccione provincia"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {provinces && provinces.length
-                    ? provinces.map((opt) => (
-                        <SelectItem key={opt.code} value={opt.code}>
-                          {opt.label}
-                        </SelectItem>
-                      ))
-                    : null}
-                </SelectContent>
-              </Select>
+              {cargandoRuc ? (
+                <Skeleton className="h-10 w-full bg-muted rounded-md" />
+              ) : (
+                <Select
+                  value={receiverProvince}
+                  onValueChange={(v) => {
+                    pendingUbigeoRef.current = null;
+                    setReceiverProvinceLocal(v);
+                    methods?.setValue?.("receptorProvincia", v);
+                    methods?.setValue?.("receiverProvince", v);
+                    (async () => {
+                      try {
+                        const res = await api.get<CatalogItem[]>(
+                          `/catalogos/ubigeo/distritos?departamento=${encodeURIComponent(receiverDepartment)}&provincia=${encodeURIComponent(v)}`,
+                        );
+                        setManualDistricts(res.data || []);
+                      } catch (err) {
+                        console.error("eager districts fetch error", err);
+                      }
+                    })();
+                  }}
+                  disabled={!receiverDepartment}
+                >
+                  <SelectTrigger id="receiver-province" className="h-10">
+                    <SelectValue placeholder={provLoading ? "Cargando…" : "Seleccione provincia"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {provinces && provinces.length
+                      ? provinces.map((opt) => (
+                          <SelectItem key={opt.code} value={opt.code}>
+                            {opt.label}
+                          </SelectItem>
+                        ))
+                      : null}
+                  </SelectContent>
+                </Select>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -742,30 +755,34 @@ export function ReceiverSection() {
                 Distrito
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Select
-                value={receiverDistrict}
-                onValueChange={(v) => {
-                  setReceiverDistrictLocal(v);
-                  methods?.setValue?.("receptorDistrito", v);
-                  methods?.setValue?.("receiverDistrict", v);
-                  methods?.setValue?.("receiverUbigeo", v);
-                }}
-                disabled={!receiverProvince}
-              >
-                <SelectTrigger id="receiver-district" className="h-10">
-                  <SelectValue placeholder={distLoading ? "Cargando…" : "Seleccione distrito"} />
-                </SelectTrigger>
-                <SelectContent>
-                  {(districts && districts.length
-                    ? districts
-                    : manualDistricts || []
-                  ).map((opt) => (
-                    <SelectItem key={opt.code} value={opt.code}>
-                      {opt.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {cargandoRuc ? (
+                <Skeleton className="h-10 w-full bg-muted rounded-md" />
+              ) : (
+                <Select
+                  value={receiverDistrict}
+                  onValueChange={(v) => {
+                    setReceiverDistrictLocal(v);
+                    methods?.setValue?.("receptorDistrito", v);
+                    methods?.setValue?.("receiverDistrict", v);
+                    methods?.setValue?.("receiverUbigeo", v);
+                  }}
+                  disabled={!receiverProvince}
+                >
+                  <SelectTrigger id="receiver-district" className="h-10">
+                    <SelectValue placeholder={distLoading ? "Cargando…" : "Seleccione distrito"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(districts && districts.length
+                      ? districts
+                      : manualDistricts || []
+                    ).map((opt) => (
+                      <SelectItem key={opt.code} value={opt.code}>
+                        {opt.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -774,7 +791,9 @@ export function ReceiverSection() {
         {/* Ubigeo */}
         <div className="space-y-2">
           <Label htmlFor="receiver-ubigeo">Ubigeo</Label>
-          {methods ? (
+          {cargandoRuc ? (
+            <Skeleton className="h-10 w-full bg-muted rounded-md font-mono" />
+          ) : methods ? (
             <Input
               id="receiver-ubigeo"
               value={methods.watch("receiverUbigeo") || ""}
@@ -800,20 +819,24 @@ export function ReceiverSection() {
                 Dirección
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Input
-                id="receiver-address"
-                className="h-10"
-                value={receptorDireccion || direccionLocal}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setDireccionLocal(v);
-                  if (methods && methods.setValue) {
-                    methods.setValue("receptorDireccion", v);
-                    methods.setValue("direccionReceptor", v);
-                  }
-                }}
-                placeholder="Dirección del receptor"
-              />
+              {cargandoRuc ? (
+                <Skeleton className="h-10 w-full bg-muted rounded-md" />
+              ) : (
+                <Input
+                  id="receiver-address"
+                  className="h-10"
+                  value={receptorDireccion || direccionLocal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDireccionLocal(v);
+                    if (methods && methods.setValue) {
+                      methods.setValue("receptorDireccion", v);
+                      methods.setValue("direccionReceptor", v);
+                    }
+                  }}
+                  placeholder="Dirección del receptor"
+                />
+              )}
               <FormMessage />
             </FormItem>
           )}

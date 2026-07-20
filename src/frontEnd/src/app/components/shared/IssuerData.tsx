@@ -1,6 +1,7 @@
 import { Building2, Settings, Loader2, Info } from "lucide-react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -312,20 +313,24 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
                 Razón Social
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Input 
-                id="issuer-social-name" 
-                placeholder="Nombre o razón social del emisor"
-                className="uppercase h-10"
-                value={emisorRazonSocial || razonSocialLocal}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setRazonSocialLocal(v);
-                  if (methods && methods.setValue) {
-                    methods.setValue("emisorRazonSocial", v);
-                    methods.setValue("razonSocialEmisor", v);
-                  }
-                }}
-              />
+              {cargandoRuc ? (
+                <Skeleton className="h-10 w-full bg-muted rounded-md" />
+              ) : (
+                <Input 
+                  id="issuer-social-name" 
+                  placeholder="Nombre o razón social del emisor"
+                  className="uppercase h-10"
+                  value={emisorRazonSocial || razonSocialLocal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setRazonSocialLocal(v);
+                    if (methods && methods.setValue) {
+                      methods.setValue("emisorRazonSocial", v);
+                      methods.setValue("razonSocialEmisor", v);
+                    }
+                  }}
+                />
+              )}
               <FormMessage />
             </FormItem>
           )}
@@ -337,21 +342,25 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
             Nombre Comercial
             <span className="text-muted-foreground ml-1">(opcional)</span>
           </Label>
-          <Input
-            id="issuer-commercial-name"
-            placeholder="Nombre comercial del establecimiento"
-            className="h-10"
-            value={emisorNombreComercial}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (methods?.setValue) {
-                // Nuevo nombre en español
-                methods.setValue("emisorNombreComercial", v);
-                // Legacy (para buildPayload)
-                methods.setValue("nombreComercialEmisor", v);
-              }
-            }}
-          />
+          {cargandoRuc ? (
+            <Skeleton className="h-10 w-full bg-muted rounded-md" />
+          ) : (
+            <Input
+              id="issuer-commercial-name"
+              placeholder="Nombre comercial del establecimiento"
+              className="h-10"
+              value={emisorNombreComercial}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (methods?.setValue) {
+                  // Nuevo nombre en español
+                  methods.setValue("emisorNombreComercial", v);
+                  // Legacy (para buildPayload)
+                  methods.setValue("nombreComercialEmisor", v);
+                }
+              }}
+            />
+          )}
         </div>
 
         {/* Dirección */}
@@ -363,20 +372,24 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
                 Dirección
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
-              <Input
-                id="issuer-address"
-                placeholder="Dirección del establecimiento"
-                className="h-10"
-                value={emisorDireccion || direccionLocal}
-                onChange={(e) => {
-                  const v = e.target.value;
-                  setDireccionLocal(v);
-                  if (methods && methods.setValue) {
-                    methods.setValue("emisorDireccion", v);
-                    methods.setValue("direccionEmisor", v);
-                  }
-                }}
-              />
+              {cargandoRuc ? (
+                <Skeleton className="h-10 w-full bg-muted rounded-md" />
+              ) : (
+                <Input
+                  id="issuer-address"
+                  placeholder="Dirección del establecimiento"
+                  className="h-10"
+                  value={emisorDireccion || direccionLocal}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    setDireccionLocal(v);
+                    if (methods && methods.setValue) {
+                      methods.setValue("emisorDireccion", v);
+                      methods.setValue("direccionEmisor", v);
+                    }
+                  }}
+                />
+              )}
               <FormMessage />
             </FormItem>
           )}
