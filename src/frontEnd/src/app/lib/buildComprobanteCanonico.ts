@@ -468,7 +468,7 @@ export function buildComprobanteCanonico(values: ComprobanteFormData): Comproban
     receptor_direccion: values.receptorDireccion || values.receiverAddress || undefined,
     
     /** Código ubigeo del receptor (opcional) */
-    receptor_ubigeo: values.receptorUbigeo || undefined,
+    receptor_ubigeo: values.receptorUbigeo || values.receiverUbigeo || values.receptorDistrito || values.receiverDistrict || undefined,
     
     // ========================================
     // DETALLES / PRODUCTOS

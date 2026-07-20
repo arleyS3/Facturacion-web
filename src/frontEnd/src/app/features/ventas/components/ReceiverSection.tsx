@@ -311,10 +311,10 @@ export function ReceiverSection() {
     if (!methods) return;
     if (suppressUbigeoResetsRef.current) return;
 
-    // Solo resetear si el departamento cambió de un valor a otro distintito (y no es el primer render)
+    // Solo resetear si el departamento cambió de un valor previo NO vacío a otro distinto
     if (
-      prevDeptRef.current !== receiverDepartment &&
-      prevDeptRef.current !== undefined
+      prevDeptRef.current &&
+      prevDeptRef.current !== receiverDepartment
     ) {
       console.debug("[ubigeo] department changed, resetting children");
       // Nuevos nombres en español
@@ -338,8 +338,8 @@ export function ReceiverSection() {
     if (suppressUbigeoResetsRef.current) return;
 
     if (
-      prevProvRef.current !== receiverProvince &&
-      prevProvRef.current !== undefined
+      prevProvRef.current &&
+      prevProvRef.current !== receiverProvince
     ) {
       console.debug("[ubigeo] province changed, resetting district");
       // Nuevos nombres en español
@@ -763,6 +763,7 @@ export function ReceiverSection() {
                   onValueChange={(v) => {
                     setReceiverDistrictLocal(v);
                     methods?.setValue?.("receptorDistrito", v, { shouldValidate: true });
+                    methods?.setValue?.("receptorUbigeo", v, { shouldValidate: true });
                     methods?.setValue?.("receiverDistrict", v);
                     methods?.setValue?.("receiverUbigeo", v);
                   }}
