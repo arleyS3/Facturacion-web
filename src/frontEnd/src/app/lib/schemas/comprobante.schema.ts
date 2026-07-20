@@ -127,8 +127,8 @@ const leyendaSchema = z.object({
  * Se valida condicionalmente en superRefine solo para notas.
  */
 const documentoRelacionadoSchema = z.object({
-  tipoDocumento: z.string(),
-  numeroDocumento: z.string(),
+  tipoDocumento: z.string().optional(),
+  numeroDocumento: z.string().optional(),
   codigoMotivo: z.string().optional(),
   descripcionMotivo: z.string().optional(),
 });

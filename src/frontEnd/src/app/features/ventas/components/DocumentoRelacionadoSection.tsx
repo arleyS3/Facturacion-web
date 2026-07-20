@@ -43,6 +43,15 @@ export function DocumentoRelacionadoSection({ type }: DocumentoRelacionadoSectio
 
   const { data: catalogo, loading: catalogoLoading } = useCatalog(catalogPath);
 
+  useEffect(() => {
+    if (!watch("documentoRelacionado.tipoDocumento") && setValue) {
+      setValue("documentoRelacionado.tipoDocumento", "01", {
+        shouldDirty: false,
+        shouldValidate: true,
+      });
+    }
+  }, [setValue, watch]);
+
   const catalogoLabel = `Catálogo 0${type === "credit" ? "9" : "10"}`;
   const notaLabel = type === "credit" ? "Crédito" : "Débito";
 

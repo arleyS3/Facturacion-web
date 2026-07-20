@@ -301,11 +301,13 @@ export function DocumentHeader({
               <SelectContent>
                 {isSales ? (
                   tiposDocumento && tiposDocumento.length ? (
-                    tiposDocumento.map((opt) => (
-                      <SelectItem key={opt.code} value={opt.label}>
-                        {opt.label}
-                      </SelectItem>
-                    ))
+                    tiposDocumento
+                      .filter((opt) => ["01", "03", "07", "08"].includes(opt.code) || ["Factura", "Boleta", "Nota de Crédito", "Nota de Débito"].includes(opt.label))
+                      .map((opt) => (
+                        <SelectItem key={opt.code} value={opt.label}>
+                          {opt.label}
+                        </SelectItem>
+                      ))
                   ) : (
                     <>
                       <SelectItem value="Factura">Factura</SelectItem>
