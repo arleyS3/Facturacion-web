@@ -75,29 +75,40 @@ public class XmlSignatureService {
         return signXmlWithConfig(xmlDocument, config);
     }
 
+    public record ResultadoFirmaXml(String xml, boolean firmado, String mensaje) {}
+
+    /**
+     * Intenta firmar el XML con el certificado configurado y retorna el resultado detallado.
+     *
+     * @param xmlDocument Documento UBL XML a firmar
+     * @param rucEmisor RUC emisor para buscar el certificado activo
+     * @return ResultadoFirmaXml con el XML (firmado o sin firmar), flag de firmado y mensaje explicativo
+     */
+    public ResultadoFirmaXml trySignXmlResult(String xmlDocument, String rucEmisor) {
+        var configOpt = configRepository.findByRucEmisorAndActivoTrue(rucEmisor);
+        if (configOpt.isEmpty()) {
+            log.warn("No hay certificado configurado para RUC {} - XML devuelto sin firma", rucEmisor);
+            return new ResultadoFirmaXml(xmlDocument, false, "Sin certificado activo en BD para RUC emisor: " + rucEmisor);
+        }
+        try {
+            String xmlFirmado = signXmlWithConfig(xmlDocument, configOpt.get());
+            return new ResultadoFirmaXml(xmlFirmado, true, "XML firmado digitalmente con éxito para RUC: " + rucEmisor);
+        } catch (Exception e) {
+            log.error("Error al firmar XML para RUC {}: {} - XML devuelto sin firma", rucEmisor, e.getMessage());
+            return new ResultadoFirmaXml(xmlDocument, false, "Error al firmar XML: " + e.getMessage());
+        }
+    }
+
     /**
      * Intenta firmar el XML con el certificado configurado. Si no hay certificado
      * activo para el RUC, retorna el XML sin firmar con una advertencia en logs.
-     * <p>
-     * Útil para desarrollo o preview donde la firma no es obligatoria, pero la
-     * infraestructura de firma ya está lista para producción.
      *
      * @param xmlDocument UBL XML document to sign
      * @param rucEmisor issuer RUC used to resolve the configured certificate
      * @return signed XML if certificate is configured, unsigned XML otherwise
      */
     public String trySignXml(String xmlDocument, String rucEmisor) {
-        var configOpt = configRepository.findByRucEmisorAndActivoTrue(rucEmisor);
-        if (configOpt.isEmpty()) {
-            log.warn("No hay certificado configurado para RUC {} - XML devuelto sin firma", rucEmisor);
-            return xmlDocument;
-        }
-        try {
-            return signXmlWithConfig(xmlDocument, configOpt.get());
-        } catch (Exception e) {
-            log.error("Error al firmar XML para RUC {}: {} - XML devuelto sin firma", rucEmisor, e.getMessage());
-            return xmlDocument;
-        }
+        return trySignXmlResult(xmlDocument, rucEmisor).xml();
     }
 
     private String signXmlWithConfig(String xmlDocument, ConfiguracionCertificadoEntity config) throws Exception {

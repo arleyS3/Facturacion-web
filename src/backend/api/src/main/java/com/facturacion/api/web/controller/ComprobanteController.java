@@ -186,14 +186,16 @@ public class ComprobanteController {
             String xml = result.xml();
             
             // 2. Firmar digitalmente el XML si se indica y hay certificado configurado
-            String xmlResult = canonico.debeFirmar()
-                ? xmlSignatureService.trySignXml(xml, canonico.emisorRuc())
-                : xml;
-            
+            var resultadoFirma = canonico.debeFirmar()
+                ? xmlSignatureService.trySignXmlResult(xml, canonico.emisorRuc())
+                : new XmlSignatureService.ResultadoFirmaXml(xml, false, "Firma digital no solicitada");
+
             return Map.of(
                     "success", true,
                     "tipoDocumento", codigoSunat,
-                    "xml", xmlResult,
+                    "xml", resultadoFirma.xml(),
+                    "firmado", resultadoFirma.firmado(),
+                    "mensajeFirma", resultadoFirma.mensaje(),
                     "validationErrors", result.validationErrors());
         } catch (Exception e) {
             log.error("Error al generar XML: {}", e.getMessage(), e);

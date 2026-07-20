@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { api } from "./api";
 import buildComprobanteCanonico from "./buildComprobanteCanonico";
 import type { ComprobanteFormData } from "./schemas/comprobante.schema";
@@ -9,12 +10,16 @@ interface GenerarXmlResponse {
   success: boolean;
   tipoDocumento?: string;
   xml?: string;
+  firmado?: boolean;
+  mensajeFirma?: string;
   error?: string;
   validationErrors?: string[];
 }
 
 export interface GenerarXmlResult {
   xml: string;
+  firmado?: boolean;
+  mensajeFirma?: string;
   validationErrors: string[];
 }
 
@@ -43,8 +48,16 @@ export async function generarXml(
     throw new Error(response.data.error || "Error al generar XML");
   }
 
+  if (response.data.firmado) {
+    toast.success("XML firmado digitalmente con éxito");
+  } else if (response.data.mensajeFirma) {
+    toast.info(response.data.mensajeFirma);
+  }
+
   return {
     xml: response.data.xml!,
+    firmado: response.data.firmado,
+    mensajeFirma: response.data.mensajeFirma,
     validationErrors: response.data.validationErrors ?? [],
   };
 }

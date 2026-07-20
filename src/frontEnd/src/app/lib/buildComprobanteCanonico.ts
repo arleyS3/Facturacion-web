@@ -526,8 +526,8 @@ export function buildComprobanteCanonico(values: ComprobanteFormData): Comproban
       .map(convertirDocumentoAdicional);
   }
 
-  // Indicar que no se firme el XML (la firma se implementará después)
-  canonico.firmar = false;
+  // Indicar que se debe firmar digitalmente el XML si existe certificado en BD
+  canonico.firmar = true;
 
   return canonico;
 }
