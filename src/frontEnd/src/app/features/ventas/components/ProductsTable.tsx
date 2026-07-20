@@ -6,6 +6,7 @@ import {
   ChevronUp,
   Settings2,
   Info,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -582,6 +583,15 @@ export function ProductsTable() {
             </Button>
           </div>
         </div>
+
+        {methods?.formState?.errors?.detalles && (
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="size-4 text-destructive shrink-0" />
+            <p className="text-sm text-destructive">
+              {(methods.formState.errors.detalles as any)?.message || "Debe agregar al menos un producto"}
+            </p>
+          </div>
+        )}
 
         <div className="border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">

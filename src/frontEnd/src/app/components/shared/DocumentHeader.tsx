@@ -247,7 +247,7 @@ export function DocumentHeader({
             <Label className="text-xs font-medium">Código de Empresa</Label>
             <Input
               placeholder="Ej: EMP001"
-              className="h-9 font-mono"
+              className={`h-9 font-mono ${formState?.errors?.codigoEmpresa ? "border-destructive focus-visible:ring-destructive/50" : ""}`}
               value={codigoEmpresaValue}
               onChange={(e) => {
                 const value = e.target.value;
@@ -258,6 +258,12 @@ export function DocumentHeader({
                 }
               }}
             />
+            {formState?.errors?.codigoEmpresa && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="size-3" />
+                {formState.errors.codigoEmpresa.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -329,7 +335,7 @@ export function DocumentHeader({
               onValueChange={(v) => setValue?.("serie", v)}
               disabled={seriesLoading || !series.length}
             >
-              <SelectTrigger id="serie" className="h-9">
+              <SelectTrigger id="serie" className={`h-9 ${formState?.errors?.serie ? "border-destructive" : ""}`}>
                 <SelectValue
                   placeholder={
                     seriesLoading
@@ -352,6 +358,12 @@ export function DocumentHeader({
                 ) : null}
               </SelectContent>
             </Select>
+            {formState?.errors?.serie && (
+              <p className="text-xs text-destructive flex items-center gap-1">
+                <AlertCircle className="size-3" />
+                {formState.errors.serie.message}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -457,7 +469,7 @@ export function DocumentHeader({
                 value={methods?.watch?.("tipoOperacion") ?? ""}
                 onValueChange={(v) => setValue?.("tipoOperacion", v)}
               >
-                <SelectTrigger id="tipo-operacion" className="h-9">
+                <SelectTrigger id="tipo-operacion" className={`h-9 ${formState?.errors?.tipoOperacion ? "border-destructive" : ""}`}>
                   <SelectValue
                     placeholder={
                       loadingTiposOperacion
@@ -482,6 +494,12 @@ export function DocumentHeader({
                   )}
                 </SelectContent>
               </Select>
+              {formState?.errors?.tipoOperacion && (
+                <p className="text-xs text-destructive flex items-center gap-1">
+                  <AlertCircle className="size-3" />
+                  {formState.errors.tipoOperacion.message}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
