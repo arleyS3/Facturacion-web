@@ -417,6 +417,7 @@ export function ReceiverSection() {
                 }
 
                 if (depCode) {
+                  methods.setValue("receptorDepartamento", depCode);
                   methods.setValue("receiverDepartment", depCode);
                   setReceiverDepartmentLocal(depCode);
                 }
@@ -435,6 +436,7 @@ export function ReceiverSection() {
 
                 // Set ubigeo as early as possible
                 if (fullUbigeo) {
+                  methods.setValue("receptorUbigeo", fullUbigeo);
                   methods.setValue("receiverUbigeo", fullUbigeo);
                 }
               } catch (err) {
@@ -444,10 +446,22 @@ export function ReceiverSection() {
               }
             } else {
               setRazonSocialLocal(nombre || "");
-              if (info.departamento)
+              if (info.departamento) {
+                methods.setValue("receptorDepartamento", info.departamento);
+                methods.setValue("receiverDepartment", info.departamento);
                 setReceiverDepartmentLocal(info.departamento);
-              if (info.provincia) setReceiverProvinceLocal(info.provincia);
-              setReceiverDistrictLocal(info.ubigeo || info.distrito || "");
+              }
+              if (info.provincia) {
+                methods.setValue("receptorProvincia", info.provincia);
+                methods.setValue("receiverProvince", info.provincia);
+                setReceiverProvinceLocal(info.provincia);
+              }
+              const distVal = info.ubigeo || info.distrito || "";
+              if (distVal) {
+                methods.setValue("receptorDistrito", distVal);
+                methods.setValue("receiverDistrict", distVal);
+                setReceiverDistrictLocal(distVal);
+              }
             }
             setErrorRuc(null);
           } else {
