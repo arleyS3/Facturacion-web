@@ -10,6 +10,7 @@ import com.facturacion.api.web.dto.LoginRequest;
 import com.facturacion.api.web.dto.MeResponse;
 import com.facturacion.api.web.dto.RefreshRequest;
 import com.facturacion.api.web.dto.RegisterRequest;
+import com.facturacion.api.web.dto.UpdateUserRequest;
 import com.facturacion.api.web.dto.UserResponse;
 import com.facturacion.api.web.models.UserEntity;
 import com.facturacion.api.web.repositories.UserRepository;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import com.facturacion.api.security.JwtService;
@@ -218,6 +220,92 @@ public class AuthController {
         target.get().setRole(newRole);
         userRepository.save(target.get());
         return ResponseEntity.ok(Map.of("message", "Rol actualizado a " + newRole));
+    }
+
+    @PutMapping("/users/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable UUID id, @RequestBody UpdateUserRequest request,
+                                         @AuthenticationPrincipal String requesterEmail) {
+        var userOpt = userRepository.findById(id);
+        if (userOpt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Usuario no encontrado"));
+        }
+        UserEntity user = userOpt.get();
+
+        // Si se va a cambiar la contraseña, validar contraseña antigua si no es vacía
+        if (request.getNewPassword() != null && !request.getNewPassword().isBlank()) {
+            if (request.getOldPassword() != null && !request.getOldPassword().isBlank()) {
+                if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+                    return ResponseEntity.badRequest().body(Map.of("error", "La contraseña actual es incorrecta"));
+                }
+            }
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        }
+
+        // Si se cambia el email
+        if (request.getEmail() != null && !request.getEmail().isBlank() && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            var existing = userRepository.findByEmail(request.getEmail());
+            if (existing.isPresent() && !existing.get().getId().equals(id)) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El correo electrónico ya está registrado"));
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        // Si se cambia el rol
+        if (request.getRole() != null && (request.getRole().equals("ADMIN") || request.getRole().equals("USER"))) {
+            var requester = userRepository.findByEmail(requesterEmail);
+            if (requester.isPresent() && requester.get().getId().equals(id) && !request.getRole().equals("ADMIN")) {
+                return ResponseEntity.badRequest().body(Map.of("error", "No puedes autodegradarte"));
+            }
+            user.setRole(request.getRole());
+        }
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .build());
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<?> updateProfile(@RequestBody UpdateUserRequest request,
+                                            @AuthenticationPrincipal String requesterEmail) {
+        if (requesterEmail == null) return ResponseEntity.status(401).build();
+        var userOpt = userRepository.findByEmail(requesterEmail);
+        if (userOpt.isEmpty()) return ResponseEntity.status(404).build();
+        UserEntity user = userOpt.get();
+
+        // Validar contraseña antigua requerida si se va a cambiar la contraseña
+        if (request.getNewPassword() != null && !request.getNewPassword().isBlank()) {
+            if (request.getOldPassword() == null || request.getOldPassword().isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Debe ingresar su contraseña actual para establecer una nueva"));
+            }
+            if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "La contraseña actual es incorrecta"));
+            }
+            user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        }
+
+        // Si se cambia el email
+        if (request.getEmail() != null && !request.getEmail().isBlank() && !request.getEmail().equalsIgnoreCase(user.getEmail())) {
+            var existing = userRepository.findByEmail(request.getEmail());
+            if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
+                return ResponseEntity.badRequest().body(Map.of("error", "El correo electrónico ya está registrado por otro usuario"));
+            }
+            user.setEmail(request.getEmail());
+        }
+
+        userRepository.save(user);
+
+        return ResponseEntity.ok(UserResponse.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .role(user.getRole())
+                .createdAt(user.getCreatedAt())
+                .build());
     }
 
     @GetMapping("/users")
