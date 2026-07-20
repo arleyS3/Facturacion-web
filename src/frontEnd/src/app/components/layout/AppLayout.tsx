@@ -58,8 +58,8 @@ const navItems = [
 /** Logo component */
 function BrandLogo({ className = "" }: { className?: string }) {
   return (
-    <div className={`size-8 rounded-lg bg-primary flex items-center justify-center ${className}`}>
-      <span className="text-primary-foreground text-xs font-bold">AF</span>
+    <div className={`size-9 rounded-lg flex items-center justify-center ${className}`}>
+      <img src={logoTransparente} alt="Logo" className="size-8" />
     </div>
   );
 }
@@ -76,15 +76,15 @@ function NavigationLoader() {
 
   React.useEffect(() => {
     const isNavigating = sessionStorage.getItem("navigating");
-    
+
     if (isNavigating) {
       setShowLoader(true);
-      
+
       const timer = setTimeout(() => {
         sessionStorage.removeItem("navigating");
         setShowLoader(false);
       }, 2000);
-      
+
       return () => clearTimeout(timer);
     }
   }, []);
@@ -112,15 +112,15 @@ function NavigationLoader() {
                   scale: [1, 1.02, 1],
                   rotate: [0, 1, 0, -1, 0],
                 }}
-                transition={{ 
+                transition={{
                   scale: { duration: 3, repeat: Infinity, ease: "easeInOut" },
                   rotate: { duration: 8, repeat: Infinity, ease: "linear" }
                 }}
                 className="relative flex items-center justify-center"
               >
-                <img 
-                  src={logoTransparente} 
-                  alt="Logo" 
+                <img
+                  src={logoTransparente}
+                  alt="Logo"
                   className="w-28 h-28 object-contain drop-shadow-lg"
                 />
               </motion.div>
@@ -151,12 +151,12 @@ function NavigationLoader() {
 }
 
 /** Nav button component */
-function NavButton({ 
-  item, 
-  isActive, 
-  className = "" 
-}: { 
-  item: typeof navItems[0]; 
+function NavButton({
+  item,
+  isActive,
+  className = ""
+}: {
+  item: typeof navItems[0];
   isActive: boolean;
   className?: string;
 }) {
@@ -179,12 +179,12 @@ function NavButton({
 }
 
 /** Mobile nav button */
-function MobileNavButton({ 
-  item, 
-  isActive, 
-  className = "" 
-}: { 
-  item: typeof navItems[0]; 
+function MobileNavButton({
+  item,
+  isActive,
+  className = ""
+}: {
+  item: typeof navItems[0];
   isActive: boolean;
   className?: string;
 }) {
