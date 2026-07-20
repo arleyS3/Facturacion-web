@@ -143,12 +143,12 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
               methods.setValue("emisorRazonSocial", nombre, {
                 shouldDirty: true,
                 shouldTouch: true,
-                shouldValidate: false,
+                shouldValidate: true,
               });
               methods.setValue("emisorDireccion", direccion, {
                 shouldDirty: true,
                 shouldTouch: true,
-                shouldValidate: false,
+                shouldValidate: true,
               });
               // Legacy (para buildPayload)
               methods.setValue("razonSocialEmisor", nombre, {
@@ -275,7 +275,7 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
                     const val = e.target.value.trim();
                     setNumeroDocumento(val);
                     if (methods && methods.setValue) {
-                      methods.setValue("emisorRuc", val);
+                      methods.setValue("emisorRuc", val, { shouldValidate: true });
                       methods.setValue("numeroDocEmisor", val);
                     }
                   }}
@@ -325,7 +325,7 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
                     const v = e.target.value;
                     setRazonSocialLocal(v);
                     if (methods && methods.setValue) {
-                      methods.setValue("emisorRazonSocial", v);
+                      methods.setValue("emisorRazonSocial", v, { shouldValidate: true });
                       methods.setValue("razonSocialEmisor", v);
                     }
                   }}
@@ -384,7 +384,7 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
                     const v = e.target.value;
                     setDireccionLocal(v);
                     if (methods && methods.setValue) {
-                      methods.setValue("emisorDireccion", v);
+                      methods.setValue("emisorDireccion", v, { shouldValidate: true });
                       methods.setValue("direccionEmisor", v);
                     }
                   }}

@@ -160,7 +160,7 @@ export function DocumentHeader({
     const formatted = digits.padStart(8, "0");
     if (formatted !== v) {
       setCorrelativo(formatted);
-      if (setValue) setValue("correlativo", formatted);
+      if (setValue) setValue("correlativo", formatted, { shouldValidate: true });
     }
   };
 
@@ -252,7 +252,7 @@ export function DocumentHeader({
               onChange={(e) => {
                 const value = e.target.value;
                 if (setValue) {
-                  setValue("codigoEmpresa", value);
+                  setValue("codigoEmpresa", value, { shouldValidate: true });
                 } else {
                   setCompanyCodeLocal(value);
                 }
@@ -276,13 +276,13 @@ export function DocumentHeader({
                 if (isSales) {
                   // Actualizar tanto el campo legacy como el nuevo
                   setValue?.("docType", v);
-                  setValue?.("tipoDocumento", v);
+                  setValue?.("tipoDocumento", v, { shouldValidate: true });
                   return;
                 }
 
                 if (methods?.setValue) {
                   methods.setValue("docType", v);
-                  methods.setValue("tipoDocumento", v);
+                  methods.setValue("tipoDocumento", v, { shouldValidate: true });
                 } else {
                   setShippingDocType(v);
                 }
@@ -332,7 +332,7 @@ export function DocumentHeader({
             <Label className="text-xs font-medium">Serie</Label>
             <Select
               value={methods?.watch?.("serie") ?? ""}
-              onValueChange={(v) => setValue?.("serie", v)}
+              onValueChange={(v) => setValue?.("serie", v, { shouldValidate: true })}
               disabled={seriesLoading || !series.length}
             >
               <SelectTrigger id="serie" className={`h-9 ${formState?.errors?.serie ? "border-destructive" : ""}`}>
@@ -375,7 +375,7 @@ export function DocumentHeader({
               onChange={(e) => {
                 const val = e.target.value.replace(/\D/g, ""); // Solo dígitos
                 setCorrelativo(val);
-                if (setValue) setValue("correlativo", val);
+                if (setValue) setValue("correlativo", val, { shouldValidate: true });
               }}
               maxLength={8}
               onBlur={() => formatCorrelativo()}
@@ -467,7 +467,7 @@ export function DocumentHeader({
               <Label htmlFor="tipo-operacion">Tipo de Operación</Label>
               <Select
                 value={methods?.watch?.("tipoOperacion") ?? ""}
-                onValueChange={(v) => setValue?.("tipoOperacion", v)}
+                onValueChange={(v) => setValue?.("tipoOperacion", v, { shouldValidate: true })}
               >
                 <SelectTrigger id="tipo-operacion" className={`h-9 ${formState?.errors?.tipoOperacion ? "border-destructive" : ""}`}>
                   <SelectValue
@@ -516,7 +516,7 @@ export function DocumentHeader({
                 searchPlaceholder="Buscar moneda..."
                 emptyMessage="No se encontraron monedas"
                 triggerClassName="h-10 w-full justify-between text-base"
-                onValueChange={(code) => setValue?.("moneda", code)}
+                onValueChange={(code) => setValue?.("moneda", code, { shouldValidate: true })}
               />
             </div>
 

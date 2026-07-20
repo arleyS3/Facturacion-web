@@ -408,8 +408,8 @@ export function ReceiverSection() {
 
             if (methods && methods.setValue) {
               // Nuevos nombres en español
-              methods.setValue("receptorRazonSocial", nombre);
-              methods.setValue("receptorDireccion", direccion);
+              methods.setValue("receptorRazonSocial", nombre, { shouldValidate: true });
+              methods.setValue("receptorDireccion", direccion, { shouldValidate: true });
               // Legacy (para buildPayload)
               methods.setValue("razonSocialReceptor", nombre);
               methods.setValue("direccionReceptor", direccion);
@@ -579,7 +579,7 @@ export function ReceiverSection() {
                     const val = e.target.value.trim();
                     setNumeroDocumento(val);
                     if (methods && methods.setValue) {
-                      methods.setValue("receptorDocumento", val);
+                      methods.setValue("receptorDocumento", val, { shouldValidate: true });
                       methods.setValue("numeroDocReceptor", val);
                     }
                   }}
@@ -629,7 +629,7 @@ export function ReceiverSection() {
                       const v = e.target.value;
                       setRazonSocialLocal(v);
                       if (methods && methods.setValue) {
-                        methods.setValue("receptorRazonSocial", v);
+                        methods.setValue("receptorRazonSocial", v, { shouldValidate: true });
                         methods.setValue("razonSocialReceptor", v);
                       }
                       if (v !== "-") setNoCorresponde(false);
@@ -672,7 +672,7 @@ export function ReceiverSection() {
                   onValueChange={(v) => {
                     pendingUbigeoRef.current = null;
                     setReceiverDepartmentLocal(v);
-                    methods?.setValue?.("receptorDepartamento", v);
+                    methods?.setValue?.("receptorDepartamento", v, { shouldValidate: true });
                     methods?.setValue?.("receiverDepartment", v);
                   }}
                 >
@@ -712,7 +712,7 @@ export function ReceiverSection() {
                   onValueChange={(v) => {
                     pendingUbigeoRef.current = null;
                     setReceiverProvinceLocal(v);
-                    methods?.setValue?.("receptorProvincia", v);
+                    methods?.setValue?.("receptorProvincia", v, { shouldValidate: true });
                     methods?.setValue?.("receiverProvince", v);
                     (async () => {
                       try {
@@ -762,7 +762,7 @@ export function ReceiverSection() {
                   value={receiverDistrict}
                   onValueChange={(v) => {
                     setReceiverDistrictLocal(v);
-                    methods?.setValue?.("receptorDistrito", v);
+                    methods?.setValue?.("receptorDistrito", v, { shouldValidate: true });
                     methods?.setValue?.("receiverDistrict", v);
                     methods?.setValue?.("receiverUbigeo", v);
                   }}

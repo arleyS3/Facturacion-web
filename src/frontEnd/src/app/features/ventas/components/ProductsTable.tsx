@@ -173,11 +173,13 @@ export function ProductsTable() {
       methods.setValue("detalles", next, {
         shouldDirty: true,
         shouldTouch: true,
+        shouldValidate: true,
       });
       // Legacy (para buildPayload)
       methods.setValue("products", next, {
         shouldDirty: true,
         shouldTouch: true,
+        shouldValidate: true,
       });
       return;
     }
