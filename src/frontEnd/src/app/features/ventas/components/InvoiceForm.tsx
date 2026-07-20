@@ -11,7 +11,7 @@ import { DocumentosAdicionalesSection } from "@/features/ventas/components/Docum
 import { Separator } from "@/components/ui/separator";
 import { EmitDocumentDialog } from "@/components/EmitDocumentDialog";
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type FieldErrors } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router";
@@ -59,19 +59,19 @@ export function InvoiceForm() {
       // DATOS DEL DOCUMENTO (nuevos nombres en español)
       // =================================================================
       codigoEmpresa: "1",
-      tipoDocumento: "",
+      tipoDocumento: "01",
       serie: "F001",
       correlativo: "",
-      fechaEmision: "",
-      horaEmision: "",
+      fechaEmision: new Date().toISOString().split("T")[0],
+      horaEmision: new Date().toTimeString().split(" ")[0],
       fechaVencimiento: "",
-      tipoOperacion: "",
+      tipoOperacion: "0101",
       moneda: "PEN",
 
       // =================================================================
       // DATOS DEL EMISOR (nuevos nombres en español)
       // =================================================================
-      emisorTipoDoc: "",
+      emisorTipoDoc: "6",
       emisorRuc: "",
       emisorRazonSocial: "",
       emisorNombreComercial: "",
@@ -86,7 +86,7 @@ export function InvoiceForm() {
       // =================================================================
       // DATOS DEL RECEPTOR (nuevos nombres en español)
       // =================================================================
-      receptorTipoDoc: "",
+      receptorTipoDoc: "6",
       receptorDocumento: "",
       receptorRazonSocial: "",
       receptorDireccion: "",
@@ -129,31 +129,31 @@ export function InvoiceForm() {
       // =================================================================
       // CAMPOS LEGACY (para compatibilidad con buildPayload/TXT)
       // =================================================================
-      docType: "",
-      docTypeCode: "",
+      docType: "Factura",
+      docTypeCode: "01",
       companyCode: "1",
       companyId: "1",
-      issuerDocType: "",
+      issuerDocType: "6",
       issuerDocNumber: "",
       issuerCommercialName: "",
       issuerSocialName: "",
       issuerAddress: "",
       issuerAnexo: "",
       issuerNoDet: false,
-      receiverDocType: "",
+      receiverDocType: "6",
       receiverDocNumber: "",
       receiverDepartment: "",
       receiverProvince: "",
       receiverDistrict: "",
       receiverUbigeo: "",
       products: [], // alias para detalles
-      tipoDocEmisor: "",
+      tipoDocEmisor: "6",
       numeroDocEmisor: "",
       razonSocialEmisor: "",
       nombreComercialEmisor: "",
       direccionEmisor: "",
       anexoEmisor: "",
-      tipoDocReceptor: "",
+      tipoDocReceptor: "6",
       numeroDocReceptor: "",
       razonSocialReceptor: "",
       direccionReceptor: "",
@@ -254,10 +254,33 @@ export function InvoiceForm() {
     }
   };
 
-  const handleInvalidSubmit = () => {
-    toast.error(
-      "Corrija los errores de validación antes de generar el documento",
-    );
+  const handleInvalidSubmit = (errors: FieldErrors<ComprobanteFormData>) => {
+    console.log("[InvoiceForm] Errores de validación:", errors);
+    const messages: string[] = [];
+
+    const extractMessages = (obj: any) => {
+      if (!obj || typeof obj !== "object") return;
+      if (typeof obj.message === "string" && obj.message.trim()) {
+        messages.push(obj.message);
+      } else {
+        Object.values(obj).forEach(extractMessages);
+      }
+    };
+
+    extractMessages(errors);
+
+    if (messages.length > 0) {
+      const uniqueMessages = Array.from(new Set(messages));
+      setValidationErrors(uniqueMessages);
+      uniqueMessages.slice(0, 3).forEach((msg) => {
+        toast.error(msg);
+      });
+      if (uniqueMessages.length > 3) {
+        toast.error(`Y ${uniqueMessages.length - 3} error(es) de validación más`);
+      }
+    } else {
+      toast.error("Corrija los errores de validación antes de generar el documento");
+    }
   };
 
   // Guardar cambios no guardados al navegar/recargar

@@ -70,19 +70,25 @@ export function ReceiverSection() {
   const [soloRucReceptor, setSoloRucReceptor] = useState(false);
 
   useEffect(() => {
-    // para Receptor: si docType es "Factura" => solo RUC (code "6")
-    if (docType === "Factura") {
+    // para Receptor: si docType es "Factura" (o "01") => solo RUC (code "6")
+    const isFactura = docType === "Factura" || docType === "01" || !docType;
+    if (isFactura) {
       setSoloRucReceptor(true);
       if (setValue) {
         // Nuevo nombre en español
-        setValue("receptorTipoDoc", "6");
+        setValue("receptorTipoDoc", "6", { shouldValidate: true });
         // Legacy (para buildPayload)
         setValue("tipoDocReceptor", "6");
       }
     } else {
       setSoloRucReceptor(false);
+      // Si el receptorTipoDoc está vacío al cambiar a otro tipo (Boleta, etc.), asignar "1" (DNI) o conservar
+      if (setValue && !methods?.getValues("receptorTipoDoc")) {
+        setValue("receptorTipoDoc", "1", { shouldValidate: true });
+        setValue("tipoDocReceptor", "1");
+      }
     }
-  }, [docType, setValue]);
+  }, [docType, setValue, methods]);
 
   const opcionesReceptor = data;
   const opcionesFiltradas = soloRucReceptor
@@ -346,6 +352,13 @@ export function ReceiverSection() {
 
   useEffect(() => {
     if (methods && methods.getValues) {
+      // Si receptorTipoDoc está vacío, asignar un valor por defecto ("6" para RUC o "1" para DNI)
+      const currentTipoDoc = methods.getValues("receptorTipoDoc") || methods.getValues("tipoDocReceptor");
+      if (!currentTipoDoc && setValue) {
+        const defaultDoc = (docType === "Factura" || docType === "01" || !docType) ? "6" : "1";
+        setValue("receptorTipoDoc", defaultDoc, { shouldValidate: true });
+        setValue("tipoDocReceptor", defaultDoc);
+      }
       // Nuevos nombres en español + legacy
       const s = methods.getValues("receptorRazonSocial") || methods.getValues("razonSocialReceptor") || "";
       const a = methods.getValues("receptorDireccion") || methods.getValues("direccionReceptor") || "";
@@ -358,7 +371,7 @@ export function ReceiverSection() {
       setReceiverProvinceLocal(p);
       setReceiverDistrictLocal(di);
     }
-  }, []);
+  }, [methods, setValue, docType]);
 
   useEffect(() => {
     if (!numeroDocumento || numeroDocumento.length < 8) return;
@@ -496,68 +509,44 @@ export function ReceiverSection() {
         {/* Tipo de Documento */}
         <FormField
           name="receptorTipoDoc"
-          render={() => (
+          render={({ field }) => (
             <FormItem className="space-y-2">
               <Label htmlFor="receiver-doc-type">
                 Tipo de Documento
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
               <FormControl>
-                {methods ? (
-                  <Select
-                    value={receptorTipoDoc || methods.watch("tipoDocReceptor")}
-                    onValueChange={(v) => {
-                      if (setValue) {
-                        setValue("receptorTipoDoc", v);
-                        setValue("tipoDocReceptor", v);
-                      }
-                    }}
-                    defaultValue={opcionesFiltradas?.[0]?.code}
-                    disabled={soloRucReceptor}
-                  >
-                    <SelectTrigger id="receiver-doc-type" className="h-10">
-                      <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {opcionesFiltradas && opcionesFiltradas.length ? (
-                        opcionesFiltradas.map((opt) => (
-                          <SelectItem key={opt.code} value={opt.code}>
-                            {opt.label}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <>
-                          <SelectItem value="6">RUC</SelectItem>
-                          <SelectItem value="1">DNI</SelectItem>
-                          <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                          <SelectItem value="7">Pasaporte</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Select defaultValue={opcionesFiltradas?.[0]?.code} disabled={soloRucReceptor}>
-                    <SelectTrigger id="receiver-doc-type" className="h-10">
-                      <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {opcionesFiltradas && opcionesFiltradas.length ? (
-                        opcionesFiltradas.map((opt) => (
-                          <SelectItem key={opt.code} value={opt.code}>
-                            {opt.label}
-                          </SelectItem>
-                        ))
-                      ) : (
-                        <>
-                          <SelectItem value="6">RUC</SelectItem>
-                          <SelectItem value="1">DNI</SelectItem>
-                          <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                          <SelectItem value="7">Pasaporte</SelectItem>
-                        </>
-                      )}
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select
+                  value={field.value || receptorTipoDoc || (soloRucReceptor ? "6" : "1")}
+                  onValueChange={(v) => {
+                    field.onChange(v);
+                    if (setValue) {
+                      setValue("receptorTipoDoc", v, { shouldValidate: true });
+                      setValue("tipoDocReceptor", v);
+                    }
+                  }}
+                  disabled={soloRucReceptor}
+                >
+                  <SelectTrigger id="receiver-doc-type" className="h-10">
+                    <SelectValue placeholder={loading ? "Cargando…" : "Seleccione tipo"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opcionesFiltradas && opcionesFiltradas.length ? (
+                      opcionesFiltradas.map((opt) => (
+                        <SelectItem key={opt.code} value={opt.code}>
+                          {opt.label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <>
+                        <SelectItem value="6">RUC</SelectItem>
+                        <SelectItem value="1">DNI</SelectItem>
+                        <SelectItem value="4">Carnet de Extranjería</SelectItem>
+                        <SelectItem value="7">Pasaporte</SelectItem>
+                      </>
+                    )}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>

@@ -63,15 +63,20 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
     : opcionesEmisor;
 
   useEffect(() => {
-    //Regla:
-    // Si el tipo de documento es Factura, Boleta, Nota de Crédito, Nota de Débito
-    // o Guía de Remisión Remitente (código 09), el tipo de documento del emisor
+    // Regla:
+    // Si el tipo de documento es Factura (01), Boleta (03), Nota de Crédito (07), Nota de Débito (08)
+    // o Guía de Remisión Remitente (09), el tipo de documento del emisor
     // solo debe permitir RUC (código 6).
     if (
+      !docType ||
       docType === "Factura" ||
+      docType === "01" ||
       docType === "Boleta" ||
+      docType === "03" ||
       docType === "Nota de Crédito" ||
+      docType === "07" ||
       docType === "Nota de Débito" ||
+      docType === "08" ||
       docType === "09" ||
       docType === "Guía Remision" ||
       docType === "Guia Remitente"
@@ -79,7 +84,7 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
       setSoloRucObligatorio(true);
       if (setValue) {
         // Nuevo nombre en español
-        setValue("emisorTipoDoc", "6");
+        setValue("emisorTipoDoc", "6", { shouldValidate: true });
         // Legacy (para buildPayload)
         setValue("tipoDocEmisor", "6");
       }
@@ -90,6 +95,12 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
 
   useEffect(() => {
     if (methods && methods.getValues) {
+      // Si emisorTipoDoc está vacío, asignar "6" (RUC) por defecto
+      const currentTipoDoc = methods.getValues("emisorTipoDoc") || methods.getValues("tipoDocEmisor");
+      if (!currentTipoDoc && setValue) {
+        setValue("emisorTipoDoc", "6", { shouldValidate: true });
+        setValue("tipoDocEmisor", "6");
+      }
       // Nuevos nombres en español
       const s = methods.getValues("emisorRazonSocial") || methods.getValues("razonSocialEmisor") || "";
       const a = methods.getValues("emisorDireccion") || methods.getValues("direccionEmisor") || "";
@@ -98,7 +109,7 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
       setDireccionLocal(a);
       if (!numeroDocumento && n) setNumeroDocumento(n);
     }
-  }, []);
+  }, [methods, setValue]);
 
   useEffect(() => {
     if (!numeroDocumento || numeroDocumento.length < 8) return;
@@ -199,68 +210,44 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
         {/* Tipo de Documento */}
         <FormField
           name="emisorTipoDoc"
-          render={() => (
+          render={({ field }) => (
             <FormItem className="space-y-2">
               <Label htmlFor="issuer-doc-type">
                 Tipo de Documento
                 <span className="text-destructive ml-0.5" aria-hidden="true">*</span>
               </Label>
               <FormControl>
-                {methods ? (
-                  <Select
-                    value={emisorTipoDoc || methods.watch("tipoDocEmisor")}
-                    onValueChange={(v) => {
-                      if (setValue) {
-                        setValue("emisorTipoDoc", v);
-                        setValue("tipoDocEmisor", v);
-                      }
-                    }}
-                    defaultValue={opcionesFiltradas?.[0]?.code}
-                    disabled={soloRucObligatorio}
-                  >
-                    <SelectTrigger id="issuer-doc-type" className="h-10">
-                      <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {opcionesFiltradas && opcionesFiltradas.length
-                        ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
-                            <SelectItem key={opt.code} value={opt.code}>
-                              {opt.label}
-                            </SelectItem>
-                          ))
-                        : (
-                          <>
-                            <SelectItem value="6">RUC</SelectItem>
-                            <SelectItem value="1">DNI</SelectItem>
-                            <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                            <SelectItem value="7">Pasaporte</SelectItem>
-                          </>
-                        )}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <Select defaultValue={opcionesFiltradas?.[0]?.code ?? "6"} disabled={soloRucObligatorio}>
-                    <SelectTrigger id="issuer-doc-type" className="h-10">
-                      <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {opcionesFiltradas && opcionesFiltradas.length
-                        ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
-                            <SelectItem key={opt.code} value={opt.code}>
-                              {opt.label}
-                            </SelectItem>
-                          ))
-                        : (
-                          <>
-                            <SelectItem value="6">RUC</SelectItem>
-                            <SelectItem value="1">DNI</SelectItem>
-                            <SelectItem value="4">Carnet de Extranjería</SelectItem>
-                            <SelectItem value="7">Pasaporte</SelectItem>
-                          </>
-                        )}
-                    </SelectContent>
-                  </Select>
-                )}
+                <Select
+                  value={field.value || emisorTipoDoc || "6"}
+                  onValueChange={(v) => {
+                    field.onChange(v);
+                    if (setValue) {
+                      setValue("emisorTipoDoc", v, { shouldValidate: true });
+                      setValue("tipoDocEmisor", v);
+                    }
+                  }}
+                  disabled={soloRucObligatorio}
+                >
+                  <SelectTrigger id="issuer-doc-type" className="h-10">
+                    <SelectValue placeholder={loading ? "Cargando..." : "Seleccione tipo"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {opcionesFiltradas && opcionesFiltradas.length
+                      ? opcionesFiltradas.map((opt: { code: string; label: string }) => (
+                          <SelectItem key={opt.code} value={opt.code}>
+                            {opt.label}
+                          </SelectItem>
+                        ))
+                      : (
+                        <>
+                          <SelectItem value="6">RUC</SelectItem>
+                          <SelectItem value="1">DNI</SelectItem>
+                          <SelectItem value="4">Carnet de Extranjería</SelectItem>
+                          <SelectItem value="7">Pasaporte</SelectItem>
+                        </>
+                      )}
+                  </SelectContent>
+                </Select>
               </FormControl>
               <FormMessage />
             </FormItem>
