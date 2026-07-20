@@ -92,12 +92,18 @@ importers:
       '@radix-ui/react-tooltip':
         specifier: 1.1.8
         version: 1.1.8(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      '@tailwindcss/vite':
+        specifier: 4.1.12
+        version: 4.1.12(vite@6.4.3(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.30.1))
       '@tanstack/react-query':
         specifier: ^4.34.0
         version: 4.44.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@types/react-map-gl':
         specifier: ^6.1.8
         version: 6.1.8
+      '@vitejs/plugin-react':
+        specifier: 4.7.0
+        version: 4.7.0(vite@6.4.3(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.30.1))
       axios:
         specifier: ^1.18.1
         version: 1.18.1
@@ -185,13 +191,13 @@ importers:
       vaul:
         specifier: 1.1.2
         version: 1.1.2(@types/react-dom@19.2.3(@types/react@19.2.17))(@types/react@19.2.17)(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+      vite:
+        specifier: ^6.4.3
+        version: 6.4.3(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.30.1)
       zod:
         specifier: ^4.4.3
         version: 4.4.3
     devDependencies:
-      '@tailwindcss/vite':
-        specifier: 4.1.12
-        version: 4.1.12(vite@6.4.3(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.30.1))
       '@types/node':
         specifier: ^25.7.0
         version: 25.7.0
@@ -201,18 +207,12 @@ importers:
       '@types/react-dom':
         specifier: ^19.2.3
         version: 19.2.3(@types/react@19.2.17)
-      '@vitejs/plugin-react':
-        specifier: 4.7.0
-        version: 4.7.0(vite@6.4.3(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.30.1))
       tailwindcss:
         specifier: 4.1.12
         version: 4.1.12
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
-      vite:
-        specifier: ^6.4.3
-        version: 6.4.3(@types/node@25.7.0)(jiti@2.7.0)(lightningcss@1.30.1)
 
 packages:
 
