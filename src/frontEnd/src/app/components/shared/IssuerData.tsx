@@ -270,6 +270,8 @@ export function IssuerData({ showAnexo = true, onLoadFromConfig }: IssuerDataPro
                   placeholder="20123456789"
                   className="font-mono h-10 pr-10"
                   maxLength={11}
+                  autoComplete="off"
+                  inputMode="numeric"
                   value={emisorRuc || numeroDocumento}
                   onChange={(e) => {
                     const val = e.target.value.trim();
