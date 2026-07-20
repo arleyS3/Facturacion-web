@@ -11,6 +11,7 @@ import {
   Shield,
   ChevronRight,
   Upload,
+  BookOpen,
   Settings,
   Users,
   User as UserIcon,
@@ -365,6 +366,13 @@ export function AppLayout() {
               >
                 <Upload className="size-4" aria-hidden="true" />
                 Enviar a OSE
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handleNavigation("/normativa", navigate)}
+                className="cursor-pointer"
+              >
+                <BookOpen className="size-4" aria-hidden="true" />
+                Normativa SUNAT
               </DropdownMenuItem>
               {userRole === "ADMIN" && (
                 <>

@@ -8,7 +8,9 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -29,6 +31,9 @@ public class NormativaService {
     private final Cache<Integer, List<ResolucionSunatResponse>> cache;
     private final Cache<Integer, Boolean> staleGuard;
 
+    // ponytail: Set de años con datos stale; persiste hasta próxima actualización exitosa
+    private final Set<Integer> staleYears = ConcurrentHashMap.newKeySet();
+
     public NormativaService() {
         this.cache = Caffeine.newBuilder()
                 .expireAfterWrite(Duration.ofHours(6))
@@ -41,14 +46,29 @@ public class NormativaService {
     /**
      * Retorna todas las resoluciones de un año. Sirve desde caché si está
      * disponible y dispara una verificación asíncrona de vigencia.
+     * Si SUNAT no responde y hay datos en caché, los devuelve con stale=true.
      */
     public List<ResolucionSunatResponse> obtenerResoluciones(int anio) {
         var cached = cache.getIfPresent(anio);
         if (cached != null) {
             triggerStaleCheck(anio, cached);
-            return cached;
+            return marcarStale(cached, staleYears.contains(anio));
         }
-        return fetchAndCache(anio);
+        try {
+            return fetchAndCache(anio);
+        } catch (RuntimeException e) {
+            // ponytail: si SUNAT falló en el primer fetch devolvemos vacío
+            return List.of();
+        }
+    }
+
+    private List<ResolucionSunatResponse> marcarStale(
+            List<ResolucionSunatResponse> lista, boolean stale) {
+        if (!stale) return lista;
+        return lista.stream()
+                .map(r -> new ResolucionSunatResponse(
+                        r.numero(), r.sumilla(), r.fecha(), r.urlPdf(), r.categoria(), true))
+                .toList();
     }
 
     /**
@@ -88,8 +108,11 @@ public class NormativaService {
             if (freshCount != actual.size()) {
                 cache.invalidate(anio);
             }
+            // Si llegamos acá, SUNAT respondió bien -> limpiamos stale
+            staleYears.remove(anio);
         } catch (IOException e) {
-            // El chequeo asíncrono es best-effort; no propagamos la excepción
+            // ponytail: SUNAT no respondió, marcamos stale
+            staleYears.add(anio);
         }
     }
 
@@ -168,13 +191,35 @@ public class NormativaService {
                 : href;
     }
 
+    // Keywords por categoría (orden de prioridad: más específico primero)
+    private static final List<CategoriaRule> CATEGORIA_RULES = List.of(
+        new CategoriaRule("FE DE ERRATAS", "FE DE ERRATAS"),
+        new CategoriaRule("Facturación Electrónica",
+            "COMPROBANTE", "CPE", "FACTURA", "BOLETA", "NOTA CRÉDITO", "NOTA DÉBITO"),
+        new CategoriaRule("Guías de Remisión",
+            "GUÍA DE REMISIÓN", "GUIA DE REMISION", "GR REMITENTE", "GR TRANSPORTISTA"),
+        new CategoriaRule("Catálogos",
+            "CATÁLOGO", "CATALOGO", "ANEXO"),
+        new CategoriaRule("Tributos",
+            "ISC", "IGV", "IMPUESTO", "TRIBUTO", "RENTA")
+    );
+
     /**
      * Asigna una categoría según el contenido de la sumilla.
      */
     static String categorizar(String sumilla) {
-        if (sumilla.toUpperCase().contains("FE DE ERRATAS")) {
-            return "FE DE ERRATAS";
+        String upper = sumilla.toUpperCase();
+        for (var rule : CATEGORIA_RULES) {
+            if (rule.keywords().stream().anyMatch(upper::contains)) {
+                return rule.categoria();
+            }
         }
-        return "RRSS";
+        return "General";
+    }
+
+    private record CategoriaRule(String categoria, List<String> keywords) {
+        CategoriaRule(String categoria, String... keywords) {
+            this(categoria, List.of(keywords));
+        }
     }
 }

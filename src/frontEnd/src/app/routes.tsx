@@ -9,6 +9,7 @@ import { CertificadoConfig } from "@/features/shared/pages/CertificadoConfig";
 import { CatalogManagementPage } from "@/features/shared/pages/CatalogManagementPage";
 import { UserManagementPage } from "@/features/shared/pages/UserManagementPage";
 import { NotFound } from "@/features/shared/pages/NotFound";
+import { NormativaSunatPage } from "@/features/normativa/pages/NormativaSunatPage";
 import { ProtectedRoute } from "@/components/layout/ProtectedRoute";
 import { AdminRoute } from "@/components/layout/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: "sales-documents", element: <SalesDocuments /> },
       { path: "shipping-guide", element: <ShippingGuide /> },
       { path: "ose-sender", element: <OseSender /> },
+      { path: "normativa", element: <NormativaSunatPage /> },
       { path: "certificado", element: <CertificadoConfig /> },
       {
         path: "catalog-management",

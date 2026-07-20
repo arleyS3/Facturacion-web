@@ -59,12 +59,12 @@ class NormativaServiceTest {
     }
 
     @Test
-    void parseDocument_asignaCategoriaRRSS() throws Exception {
+    void parseDocument_asignaCategoriaGeneral() throws Exception {
         var doc = Jsoup.parse(cargarHtml("/normativa/indcor-2025-sample.html"), BASE_URI);
 
         var resoluciones = service.parseDocument(doc);
-        // 000401-2025 no contiene "FE DE ERRATAS"
-        assertEquals("RRSS", resoluciones.get(0).categoria());
+        // 000401-2025 no contiene keywords de categoría específica
+        assertEquals("General", resoluciones.get(0).categoria());
     }
 
     @Test
@@ -105,9 +105,35 @@ class NormativaServiceTest {
     }
 
     @Test
-    void categorizar_defaultARrss() {
-        assertEquals("RRSS",
+    void categorizar_defaultAGeneral() {
+        assertEquals("General",
                 NormativaService.categorizar("Aprueba el set de indicadores..."));
+    }
+
+    @Test
+    void categorizar_facturacionElectronica() {
+        assertEquals("Facturación Electrónica",
+                NormativaService.categorizar("Modifica el CPE para factura electrónica"));
+        assertEquals("Facturación Electrónica",
+                NormativaService.categorizar("Guía de remisión - NOTA CRÉDITO electrónica"));
+    }
+
+    @Test
+    void categorizar_guiasRemision() {
+        assertEquals("Guías de Remisión",
+                NormativaService.categorizar("Modifica la GUÍA DE REMISIÓN remitente"));
+    }
+
+    @Test
+    void categorizar_catalogos() {
+        assertEquals("Catálogos",
+                NormativaService.categorizar("Actualiza el ANEXO 8 Catálogo de códigos"));
+    }
+
+    @Test
+    void categorizar_tributos() {
+        assertEquals("Tributos",
+                NormativaService.categorizar("Modifica el IGV para el sector construcción"));
     }
 
     @Test

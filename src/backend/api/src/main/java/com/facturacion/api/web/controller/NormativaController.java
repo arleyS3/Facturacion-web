@@ -59,4 +59,18 @@ public class NormativaController {
                         || r.sumilla().toLowerCase().contains(busqueda))
                 .toList();
     }
+
+    @Operation(summary = "Listar categorías disponibles",
+            description = "Retorna las categorías de resoluciones disponibles para el año indicado.")
+    @GetMapping(value = "/categorias", produces = MediaType.APPLICATION_JSON_VALUE)
+    public List<String> listarCategorias(
+            @Parameter(description = "Año (2000-2099)", required = true)
+            @RequestParam @Min(2000) @Max(2099) int anio) {
+
+        return normativaService.obtenerResoluciones(anio).stream()
+                .map(ResolucionSunatResponse::categoria)
+                .distinct()
+                .sorted()
+                .toList();
+    }
 }
