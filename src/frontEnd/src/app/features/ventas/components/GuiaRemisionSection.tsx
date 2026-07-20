@@ -166,10 +166,21 @@ export function GuiaRemisionSection() {
           <Input
             id="guia-numero"
             value={guiaRemision?.numero ?? ""}
-            onChange={(e) => updateGuiaRemision({ numero: e.target.value })}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              updateGuiaRemision({ numero: val });
+            }}
+            onBlur={() => {
+              if (guiaRemision?.numero) {
+                const digits = guiaRemision.numero.replace(/\D/g, "");
+                if (digits) {
+                  updateGuiaRemision({ numero: digits.padStart(8, "0") });
+                }
+              }
+            }}
             className="h-9 font-mono"
             placeholder="00000001"
-            maxLength={8}
+            inputMode="numeric"
             autoComplete="off"
           />
         </div>

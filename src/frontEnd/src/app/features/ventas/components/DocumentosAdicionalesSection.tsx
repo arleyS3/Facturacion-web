@@ -166,10 +166,9 @@ export function DocumentosAdicionalesSection() {
           <Table>
             <TableHeader className="bg-muted/50">
               <TableRow>
-                <TableHead className="min-w-[120px]">Serie</TableHead>
-                <TableHead className="min-w-[160px]">Número (Correlativo)</TableHead>
-                <TableHead className="min-w-[160px]">ID Unido</TableHead>
-                <TableHead className="min-w-[220px]">Tipo Documento</TableHead>
+                <TableHead className="min-w-[140px]">Serie</TableHead>
+                <TableHead className="min-w-[180px]">Número (Correlativo)</TableHead>
+                <TableHead className="min-w-[240px]">Tipo Documento</TableHead>
                 <TableHead className="w-[60px] text-right"></TableHead>
               </TableRow>
             </TableHeader>
@@ -177,7 +176,7 @@ export function DocumentosAdicionalesSection() {
               {documentos.length === 0 ? (
                 <TableRow>
                   <TableCell
-                    colSpan={5}
+                    colSpan={4}
                     className="text-center text-muted-foreground py-8 text-sm"
                   >
                     No hay documentos adicionales. Haga clic en "Agregar Documento" para comenzar.
@@ -185,11 +184,6 @@ export function DocumentosAdicionalesSection() {
                 </TableRow>
               ) : (
                 documentos.map((doc) => {
-                  const idUnido =
-                    doc.serie && doc.numero
-                      ? `${doc.serie}-${doc.numero}`
-                      : doc.id || "—";
-
                   return (
                     <TableRow key={doc._key} className="hover:bg-muted/50">
                       <TableCell>
@@ -212,11 +206,6 @@ export function DocumentosAdicionalesSection() {
                           inputMode="numeric"
                           autoComplete="off"
                         />
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="font-mono text-xs font-semibold py-1 px-2 text-primary">
-                          {idUnido}
-                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Select
