@@ -74,16 +74,18 @@ export function ReceiverSection() {
     const isFactura = docType === "Factura" || docType === "01" || !docType;
     if (isFactura) {
       setSoloRucReceptor(true);
-      if (setValue) {
-        // Nuevo nombre en español
-        setValue("receptorTipoDoc", "6", { shouldValidate: true });
-        // Legacy (para buildPayload)
-        setValue("tipoDocReceptor", "6");
+      if (setValue && methods) {
+        if (methods.getValues("receptorTipoDoc") !== "6") {
+          setValue("receptorTipoDoc", "6", { shouldValidate: true });
+        }
+        if (methods.getValues("tipoDocReceptor") !== "6") {
+          setValue("tipoDocReceptor", "6");
+        }
       }
     } else {
       setSoloRucReceptor(false);
       // Si el receptorTipoDoc está vacío al cambiar a otro tipo (Boleta, etc.), asignar "1" (DNI) o conservar
-      if (setValue && !methods?.getValues("receptorTipoDoc")) {
+      if (setValue && methods && !methods.getValues("receptorTipoDoc")) {
         setValue("receptorTipoDoc", "1", { shouldValidate: true });
         setValue("tipoDocReceptor", "1");
       }
@@ -356,20 +358,22 @@ export function ReceiverSection() {
       const currentTipoDoc = methods.getValues("receptorTipoDoc") || methods.getValues("tipoDocReceptor");
       if (!currentTipoDoc && setValue) {
         const defaultDoc = (docType === "Factura" || docType === "01" || !docType) ? "6" : "1";
-        setValue("receptorTipoDoc", defaultDoc, { shouldValidate: true });
-        setValue("tipoDocReceptor", defaultDoc);
+        if (methods.getValues("receptorTipoDoc") !== defaultDoc) {
+          setValue("receptorTipoDoc", defaultDoc, { shouldValidate: true });
+          setValue("tipoDocReceptor", defaultDoc);
+        }
       }
       // Nuevos nombres en español + legacy
       const s = methods.getValues("receptorRazonSocial") || methods.getValues("razonSocialReceptor") || "";
       const a = methods.getValues("receptorDireccion") || methods.getValues("direccionReceptor") || "";
-      setRazonSocialLocal(s);
-      setDireccionLocal(a);
+      setRazonSocialLocal((prev) => (prev !== s ? s : prev));
+      setDireccionLocal((prev) => (prev !== a ? a : prev));
       const d = methods.getValues("receptorDepartamento") || methods.getValues("receiverDepartment") || "";
       const p = methods.getValues("receptorProvincia") || methods.getValues("receiverProvince") || "";
       const di = methods.getValues("receptorDistrito") || methods.getValues("receiverDistrict") || "";
-      setReceiverDepartmentLocal(d);
-      setReceiverProvinceLocal(p);
-      setReceiverDistrictLocal(di);
+      setReceiverDepartmentLocal((prev) => (prev !== d ? d : prev));
+      setReceiverProvinceLocal((prev) => (prev !== p ? p : prev));
+      setReceiverDistrictLocal((prev) => (prev !== di ? di : prev));
     }
   }, [methods, setValue, docType]);
 
