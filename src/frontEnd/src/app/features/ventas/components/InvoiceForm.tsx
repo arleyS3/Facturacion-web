@@ -34,7 +34,7 @@ import {
 import { generarYDescargarXml } from "@/lib/xmlService";
 import { DocumentoRelacionadoSection } from "@/features/ventas/components/DocumentoRelacionadoSection";
 import { ValidationBanner } from "@/components/shared/ValidationBanner";
-import { toast } from "sonner";
+import { sileo } from "sileo";
 
 /**
  * Componente del formulario de documentos de venta. Maneja el flujo de
@@ -273,12 +273,15 @@ export function InvoiceForm() {
 
     if (messages.length > 0) {
       const uniqueMessages = Array.from(new Set(messages));
-      setValidationErrors(uniqueMessages);
-      uniqueMessages.forEach((msg) => {
-        toast.error(msg);
+      sileo.error({
+        title: "Errores de validación en el formulario",
+        description: uniqueMessages.join("\n"),
       });
     } else {
-      toast.error("Corrija los errores de validación antes de generar el documento");
+      sileo.error({
+        title: "Formulario incompleto",
+        description: "Corrija los errores de validación antes de generar el documento.",
+      });
     }
   };
 
