@@ -149,7 +149,7 @@ const parteTrasladoSchema = z
 /**
  * Schema para una guía de remisión referenciada en el comprobante.
  */
-export const guiaRemisionSchema = z.object({
+const guiaRemisionObjectSchema = z.object({
   serie: z
     .string()
     .min(1, { message: "La serie es requerida" }),
@@ -162,6 +162,26 @@ export const guiaRemisionSchema = z.object({
 });
 
 /**
+ * Si el objeto de guía tiene todos sus campos vacíos, se considera
+ * como "no llenado" y se transforma a undefined para que .optional()
+ * lo acepte sin validar los min(1) internos.
+ */
+export const guiaRemisionSchema = z.preprocess(
+  (val) => {
+    if (val == null) return undefined;
+    if (typeof val === "object" && val !== null) {
+      const obj = val as Record<string, unknown>;
+      const serie = String(obj.serie ?? "").trim();
+      const numero = String(obj.numero ?? "").trim();
+      const codigo = String(obj.codigoDocumento ?? "").trim();
+      if (!serie && !numero && !codigo) return undefined;
+    }
+    return val;
+  },
+  guiaRemisionObjectSchema.optional()
+);
+
+/**
  * Schema para un documento adicional referenciado en el comprobante.
  */
 export const documentoAdicionalSchema = z.object({
@@ -171,12 +191,25 @@ export const documentoAdicionalSchema = z.object({
   tipoDocumento: z
     .string()
     .min(1, { message: "El tipo de documento es requerido" }),
-});
+}).passthrough();
 
 /**
  * Schema para la lista de documentos adicionales.
+ * Filtra documentos con id vacío (filas agregadas pero no llenadas).
  */
-export const documentosAdicionalesSchema = z.array(documentoAdicionalSchema);
+export const documentosAdicionalesSchema = z.preprocess(
+  (val) => {
+    if (!Array.isArray(val)) return val;
+    return val.filter((item: any) => {
+      if (!item || typeof item !== "object") return false;
+      const id = String(item.id ?? "").trim();
+      const serie = String(item.serie ?? "").trim();
+      const numero = String(item.numero ?? "").trim();
+      return id !== "" || (serie !== "" && numero !== "");
+    });
+  },
+  z.array(documentoAdicionalSchema)
+);
 
 // =============================================================================
 // HELPER: validación condicional para notas de crédito/débito

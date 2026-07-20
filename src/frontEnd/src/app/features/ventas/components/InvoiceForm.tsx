@@ -258,12 +258,14 @@ export function InvoiceForm() {
     console.log("[InvoiceForm] Errores de validación:", errors);
     const messages: string[] = [];
 
-    const extractMessages = (obj: any) => {
+    const extractMessages = (obj: any, prefix = "") => {
       if (!obj || typeof obj !== "object") return;
       if (typeof obj.message === "string" && obj.message.trim()) {
         messages.push(obj.message);
       } else {
-        Object.values(obj).forEach(extractMessages);
+        Object.entries(obj).forEach(([key, val]) => {
+          extractMessages(val, prefix ? `${prefix}.${key}` : key);
+        });
       }
     };
 
@@ -272,12 +274,9 @@ export function InvoiceForm() {
     if (messages.length > 0) {
       const uniqueMessages = Array.from(new Set(messages));
       setValidationErrors(uniqueMessages);
-      uniqueMessages.slice(0, 3).forEach((msg) => {
+      uniqueMessages.forEach((msg) => {
         toast.error(msg);
       });
-      if (uniqueMessages.length > 3) {
-        toast.error(`Y ${uniqueMessages.length - 3} error(es) de validación más`);
-      }
     } else {
       toast.error("Corrija los errores de validación antes de generar el documento");
     }
