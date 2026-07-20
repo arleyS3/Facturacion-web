@@ -31,6 +31,7 @@ type Resolucion = {
   sumilla: string;
   fecha: string;
   urlPdf: string;
+  urlAnexo: string | null;
   categoria: string;
   stale: boolean;
 };
@@ -210,6 +211,7 @@ export function NormativaSunatPage() {
               <TableHead>Descripción</TableHead>
               <TableHead className="w-[110px]">Fecha</TableHead>
               <TableHead className="w-[160px]">Categoría</TableHead>
+              <TableHead className="w-[60px] text-center">Anexo</TableHead>
               <TableHead className="w-[60px] text-right">PDF</TableHead>
             </TableRow>
           </TableHeader>
@@ -244,6 +246,21 @@ export function NormativaSunatPage() {
                   >
                     {r.categoria}
                   </Badge>
+                </TableCell>
+                <TableCell className="text-center">
+                  {r.urlAnexo ? (
+                    <a
+                      href={r.urlAnexo}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                      title="Abrir anexo"
+                    >
+                      <ExternalLink className="size-4" />
+                    </a>
+                  ) : (
+                    <span className="text-muted-foreground/40">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="text-right">
                   <a

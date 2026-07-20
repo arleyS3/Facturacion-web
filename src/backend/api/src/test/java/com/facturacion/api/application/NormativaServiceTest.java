@@ -28,7 +28,7 @@ class NormativaServiceTest {
 
         var resoluciones = service.parseDocument(doc);
 
-        assertEquals(4, resoluciones.size());
+        assertEquals(5, resoluciones.size());
     }
 
     @Test
@@ -147,6 +147,31 @@ class NormativaServiceTest {
 
         assertTrue(encontrada.isPresent());
         assertEquals("31/12/2025", encontrada.get().fecha());
+    }
+
+    @Test
+    void parseDocument_extraeUrlAnexo() throws Exception {
+        var doc = Jsoup.parse(cargarHtml("/normativa/indcor-2025-sample.html"), BASE_URI);
+
+        var resoluciones = service.parseDocument(doc);
+        // 000048-2026 tiene anexo
+        var conAnexo = resoluciones.stream()
+                .filter(r -> r.numero().equals("000048-2026"))
+                .findFirst().orElseThrow();
+
+        assertNotNull(conAnexo.urlAnexo());
+        assertTrue(conAnexo.urlAnexo().contains("anexo-000048-2026.pdf"));
+        // Sumilla no debe contener "Anexo" ni el link
+        assertFalse(conAnexo.sumilla().contains("Anexo"));
+    }
+
+    @Test
+    void parseDocument_sinAnexo_esNull() throws Exception {
+        var doc = Jsoup.parse(cargarHtml("/normativa/indcor-2025-sample.html"), BASE_URI);
+
+        var resoluciones = service.parseDocument(doc);
+
+        assertNull(resoluciones.get(0).urlAnexo());
     }
 
     @Test

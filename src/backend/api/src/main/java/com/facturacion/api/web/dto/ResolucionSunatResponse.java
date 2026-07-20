@@ -7,7 +7,8 @@ package com.facturacion.api.web.dto;
  * @param sumilla   descripción o asunto de la resolución
  * @param fecha     fecha de publicación en El Peruano (dd/MM/yyyy o vacío si no aplica)
  * @param urlPdf    enlace absoluto al PDF de la resolución
- * @param categoria categoría normativa (RRSS, FE DE ERRATAS, etc.)
+ * @param urlAnexo  enlace absoluto al PDF del anexo (null si no tiene)
+ * @param categoria categoría normativa
  * @param stale     indica si los datos pueden estar desactualizados respecto a SUNAT
  */
 public record ResolucionSunatResponse(
@@ -15,6 +16,7 @@ public record ResolucionSunatResponse(
     String sumilla,
     String fecha,
     String urlPdf,
+    String urlAnexo,
     String categoria,
     boolean stale
 ) {}

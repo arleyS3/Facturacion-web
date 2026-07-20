@@ -67,7 +67,7 @@ public class NormativaService {
         if (!stale) return lista;
         return lista.stream()
                 .map(r -> new ResolucionSunatResponse(
-                        r.numero(), r.sumilla(), r.fecha(), r.urlPdf(), r.categoria(), true))
+                        r.numero(), r.sumilla(), r.fecha(), r.urlPdf(), r.urlAnexo(), r.categoria(), true))
                 .toList();
     }
 
@@ -164,7 +164,20 @@ public class NormativaService {
 
             String numero = extraerNumero(relHref);
 
-            String sumilla = cells.get(1).text()
+            Element sumillaCell = cells.get(1);
+            String urlAnexo = null;
+            // Buscar links a anexos dentro de la celda de sumilla
+            for (Element subLink : sumillaCell.select("a[href]")) {
+                String h = subLink.attr("href");
+                if (h != null && h.contains("anexo")) {
+                    String abs = subLink.attr("abs:href");
+                    urlAnexo = abs.isEmpty() ? h : abs;
+                    subLink.remove(); // lo sacamos para que no aparezca en el text()
+                    break;
+                }
+            }
+
+            String sumilla = sumillaCell.text()
                     .replaceAll("\\s+", " ")
                     .trim();
 
@@ -173,7 +186,7 @@ public class NormativaService {
                     : "";
 
             results.add(new ResolucionSunatResponse(
-                    numero, sumilla, fecha, urlPdf, categorizar(sumilla), false));
+                    numero, sumilla, fecha, urlPdf, urlAnexo, categorizar(sumilla), false));
         }
 
         return results;
