@@ -229,6 +229,15 @@ public class AdminCatalogController {
     }
 
     private void updateEntity(Object entity, CatalogCrudRequest request) {
+        if (request.getCodigo() != null && !request.getCodigo().isBlank()) {
+            if (entity instanceof TipoOperacionEntity e) e.setCodigo(request.getCodigo());
+            else if (entity instanceof TipoNotaCreditoEntity e) e.setCodigo(request.getCodigo());
+            else if (entity instanceof TipoNotaDebitoEntity e) e.setCodigo(request.getCodigo());
+            else if (entity instanceof TipoSistemaIscEntity e) e.setCodigo(request.getCodigo());
+            else if (entity instanceof TipoAfectacionIgvEntity e) e.setCodigo(request.getCodigo());
+            else if (entity instanceof TipoDocumentoIdentidadEntity e) e.setCodigo(request.getCodigo());
+            else if (entity instanceof MotivoTrasladoEntity e) e.setCodigo(request.getCodigo());
+        }
         if (entity instanceof TipoOperacionEntity e) {
             e.setDescripcion(request.getDescripcion());
             e.setActualizadoAt(LocalDateTime.now());

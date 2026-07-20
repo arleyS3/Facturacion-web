@@ -126,7 +126,7 @@ function CatalogTab({ tipo, label }: { tipo: string; label: string }) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!formDescripcion.trim()) return;
+    if (!formCodigo.trim() || !formDescripcion.trim()) return;
 
     const payload: CatalogCrudRequest = {
       codigo: formCodigo.trim(),
@@ -137,7 +137,6 @@ function CatalogTab({ tipo, label }: { tipo: string; label: string }) {
     }
 
     if (dialog.mode === "create") {
-      if (!formCodigo.trim()) return;
       create.mutate(payload, { onSettled: closeDialog });
     } else if (dialog.mode === "edit" && dialog.editingItem) {
       update.mutate(
@@ -258,27 +257,25 @@ function CatalogTab({ tipo, label }: { tipo: string; label: string }) {
             <DialogDescription>
               {dialog.mode === "create"
                 ? "Completá los campos para crear un nuevo registro."
-                : "Modificá la descripción del registro."}
+                : "Modificá el código o la descripción del registro."}
             </DialogDescription>
           </DialogHeader>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Código — solo en creación */}
-            {dialog.mode === "create" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="codigo">
-                  Código <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="codigo"
-                  value={formCodigo}
-                  onChange={(e) => setFormCodigo(e.target.value)}
-                  placeholder="01"
-                  required
-                  maxLength={10}
-                />
-              </div>
-            )}
+            {/* Código */}
+            <div className="space-y-1.5">
+              <Label htmlFor="codigo">
+                Código <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="codigo"
+                value={formCodigo}
+                onChange={(e) => setFormCodigo(e.target.value)}
+                placeholder="01"
+                required
+                maxLength={10}
+              />
+            </div>
 
             {/* Descripción */}
             <div className="space-y-1.5">
