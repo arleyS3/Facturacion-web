@@ -23,7 +23,7 @@ public class GuiaRemisionUblBuilder {
     private static final String VERSION_UBL = "2.1";
     private static final String VERSION_ESTRUCTURA = "2.0";
 
-    public String construirXml(GuiaRemisionUblData data) throws Exception {
+    public DespatchAdviceType buildDespatchAdvice(GuiaRemisionUblData data) {
         DespatchAdviceType guia = new DespatchAdviceType();
         
         // 1. Encabezado principal
@@ -56,14 +56,22 @@ public class GuiaRemisionUblBuilder {
                 guia.addDespatchLine(crearLinea(linea));
             }
         }
-        
-        // 5. Generar XML
+
+        return guia;
+    }
+
+    public String serializarGuiaRemision(DespatchAdviceType guia) throws Exception {
         StringWriter writer = new StringWriter();
         UBL21Marshaller.despatchAdvice()
             .setFormattedOutput(true)
             .write(guia, writer);
         
         return writer.toString();
+    }
+
+    public String construirXml(GuiaRemisionUblData data) throws Exception {
+        DespatchAdviceType guia = buildDespatchAdvice(data);
+        return serializarGuiaRemision(guia);
     }
 
     private SupplierPartyType crearRemitente(GuiaRemisionUblData data) {

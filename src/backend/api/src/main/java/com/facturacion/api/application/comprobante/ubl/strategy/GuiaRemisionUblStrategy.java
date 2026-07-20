@@ -4,21 +4,20 @@ import com.facturacion.api.application.comprobante.dto.GenerarXmlResult;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.ubl.builder.guiaRemision.GuiaRemisionUblBuilder;
 import com.facturacion.api.application.comprobante.ubl.mapper.guiaRemision.GuiaRemisionUblMapper;
+import com.facturacion.api.application.comprobante.validation.ValidacionService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
  * Estrategia UBL para guía de remisión electrónica.
  */
 @Component
+@RequiredArgsConstructor
 public class GuiaRemisionUblStrategy implements UblDocumentoStrategy {
 
     private final GuiaRemisionUblMapper mapper;
     private final GuiaRemisionUblBuilder builder;
-
-    public GuiaRemisionUblStrategy(GuiaRemisionUblMapper mapper, GuiaRemisionUblBuilder builder) {
-        this.mapper = mapper;
-        this.builder = builder;
-    }
+    private final ValidacionService validacionService;
 
     /**
      * {@inheritDoc}
@@ -47,6 +46,16 @@ public class GuiaRemisionUblStrategy implements UblDocumentoStrategy {
                 """.formatted(canonico.numero());
             return new GenerarXmlResult(xml, java.util.List.of());
         }
-        return new GenerarXmlResult(builder.construirXml(data), java.util.List.of());
+
+        // 1. Construir DespatchAdviceType
+        var despatchAdvice = builder.buildDespatchAdvice(data);
+
+        // 2. Validar contra esquema XSD UBL 2.1 (ph-ubl21)
+        var validationErrors = validacionService.validar(despatchAdvice);
+
+        // 3. Serializar XML
+        String xml = builder.serializarGuiaRemision(despatchAdvice);
+
+        return new GenerarXmlResult(xml, validationErrors);
     }
 }

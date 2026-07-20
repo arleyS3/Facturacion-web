@@ -3,6 +3,7 @@ package com.facturacion.api.application.comprobante.ubl.strategy;
 import com.facturacion.api.application.comprobante.modelo.ComprobanteCanonico;
 import com.facturacion.api.application.comprobante.ubl.builder.guiaRemision.GuiaRemisionUblBuilder;
 import com.facturacion.api.application.comprobante.ubl.mapper.guiaRemision.GuiaRemisionUblMapper;
+import com.facturacion.api.application.comprobante.validation.ValidacionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,13 +24,16 @@ class GuiaRemisionUblStrategyTest {
     private GuiaRemisionUblBuilder builder;
 
     @Mock
+    private ValidacionService validacionService;
+
+    @Mock
     private ComprobanteCanonico canonico;
 
     private GuiaRemisionUblStrategy strategy;
 
     @BeforeEach
     void setUp() {
-        strategy = new GuiaRemisionUblStrategy(mapper, builder);
+        strategy = new GuiaRemisionUblStrategy(mapper, builder, validacionService);
     }
 
     @Test
@@ -38,6 +42,6 @@ class GuiaRemisionUblStrategyTest {
 
         assertThrows(IllegalArgumentException.class, () -> strategy.generarXml(canonico));
 
-        verifyNoInteractions(mapper, builder);
+        verifyNoInteractions(mapper, builder, validacionService);
     }
 }
