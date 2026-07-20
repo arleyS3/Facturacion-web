@@ -50,28 +50,40 @@ export function useAdminCatalog(tipo: string) {
   const create = useMutation({
     mutationFn: (data: CatalogCrudRequest) =>
       api.post(`/admin/catalogos/${tipo}`, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      toast.success("Registro creado exitosamente");
+    },
     onError: handleError,
   });
 
   const update = useMutation({
     mutationFn: ({ id, data }: { id: number; data: CatalogCrudRequest }) =>
       api.put(`/admin/catalogos/${tipo}/${id}`, data),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      toast.success("Registro actualizado exitosamente");
+    },
     onError: handleError,
   });
 
   const remove = useMutation({
     mutationFn: (id: number) =>
       api.delete(`/admin/catalogos/${tipo}/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      toast.success("Registro desactivado exitosamente");
+    },
     onError: handleError,
   });
 
   const reactivar = useMutation({
     mutationFn: (id: number) =>
       api.patch(`/admin/catalogos/${tipo}/${id}/reactivar`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      toast.success("Registro reactivado exitosamente");
+    },
     onError: handleError,
   });
 

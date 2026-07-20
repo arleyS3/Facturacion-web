@@ -231,6 +231,7 @@ export function ProductsTable() {
       return newSet;
     });
     setDeleteConfirmProduct(null);
+    toast.info(`Producto "${deleteConfirmProduct.nombre}" eliminado de la lista`);
   }, [deleteConfirmProduct, products, setProducts, setExpandedRows]);
 
   const addProduct = () => {
@@ -254,6 +255,7 @@ export function ProductsTable() {
       total: 0,
     };
     setProducts([...products, newProduct]);
+    toast.info("Producto agregado a la lista");
   };
 
   const handleImportFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -500,6 +502,7 @@ export function ProductsTable() {
       updateProduct(currentISCProduct, {
         iscData: tempISCData,
       });
+      toast.success("Configuración de ISC guardada correctamente");
     }
     setIscModalOpen(false);
     setCurrentISCProduct(null);
