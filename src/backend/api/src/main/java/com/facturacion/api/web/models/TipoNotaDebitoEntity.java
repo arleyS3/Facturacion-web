@@ -2,12 +2,9 @@ package com.facturacion.api.web.models;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.SQLRestriction;
 import java.time.LocalDateTime;
-
 @Entity
 @Table(name = "tipo_nota_debito")
-@SQLRestriction("activo = true")
 @Getter
 @Setter
 @NoArgsConstructor

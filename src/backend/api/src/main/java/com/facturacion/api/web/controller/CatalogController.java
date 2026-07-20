@@ -64,6 +64,7 @@ public class CatalogController {
   /** Devuelve los motivos de traslado (catalogo). */
   public List<CatalogItem> motivosTraslado() {
     return motivoTrasladoRepository.findAll().stream()
+        .filter(m -> Boolean.TRUE.equals(m.getActivo()))
         .map(m -> CatalogItem.of(m.getCodigo(), m.getDescripcion()))
         .toList();
   }
@@ -100,6 +101,7 @@ public class CatalogController {
   /** Tipos de operación (catalogo). */
   public List<CatalogItem> tiposOperacion() {
     return tipoOperacionRepository.findAll().stream()
+        .filter(t -> Boolean.TRUE.equals(t.getActivo()))
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -108,6 +110,7 @@ public class CatalogController {
   /** Tipos de afectación de IGV (catalogo). */
   public List<CatalogItem> tiposAfectacionIGV() {
     return tipoAfectacionIgvRepository.findAll().stream()
+        .filter(t -> Boolean.TRUE.equals(t.getActivo()))
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion(), t.getCodigoTributario()))
         .toList();
   }
@@ -116,6 +119,7 @@ public class CatalogController {
   /** Tipos de documento de identidad del catálogo. */
   public List<CatalogItem> tiposDocumentoIdentidad() {
     return tipoDocumentoIdentidadRepository.findAll().stream()
+        .filter(t -> Boolean.TRUE.equals(t.getActivo()))
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -132,6 +136,7 @@ public class CatalogController {
   /** Tipos de nota de crédito. */
   public List<CatalogItem> tiposNotaCredito() {
     return tipoNotaCreditoRepository.findAll().stream()
+        .filter(t -> Boolean.TRUE.equals(t.getActivo()))
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -140,6 +145,7 @@ public class CatalogController {
   /** Tipos de nota de débito. */
   public List<CatalogItem> tiposNotaDebito() {
     return tipoNotaDebitoRepository.findAll().stream()
+        .filter(t -> Boolean.TRUE.equals(t.getActivo()))
         .map(t -> CatalogItem.of(t.getCodigo(), t.getDescripcion()))
         .toList();
   }
@@ -156,6 +162,7 @@ public class CatalogController {
   /** Sistemas de ISC (catálogo 08 SUNAT). */
   public List<CatalogItem> sistemasIsc() {
     return tipoSistemaIscRepository.findAll().stream()
+        .filter(s -> Boolean.TRUE.equals(s.getActivo()))
         .map(s -> CatalogItem.of(s.getCodigo(), s.getDescripcion()))
         .toList();
   }

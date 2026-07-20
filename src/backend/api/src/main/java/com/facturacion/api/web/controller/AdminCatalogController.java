@@ -279,29 +279,13 @@ public class AdminCatalogController {
     }
 
     private List<?> findAllIncludingInactive(String tipo) {
-        return switch (tipo) {
-            case "tipos-operacion" -> tipoOperacionRepo.findAllIncludingInactive();
-            case "tipos-nota-credito" -> tipoNotaCreditoRepo.findAllIncludingInactive();
-            case "tipos-nota-debito" -> tipoNotaDebitoRepo.findAllIncludingInactive();
-            case "sistemas-isc" -> tipoSistemaIscRepo.findAllIncludingInactive();
-            case "tipos-afectacion-igv" -> tipoAfectacionIgvRepo.findAllIncludingInactive();
-            case "tipos-documento-identidad" -> tipoDocumentoIdentidadRepo.findAllIncludingInactive();
-            case "motivos-traslado" -> motivoTrasladoRepo.findAllIncludingInactive();
-            default -> throw new IllegalArgumentException("Tipo de catalogo invalido: " + tipo);
-        };
+        var repo = resolveRepo(tipo);
+        return repo != null ? repo.findAll() : List.of();
     }
 
     private Object findByIdIncludingInactive(String tipo, Long id) {
-        return switch (tipo) {
-            case "tipos-operacion" -> tipoOperacionRepo.findByIdIncludingInactive(id);
-            case "tipos-nota-credito" -> tipoNotaCreditoRepo.findByIdIncludingInactive(id);
-            case "tipos-nota-debito" -> tipoNotaDebitoRepo.findByIdIncludingInactive(id);
-            case "sistemas-isc" -> tipoSistemaIscRepo.findByIdIncludingInactive(id);
-            case "tipos-afectacion-igv" -> tipoAfectacionIgvRepo.findByIdIncludingInactive(id);
-            case "tipos-documento-identidad" -> tipoDocumentoIdentidadRepo.findByIdIncludingInactive(id);
-            case "motivos-traslado" -> motivoTrasladoRepo.findByIdIncludingInactive(id);
-            default -> throw new IllegalArgumentException("Tipo de catalogo invalido: " + tipo);
-        };
+        var repo = resolveRepo(tipo);
+        return repo != null ? repo.findById(id).orElse(null) : null;
     }
 
     private void setActivo(Object entity, boolean activo) {
