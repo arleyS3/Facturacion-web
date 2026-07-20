@@ -19,6 +19,7 @@ export const registroSchema = z
         message: "El nombre no puede contener solo espacios",
       }),
     email: z
+      .string()
       .email({ message: "El correo electrónico no es válido" })
       .min(1, { message: "El correo electrónico es requerido" })
       .max(254, { message: "El correo no puede exceder 254 caracteres" }),

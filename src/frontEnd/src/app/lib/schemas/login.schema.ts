@@ -1,8 +1,9 @@
 import { z } from "zod";
 
 export const loginSchema = z.object({
-  email:
-  z.email({ message: "El correo electrónico no es válido" })
+  email: z
+    .string()
+    .email({ message: "El correo electrónico no es válido" })
     .min(1, { message: "El correo electrónico es requerido" })
     .max(254, { message: "El correo no puede exceder 254 caracteres" }),
   password: z
