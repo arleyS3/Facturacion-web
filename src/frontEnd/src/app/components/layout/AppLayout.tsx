@@ -25,7 +25,6 @@ const navItems = [
   { label: "Inicio", path: "/home", icon: LayoutDashboard },
   { label: "Documentos de Venta", path: "/sales-documents", icon: FileText },
   { label: "Guías de Remisión", path: "/shipping-guide", icon: Truck },
-  { label: "Certificado Digital", path: "/certificado", icon: Shield },
 ];
 
 /** Logo component */

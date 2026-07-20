@@ -69,15 +69,15 @@ const formatDate = (iso?: string) => {
 };
 
 const getVencimientoInfo = (fecha?: string) => {
-  if (!fecha) return { label: "Sin vigencia", color: "text-slate-500" };
+  if (!fecha) return { label: "Sin vigencia", color: "text-muted-foreground" };
   const vence = new Date(fecha);
   const hoy = new Date();
   const diff = vence.getTime() - hoy.getTime();
   const dias = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  if (dias < 0) return { label: `Vencido (${Math.abs(dias)}d)`, color: "text-red-600" };
-  if (dias === 0) return { label: "Vence hoy", color: "text-red-600" };
-  if (dias <= 30) return { label: `Vence en ${dias}d`, color: "text-amber-600" };
-  return { label: `Válido hasta ${formatDate(fecha)}`, color: "text-emerald-600" };
+  if (dias < 0) return { label: `Vencido (${Math.abs(dias)}d)`, color: "text-destructive font-medium" };
+  if (dias === 0) return { label: "Vence hoy", color: "text-destructive font-medium" };
+  if (dias <= 30) return { label: `Vence en ${dias}d`, color: "text-amber-600 dark:text-amber-400 font-medium" };
+  return { label: `Válido hasta ${formatDate(fecha)}`, color: "text-emerald-600 dark:text-emerald-400 font-medium" };
 };
 
 export function CertificadoConfig() {
@@ -101,7 +101,7 @@ export function CertificadoConfig() {
     try {
       const res = await api.get<CertificadoInfo[]>("/configuracion-certificado");
       setCertificados(res.data || []);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error al cargar lista de certificados", err);
       toast.error("No se pudo cargar la lista de certificados");
     } finally {
@@ -176,8 +176,9 @@ export function CertificadoConfig() {
       toast.success(res.data.mensaje || "Certificado guardado y activado exitosamente");
       setDialogOpen(false);
       await cargarCertificados();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || err.message || "Error al guardar el certificado";
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } }; message?: string };
+      const msg = errorObj.response?.data?.message || errorObj.message || "Error al guardar el certificado";
       toast.error(msg);
     } finally {
       setGuardandoCert(false);
@@ -193,8 +194,9 @@ export function CertificadoConfig() {
       );
       toast.success(res.data.mensaje || `Certificado ${nuevoEstado ? "activado" : "desactivado"}`);
       await cargarCertificados();
-    } catch (err: any) {
-      const msg = err.response?.data?.message || "Error al cambiar el estado del certificado";
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      const msg = errorObj.response?.data?.message || "Error al cambiar el estado del certificado";
       toast.error(msg);
     } finally {
       setTogglingRuc(null);
@@ -208,8 +210,9 @@ export function CertificadoConfig() {
       const res = await api.delete<CertificadoInfo>(`/configuracion-certificado/${rucEmisor}`);
       toast.success(res.data.mensaje || "Certificado desactivado");
       await cargarCertificados();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || "Error al desactivar el certificado");
+    } catch (err: unknown) {
+      const errorObj = err as { response?: { data?: { message?: string } } };
+      toast.error(errorObj.response?.data?.message || "Error al desactivar el certificado");
     }
   };
 
@@ -228,15 +231,15 @@ export function CertificadoConfig() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-blue-600/10 text-blue-600 dark:bg-blue-400/20 dark:text-blue-400">
+          <div className="p-3 rounded-xl bg-primary/10 text-primary">
             <Shield className="size-6" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground text-balance">
               Certificados Digitales
             </h1>
             <p className="text-sm text-muted-foreground">
-              Gestión de certificados PKCS#12 (.pfx) para la firma electrónica UBL
+              Gestión de certificados PKCS#12 (.pfx / .p12) para la firma electrónica UBL
             </p>
           </div>
         </div>
@@ -246,13 +249,13 @@ export function CertificadoConfig() {
             size="sm"
             onClick={cargarCertificados}
             disabled={cargandoLista}
-            className="gap-2"
+            className="gap-2 cursor-pointer focus-visible:ring-2"
           >
-            <RefreshCw className={`size-4 ${cargandoLista ? "animate-spin" : ""}`} />
+            <RefreshCw className={`size-4 ${cargandoLista ? "animate-spin" : ""}`} aria-hidden="true" />
             Actualizar
           </Button>
-          <Button size="sm" onClick={abrirModalNuevo} className="gap-2 bg-blue-600 hover:bg-blue-700">
-            <Plus className="size-4" />
+          <Button size="sm" onClick={abrirModalNuevo} className="gap-2 bg-primary hover:bg-primary/90 cursor-pointer focus-visible:ring-2">
+            <Plus className="size-4" aria-hidden="true" />
             Nuevo Certificado
           </Button>
         </div>
@@ -263,74 +266,76 @@ export function CertificadoConfig() {
         <Card className="shadow-sm">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase">Total Registrados</p>
-              <h2 className="text-2xl font-bold mt-1">{totalCertificados}</h2>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Registrados</p>
+              <h2 className="text-2xl font-bold mt-1 font-mono tabular-nums">{totalCertificados}</h2>
             </div>
             <div className="p-2.5 bg-muted rounded-lg">
-              <FileCheck className="size-5 text-muted-foreground" />
+              <FileCheck className="size-5 text-muted-foreground" aria-hidden="true" />
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-emerald-200 dark:border-emerald-900/50">
+        <Card className="shadow-sm border-emerald-500/20 bg-emerald-500/5">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase">
+              <p className="text-xs font-medium text-emerald-600 dark:text-emerald-400 uppercase tracking-wider">
                 Activos para Firma
               </p>
-              <h2 className="text-2xl font-bold mt-1 text-emerald-700 dark:text-emerald-300">
+              <h2 className="text-2xl font-bold mt-1 text-emerald-700 dark:text-emerald-300 font-mono tabular-nums">
                 {totalActivos}
               </h2>
             </div>
-            <div className="p-2.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg">
-              <ShieldCheck className="size-5 text-emerald-600 dark:text-emerald-400" />
+            <div className="p-2.5 bg-emerald-500/10 rounded-lg">
+              <ShieldCheck className="size-5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
             </div>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-slate-200 dark:border-slate-800">
+        <Card className="shadow-sm border-border">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase">Inactivos / Desactivados</p>
-              <h2 className="text-2xl font-bold mt-1 text-slate-700 dark:text-slate-300">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Inactivos</p>
+              <h2 className="text-2xl font-bold mt-1 text-muted-foreground font-mono tabular-nums">
                 {totalInactivos}
               </h2>
             </div>
-            <div className="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-lg">
-              <ShieldAlert className="size-5 text-slate-500" />
+            <div className="p-2.5 bg-muted rounded-lg">
+              <ShieldAlert className="size-5 text-muted-foreground" aria-hidden="true" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Main Table Card */}
-      <Card className="shadow-md border border-slate-200 dark:border-slate-800">
+      <Card className="shadow-sm border border-border">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-base font-semibold">Lista de Certificados</CardTitle>
+              <CardTitle className="text-base font-semibold text-pretty">Lista de Certificados</CardTitle>
               <CardDescription className="text-xs">
-                Certificados guardados en el sistema organizados por RUC Emisor
+                Certificados de firma electrónica organizados por RUC Emisor
               </CardDescription>
             </div>
             <div className="relative w-full sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" aria-hidden="true" />
               <Input
-                placeholder="Buscar por RUC o alias..."
+                placeholder="Buscar por RUC o alias…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 h-9 text-xs"
+                autoComplete="off"
+                spellCheck={false}
               />
             </div>
           </div>
         </CardHeader>
         <CardContent className="p-0">
           {cargandoLista ? (
-            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3">
-              <Loader2 className="size-6 animate-spin text-blue-600" />
-              <p className="text-sm">Cargando certificados...</p>
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-3" aria-live="polite">
+              <Loader2 className="size-6 animate-spin text-primary" aria-hidden="true" />
+              <p className="text-sm">Cargando certificados…</p>
             </div>
           ) : certificadosFiltrados.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground gap-3">
-              <Shield className="size-10 text-slate-300 dark:text-slate-700" />
+              <Shield className="size-10 text-muted-foreground/40" aria-hidden="true" />
               <div>
                 <p className="text-sm font-medium text-foreground">
                   {searchTerm ? "No se encontraron certificados" : "No hay certificados registrados"}
@@ -338,12 +343,12 @@ export function CertificadoConfig() {
                 <p className="text-xs text-muted-foreground mt-1">
                   {searchTerm
                     ? "Intente buscar con otro RUC o alias"
-                    : "Haga clic en 'Nuevo Certificado' para subir el primer archivo PKCS#12 (.pfx)"}
+                    : "Haga clic en 'Nuevo Certificado' para cargar el primer archivo PKCS#12 (.pfx)"}
                 </p>
               </div>
               {!searchTerm && (
-                <Button size="sm" onClick={abrirModalNuevo} className="mt-2 gap-2">
-                  <Plus className="size-4" />
+                <Button size="sm" onClick={abrirModalNuevo} className="mt-2 gap-2 cursor-pointer">
+                  <Plus className="size-4" aria-hidden="true" />
                   Agregar Certificado
                 </Button>
               )}
@@ -351,7 +356,7 @@ export function CertificadoConfig() {
           ) : (
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-slate-50 dark:bg-slate-900/50">
+                <TableHeader className="bg-muted/50">
                   <TableRow>
                     <TableHead className="w-[180px]">RUC Emisor</TableHead>
                     <TableHead className="w-[200px]">Alias</TableHead>
@@ -367,18 +372,18 @@ export function CertificadoConfig() {
                     const isToggling = togglingRuc === cert.rucEmisor;
 
                     return (
-                      <TableRow key={cert.rucEmisor} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                      <TableRow key={cert.rucEmisor} className="hover:bg-muted/50">
                         {/* RUC */}
                         <TableCell className="font-mono text-sm font-semibold text-foreground">
                           <div className="flex items-center gap-2">
-                            <Building2 className="size-4 text-blue-600 shrink-0" />
+                            <Building2 className="size-4 text-primary shrink-0" aria-hidden="true" />
                             <span>{cert.rucEmisor}</span>
                           </div>
                         </TableCell>
 
                         {/* Alias */}
-                        <TableCell className="text-sm">
-                          <span className="text-slate-700 dark:text-slate-300 font-medium">
+                        <TableCell className="text-sm truncate max-w-[200px]">
+                          <span className="text-foreground font-medium">
                             {cert.aliasCertificado || `certificado-${cert.rucEmisor}`}
                           </span>
                         </TableCell>
@@ -397,10 +402,10 @@ export function CertificadoConfig() {
                               className={
                                 cert.activo
                                   ? "bg-emerald-600 hover:bg-emerald-700 text-white"
-                                  : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-400"
+                                  : ""
                               }
                             >
-                              {isToggling ? "Actualizando..." : cert.activo ? "Activo" : "Inactivo"}
+                              {isToggling ? "Actualizando…" : cert.activo ? "Activo" : "Inactivo"}
                             </Badge>
                           </div>
                         </TableCell>
@@ -408,13 +413,13 @@ export function CertificadoConfig() {
                         {/* Vigencia */}
                         <TableCell>
                           <div className="flex items-center gap-1.5 text-xs">
-                            <Calendar className="size-3.5 text-muted-foreground shrink-0" />
+                            <Calendar className="size-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
                             <span className={venc.color}>{venc.label}</span>
                           </div>
                         </TableCell>
 
                         {/* Fecha Creación */}
-                        <TableCell className="text-xs text-muted-foreground">
+                        <TableCell className="text-xs text-muted-foreground font-mono tabular-nums">
                           {formatDate(cert.creadoAt)}
                         </TableCell>
 
@@ -425,10 +430,11 @@ export function CertificadoConfig() {
                               variant="ghost"
                               size="sm"
                               onClick={() => abrirModalEditar(cert)}
-                              title="Reemplazar / Modificar certificado"
-                              className="h-8 px-2 text-xs"
+                              title="Reemplazar certificado"
+                              aria-label={`Reemplazar certificado para RUC ${cert.rucEmisor}`}
+                              className="h-8 px-2 text-xs cursor-pointer"
                             >
-                              <RefreshCw className="size-3.5 mr-1" />
+                              <RefreshCw className="size-3.5 mr-1" aria-hidden="true" />
                               Reemplazar
                             </Button>
                             <Button
@@ -436,9 +442,10 @@ export function CertificadoConfig() {
                               size="sm"
                               onClick={() => eliminarCertificado(cert.rucEmisor)}
                               title="Desactivar certificado"
-                              className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10"
+                              aria-label={`Desactivar certificado para RUC ${cert.rucEmisor}`}
+                              className="h-8 w-8 p-0 text-destructive hover:bg-destructive/10 cursor-pointer"
                             >
-                              <Trash2 className="size-3.5" />
+                              <Trash2 className="size-3.5" aria-hidden="true" />
                             </Button>
                           </div>
                         </TableCell>
@@ -456,8 +463,8 @@ export function CertificadoConfig() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <ShieldCheck className="size-5 text-blue-600" />
+            <DialogTitle className="flex items-center gap-2 text-lg">
+              <ShieldCheck className="size-5 text-primary" aria-hidden="true" />
               {certificados.some((c) => c.rucEmisor === certRuc)
                 ? "Reemplazar Certificado Digital"
                 : "Nuevo Certificado Digital"}
@@ -475,8 +482,11 @@ export function CertificadoConfig() {
               </Label>
               <Input
                 id="modal-ruc"
-                placeholder="20100119065"
+                placeholder="20100119065…"
                 maxLength={11}
+                inputMode="numeric"
+                autoComplete="off"
+                spellCheck={false}
                 value={certRuc}
                 onChange={(e) => setCertRuc(e.target.value.replace(/\D/g, ""))}
                 className="font-mono text-sm h-10"
@@ -491,21 +501,21 @@ export function CertificadoConfig() {
               </Label>
               <div
                 onClick={() => document.getElementById("modal-file")?.click()}
-                className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-lg p-5 cursor-pointer hover:border-blue-500 transition-colors bg-slate-50/50 dark:bg-slate-900/50 flex flex-col items-center justify-center gap-2 text-center"
+                className="border-2 border-dashed border-border rounded-lg p-5 cursor-pointer hover:border-primary transition-colors bg-muted/30 flex flex-col items-center justify-center gap-2 text-center"
               >
                 {certFile ? (
                   <>
-                    <FileCheck className="size-8 text-blue-600" />
+                    <FileCheck className="size-8 text-primary" aria-hidden="true" />
                     <div>
                       <p className="text-sm font-semibold text-foreground">{certFile.name}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
+                      <p className="text-xs text-muted-foreground mt-0.5 font-mono tabular-nums">
                         {(certFile.size / 1024).toFixed(1)} KB
                       </p>
                     </div>
                   </>
                 ) : (
                   <>
-                    <Shield className="size-8 text-muted-foreground" />
+                    <Shield className="size-8 text-muted-foreground" aria-hidden="true" />
                     <div>
                       <p className="text-xs font-medium text-foreground">
                         Haga clic para examinar su equipo
@@ -544,7 +554,8 @@ export function CertificadoConfig() {
                 <Input
                   id="modal-password"
                   type={showPassword ? "text" : "password"}
-                  placeholder="Contraseña del archivo .pfx"
+                  placeholder="Contraseña del archivo .pfx…"
+                  autoComplete="off"
                   value={certPassword}
                   onChange={(e) => setCertPassword(e.target.value)}
                   className="pr-10 h-10"
@@ -553,14 +564,15 @@ export function CertificadoConfig() {
                 <button
                   type="button"
                   onClick={() => setShowPassword((prev) => !prev)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-md cursor-pointer focus-visible:ring-1"
                 >
-                  {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  {showPassword ? <EyeOff className="size-4" aria-hidden="true" /> : <Eye className="size-4" aria-hidden="true" />}
                 </button>
               </div>
             </div>
 
-            {/* Alias opcional */}
+            {/* Alias y Fecha de Vigencia */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="modal-alias" className="text-xs font-semibold">
@@ -568,7 +580,8 @@ export function CertificadoConfig() {
                 </Label>
                 <Input
                   id="modal-alias"
-                  placeholder="autonomiflow-demo"
+                  placeholder="autonomiflow-demo…"
+                  autoComplete="off"
                   value={certAlias}
                   onChange={(e) => setCertAlias(e.target.value)}
                   className="h-9 text-xs"
@@ -589,18 +602,18 @@ export function CertificadoConfig() {
             </div>
 
             <DialogFooter className="pt-3 gap-2">
-              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={guardandoCert}>
+              <Button type="button" variant="outline" onClick={() => setDialogOpen(false)} disabled={guardandoCert} className="cursor-pointer">
                 Cancelar
               </Button>
-              <Button type="submit" disabled={guardandoCert} className="bg-blue-600 hover:bg-blue-700">
+              <Button type="submit" disabled={guardandoCert} className="bg-primary hover:bg-primary/90 cursor-pointer">
                 {guardandoCert ? (
                   <>
-                    <Loader2 className="size-4 mr-2 animate-spin" />
-                    Guardando...
+                    <Loader2 className="size-4 mr-2 animate-spin" aria-hidden="true" />
+                    Guardando…
                   </>
                 ) : (
                   <>
-                    <ShieldCheck className="size-4 mr-2" />
+                    <ShieldCheck className="size-4 mr-2" aria-hidden="true" />
                     Guardar y Activar
                   </>
                 )}
