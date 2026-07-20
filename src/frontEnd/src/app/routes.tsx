@@ -5,6 +5,7 @@ import { Home } from "@/features/shared/pages/Home";
 import { SalesDocuments } from "@/features/ventas/pages/SalesDocuments";
 import { ShippingGuide } from "@/features/guias-remision/pages/ShippingGuide";
 import { OseSender } from "@/features/shared/pages/OseSender";
+import { CertificadoConfig } from "@/features/shared/pages/CertificadoConfig";
 import { CatalogManagementPage } from "@/features/shared/pages/CatalogManagementPage";
 import { UserManagementPage } from "@/features/shared/pages/UserManagementPage";
 import { NotFound } from "@/features/shared/pages/NotFound";
@@ -51,6 +52,7 @@ export const router = createBrowserRouter([
       { path: "sales-documents", element: <SalesDocuments /> },
       { path: "shipping-guide", element: <ShippingGuide /> },
       { path: "ose-sender", element: <OseSender /> },
+      { path: "certificado", element: <CertificadoConfig /> },
       {
         path: "catalog-management",
         element: (

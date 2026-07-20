@@ -3,7 +3,7 @@
 import React from "react";
 import { useLocation, Outlet, useNavigate } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
-import { LogOut, LayoutDashboard, FileText, Truck, ChevronRight, Upload, Settings, Users } from "lucide-react";
+import { LogOut, LayoutDashboard, FileText, Truck, Shield, ChevronRight, Upload, Settings, Users } from "lucide-react";
 import { api, setAccessToken } from "@/lib/api";
 
 import {
@@ -25,6 +25,7 @@ const navItems = [
   { label: "Inicio", path: "/home", icon: LayoutDashboard },
   { label: "Documentos de Venta", path: "/sales-documents", icon: FileText },
   { label: "Guías de Remisión", path: "/shipping-guide", icon: Truck },
+  { label: "Certificado Digital", path: "/certificado", icon: Shield },
 ];
 
 /** Logo component */
@@ -269,6 +270,13 @@ export function AppLayout() {
               <div className="px-2 py-1.5">
                 <p className="text-xs text-muted-foreground truncate">{userEmail}</p>
               </div>
+              <DropdownMenuItem
+                onClick={() => handleNavigation("/certificado", navigate)}
+                className="cursor-pointer"
+              >
+                <Shield className="size-4" />
+                Certificado Digital
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={() => handleNavigation("/ose-sender", navigate)}
                 className="cursor-pointer"
