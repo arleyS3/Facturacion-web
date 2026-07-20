@@ -124,8 +124,21 @@ export function DocumentoRelacionadoSection({ type }: DocumentoRelacionadoSectio
             className="h-9 font-mono"
             placeholder="00000001"
             value={correlativoRef}
-            onChange={(e) => actualizarNumero(serieRef, e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value.replace(/\D/g, "");
+              actualizarNumero(serieRef, val);
+            }}
+            onBlur={() => {
+              if (correlativoRef) {
+                const digits = correlativoRef.replace(/\D/g, "");
+                if (digits) {
+                  const padded = digits.padStart(8, "0");
+                  actualizarNumero(serieRef, padded);
+                }
+              }
+            }}
             inputMode="numeric"
+            autoComplete="off"
           />
         </div>
       </div>
