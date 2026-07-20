@@ -44,6 +44,7 @@ public record GuiaRemisionUblData(
         String serie,
         String correlativo,
         String fechaEmision,
+        String horaEmision,
         String fechaTraslado,
         String tipoDocumento,
         String motivoTraslado,
@@ -70,9 +71,20 @@ public record GuiaRemisionUblData(
         String transportistaMarcaVehiculo,
         String conductorNroDocumento,
         String conductorTipoDocumento,
+        String conductorNombres,
+        String conductorApellidos,
+        String conductorLicencia,
         BigDecimal pesoBruto,
         String unidadMedidaPeso,
         Integer numeroBultos,
+        String puertoCodigo,
+        String puertoNombre,
+        String contenedorId,
+        String precintoId,
+        String docRefTransporteId,
+        String docRefTransporteTipo,
+        String docRefTransporteEmisor,
+        List<String> indicadores,
         List<GuiaRemisionLineaUblData> lineas
 ) {
 }

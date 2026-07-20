@@ -111,7 +111,8 @@ class ComprobanteControllerTest {
         when(facturaStrategy.generarXml(any())).thenReturn(
                 new GenerarXmlResult("<Invoice>test</Invoice>",
                         List.of("cvc-complex-type.2.4.a: Element ID missing")));
-        when(xmlSignatureService.trySignXml(any(), any())).thenReturn("<Invoice>test</Invoice>");
+        when(xmlSignatureService.trySignXmlResult(any(), any())).thenReturn(
+                new XmlSignatureService.ResultadoFirmaXml("<Invoice>test</Invoice>", true, "OK"));
 
         mockMvc.perform(post("/api/v1/comprobantes/generar-xml")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -127,7 +128,8 @@ class ComprobanteControllerTest {
     void generarXml_returnsEmptyValidationErrors_whenXmlIsValid() throws Exception {
         when(facturaStrategy.generarXml(any())).thenReturn(
                 new GenerarXmlResult("<Invoice>valid</Invoice>", List.of()));
-        when(xmlSignatureService.trySignXml(any(), any())).thenReturn("<Invoice>valid</Invoice>");
+        when(xmlSignatureService.trySignXmlResult(any(), any())).thenReturn(
+                new XmlSignatureService.ResultadoFirmaXml("<Invoice>valid</Invoice>", true, "OK"));
 
         mockMvc.perform(post("/api/v1/comprobantes/generar-xml")
                         .contentType(MediaType.APPLICATION_JSON)

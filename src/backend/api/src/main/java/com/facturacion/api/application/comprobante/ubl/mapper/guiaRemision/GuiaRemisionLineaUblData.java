@@ -16,6 +16,7 @@ public record GuiaRemisionLineaUblData(
         String codigoProducto,
         String descripcion,
         BigDecimal cantidad,
-        String unidadMedida
+        String unidadMedida,
+        String damNumero
 ) {
 }

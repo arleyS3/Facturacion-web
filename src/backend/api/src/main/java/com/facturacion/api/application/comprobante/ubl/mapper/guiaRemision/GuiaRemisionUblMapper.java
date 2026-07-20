@@ -38,12 +38,18 @@ public class GuiaRemisionUblMapper {
         if (canonico.detalles() != null) {
             int numeroLinea = 1;
             for (DetalleCanonico det : canonico.detalles()) {
+                // DAM por ítem opcional si está presente en documentoAdicional o en el detalle
+                String damItem = (canonico.documentoRelacionado() != null && "50".equals(canonico.documentoRelacionado().tipoDocumento()))
+                        ? canonico.documentoRelacionado().numeroDocumento()
+                        : (traslado.docRefTransporteId() != null ? traslado.docRefTransporteId() : null);
+
                 lineas.add(new GuiaRemisionLineaUblData(
                         numeroLinea++,
                         det.codigoProducto(),
                         det.descripcion(),
                         det.cantidad(),
-                        det.unidadMedida() != null ? det.unidadMedida() : "NIU"
+                        det.unidadMedida() != null ? det.unidadMedida() : "NIU",
+                        damItem
                 ));
             }
         }
@@ -53,6 +59,7 @@ public class GuiaRemisionUblMapper {
                 serie,
                 correlativo,
                 canonico.fechaEmision(),
+                canonico.horaEmision(),
                 traslado.fechaTraslado(),
                 canonico.tipoDocumento() != null ? canonico.tipoDocumento() : "09", // 09 = Guía de Remisión Remitente
                 traslado.tipoTraslado(), // Catálogo 20
@@ -79,9 +86,20 @@ public class GuiaRemisionUblMapper {
                 traslado.marcaVehiculo(),
                 traslado.conductorNroDocumento(),
                 traslado.conductorTipoDocumento(),
+                traslado.conductorNombres(),
+                traslado.conductorApellidos(),
+                traslado.conductorLicencia(),
                 traslado.pesoBrutoTotal(),
                 traslado.undPesoTotal() != null ? traslado.undPesoTotal() : "KGM",
                 traslado.numeroBultos(),
+                traslado.puertoCodigo(),
+                traslado.puertoNombre(),
+                traslado.contenedorId(),
+                traslado.precintoId(),
+                traslado.docRefTransporteId(),
+                traslado.docRefTransporteTipo(),
+                traslado.docRefTransporteEmisor(),
+                traslado.indicadores(),
                 lineas
         );
     }

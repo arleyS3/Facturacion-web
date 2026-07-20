@@ -92,6 +92,15 @@ public record ParteTrasladoCanonico(
         
         @JsonProperty("conductor_tipo_documento")
         String conductorTipoDocumento,
+
+        @JsonProperty("conductor_nombres")
+        String conductorNombres,
+
+        @JsonProperty("conductor_apellidos")
+        String conductorApellidos,
+
+        @JsonProperty("conductor_licencia")
+        String conductorLicencia,
         
         @JsonProperty("peso_bruto_total")
         BigDecimal pesoBrutoTotal,
@@ -103,6 +112,30 @@ public record ParteTrasladoCanonico(
         Integer numeroBultos,
         
         @JsonProperty("fecha_traslado")
-        String fechaTraslado
+        String fechaTraslado,
+
+        @JsonProperty("puerto_codigo")
+        String puertoCodigo,
+
+        @JsonProperty("puerto_nombre")
+        String puertoNombre,
+
+        @JsonProperty("contenedor_id")
+        String contenedorId,
+
+        @JsonProperty("precinto_id")
+        String precintoId,
+
+        @JsonProperty("doc_ref_transporte_id")
+        String docRefTransporteId,
+
+        @JsonProperty("doc_ref_transporte_tipo")
+        String docRefTransporteTipo,
+
+        @JsonProperty("doc_ref_transporte_emisor")
+        String docRefTransporteEmisor,
+
+        @JsonProperty("indicadores")
+        java.util.List<String> indicadores
 ) {
 }

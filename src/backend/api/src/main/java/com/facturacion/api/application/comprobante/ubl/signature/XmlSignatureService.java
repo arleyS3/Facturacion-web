@@ -248,6 +248,9 @@ public class XmlSignatureService {
 
         Node insertionPoint = firstDirectChild(root, CAC_NS, "AccountingSupplierParty");
         if (insertionPoint == null) {
+            insertionPoint = firstDirectChild(root, CAC_NS, "DespatchSupplierParty");
+        }
+        if (insertionPoint == null) {
             root.appendChild(signature);
             return;
         }
@@ -265,6 +268,9 @@ public class XmlSignatureService {
 
     private String findSupplierRuc(Element root) {
         Element supplierParty = firstDescendant(root, CAC_NS, "AccountingSupplierParty");
+        if (supplierParty == null) {
+            supplierParty = firstDescendant(root, CAC_NS, "DespatchSupplierParty");
+        }
         String partyIdentification = textOfFirstDescendant(supplierParty, "ID");
         if (partyIdentification.matches("\\d{11}")) {
             return partyIdentification;
@@ -275,6 +281,9 @@ public class XmlSignatureService {
 
     private String findSupplierName(Element root) {
         Element supplierParty = firstDescendant(root, CAC_NS, "AccountingSupplierParty");
+        if (supplierParty == null) {
+            supplierParty = firstDescendant(root, CAC_NS, "DespatchSupplierParty");
+        }
         String registrationName = textOfFirstDescendant(supplierParty, "RegistrationName");
         if (!registrationName.isBlank()) {
             return registrationName;

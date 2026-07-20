@@ -59,7 +59,7 @@ public class SeccionesToCanonicoMapper {
                 a.getOrDefault("UbigeoReceptor", null),
                 mapDetalles(secciones),
                 mapRelacionado(campos),
-                mapTraslado(campos),
+                mapTraslado(secciones),
                 List.of(),
                 null, // descuentosGlobales — no se mapea desde trama antigua
                 null, // anticipos — no se mapea desde trama antigua
@@ -127,37 +127,93 @@ public class SeccionesToCanonicoMapper {
     /**
      * Mapea la sección de traslado.
      *
-     * @param campos mapa de campos por sección
+     * @param secciones payload con campos y listas
      * @return parte de traslado o null
      */
-    private ParteTrasladoCanonico mapTraslado(Map<String, Map<String, String>> campos) {
+    private ParteTrasladoCanonico mapTraslado(SeccionesPayload secciones) {
+        if (secciones == null || secciones.campos() == null)
+            return null;
+
+        Map<String, Map<String, String>> campos = secciones.campos();
         Map<String, String> g = campos.getOrDefault("G", Map.of());
         if (g.isEmpty())
             return null;
-        
-        // Mapeo de campos al nuevo formato snake_case
+
+        Map<String, String> g1 = campos.getOrDefault("G1", Map.of());
+        Map<String, String> g2 = campos.getOrDefault("G2", Map.of());
+        Map<String, String> d = campos.getOrDefault("D", Map.of());
+
+        Map<String, List<Map<String, String>>> listas = secciones.listas() != null ? secciones.listas() : Map.of();
+        List<Map<String, String>> listaG11 = listas.getOrDefault("G11", List.of());
+        Map<String, String> driverItem = !listaG11.isEmpty() ? listaG11.get(0) : Map.of();
+
+        List<Map<String, String>> listaG3 = listas.getOrDefault("G3", List.of());
+        Map<String, String> containerItem = !listaG3.isEmpty() ? listaG3.get(0) : Map.of();
+
+        List<Map<String, String>> listaG4 = listas.getOrDefault("G4", List.of());
+        List<String> indicadores = new ArrayList<>();
+        for (Map<String, String> ind : listaG4) {
+            String val = ind.get("IndicadorTraslado");
+            if (val != null && !val.isBlank()) {
+                indicadores.add(val);
+            }
+        }
+
+        List<Map<String, String>> listaD = listas.getOrDefault("D", List.of());
+        Map<String, String> refItem = !listaD.isEmpty() ? listaD.get(0) : (d.isEmpty() ? Map.of() : d);
+
+        String docRefId = null;
+        if (!refItem.isEmpty()) {
+            String s = refItem.getOrDefault("SerieRef", "");
+            String f = refItem.getOrDefault("FolioRef", "");
+            docRefId = s.isBlank() ? f : s + "-" + f;
+        }
+
+        String conductorNroDoc = g.getOrDefault("NroDocConductor", driverItem.getOrDefault("ConductorNroDocId", ""));
+        String conductorTipoDoc = g.getOrDefault("TipoDocConductor", driverItem.getOrDefault("ConductorTipoDocId", ""));
+        String conductorNombres = driverItem.getOrDefault("NombConductor", null);
+        String conductorApellidos = driverItem.getOrDefault("ApellConductor", null);
+        String conductorLicencia = driverItem.getOrDefault("NumLicenciaCond", null);
+
+        String transportistaNroDoc = g.getOrDefault("NroDocTransportista", g1.getOrDefault("RucTranspor", ""));
+        String transportistaRazonSocial = g.getOrDefault("RznSocTransportista", g1.getOrDefault("RazoTrans", ""));
+        String transportistaTipoDoc = g.getOrDefault("TipoDocTransportista", g1.getOrDefault("TipoRucTrans", ""));
+
+        String fechaTraslado = g.getOrDefault("FecTraslado", g1.getOrDefault("FecIniTras", ""));
+
         return new ParteTrasladoCanonico(
-                g.getOrDefault("TipoTraslado", ""),           // tipo_traslado
-                g.getOrDefault("ModalidadTraslado", ""),      // modalidad_traslado
-                g.getOrDefault("PuntoPartida", ""),           // punto_partida
-                g.getOrDefault("PuntoLlegada", ""),           // punto_llegada
-                g.getOrDefault("UbigeoPtoPartida", ""),        // punto_partida_ubigeo
-                g.getOrDefault("DireccionPtoPartida", ""),    // punto_partida_direccion
-                g.getOrDefault("UrbanizacionPtoPartida", ""),  // punto_partida_urbanizacion
-                g.getOrDefault("UbigeoPtoLlegada", ""),       // punto_llegada_ubigeo
-                g.getOrDefault("DireccionPtoLlegada", ""),    // punto_llegada_direccion
-                g.getOrDefault("UrbanizacionPtoLlegada", ""),  // punto_llegada_urbanizacion
-                g.getOrDefault("NroDocTransportista", ""),    // transportista_nro_documento
-                g.getOrDefault("RznSocTransportista", ""),     // transportista_razonSocial
-                g.getOrDefault("TipoDocTransportista", ""),  // transportista_tipo_documento
-                g.getOrDefault("PlacaVehiculo", ""),         // placa_vehiculo
-                g.getOrDefault("MarcaVehiculo", ""),          // marca_vehiculo
-                g.getOrDefault("NroDocConductor", ""),        // conductor_nro_documento
-                g.getOrDefault("TipoDocConductor", ""),       // conductor_tipo_documento
-                decimal(g.getOrDefault("PesoBrutoTotal", "0")), // peso_bruto_total
-                g.getOrDefault("UndPesoTotal", ""),          // und_peso_total
+                g.getOrDefault("MotTras", g.getOrDefault("TipoTraslado", "")), // tipo_traslado
+                g.getOrDefault("ModTras", g.getOrDefault("ModalidadTraslado", "")), // modalidad_traslado
+                g.getOrDefault("PuntoPartida", ""), // punto_partida
+                g.getOrDefault("PuntoLlegada", ""), // punto_llegada
+                g.getOrDefault("DirParUbiGeo", g.getOrDefault("UbigeoPtoPartida", "")), // punto_partida_ubigeo
+                g.getOrDefault("DirParDireccion", g.getOrDefault("DireccionPtoPartida", "")), // punto_partida_direccion
+                g.getOrDefault("UrbanizacionPtoPartida", ""), // punto_partida_urbanizacion
+                g.getOrDefault("DirLlegUbiGeo", g.getOrDefault("UbigeoPtoLlegada", "")), // punto_llegada_ubigeo
+                g.getOrDefault("DirLlegDireccion", g.getOrDefault("DireccionPtoLlegada", "")), // punto_llegada_direccion
+                g.getOrDefault("UrbanizacionPtoLlegada", ""), // punto_llegada_urbanizacion
+                transportistaNroDoc,
+                transportistaRazonSocial,
+                transportistaTipoDoc,
+                g.getOrDefault("PlacaVehicPrinc", g.getOrDefault("PlacaVehiculo", "")), // placa_vehiculo
+                g.getOrDefault("MarcaVehiculo", ""), // marca_vehiculo
+                conductorNroDoc,
+                conductorTipoDoc,
+                conductorNombres,
+                conductorApellidos,
+                conductorLicencia,
+                decimal(g.getOrDefault("TotalPesoTraslado", g.getOrDefault("PesoBrutoTotal", "0"))), // peso_bruto_total
+                g.getOrDefault("UnmdTotalPeso", g.getOrDefault("UndPesoTotal", "KGM")), // und_peso_total
                 Integer.parseInt(g.getOrDefault("NroBultos", "0")), // numero_bultos
-                g.getOrDefault("FecTraslado", "")             // fecha_traslado
+                fechaTraslado,
+                g2.getOrDefault("CodPueAer", null), // puerto_codigo
+                g2.getOrDefault("NmbPueAer", null), // puerto_nombre
+                containerItem.getOrDefault("IdContenedor", null), // contenedor_id
+                containerItem.getOrDefault("NumPrecinto", null), // precinto_id
+                docRefId, // doc_ref_transporte_id
+                refItem.getOrDefault("TpoDocRef", null), // doc_ref_transporte_tipo
+                refItem.getOrDefault("RucEmisDocRef", null), // doc_ref_transporte_emisor
+                indicadores
         );
     }
 

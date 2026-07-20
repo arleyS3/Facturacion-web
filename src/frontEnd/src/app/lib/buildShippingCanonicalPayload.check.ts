@@ -6,6 +6,7 @@ const payload = buildShippingCanonicalPayload({
   serie: "T001",
   correlativo: "7",
   fechaEmision: "2026-06-29",
+  horaEmision: "12:06:25",
   issuerDocNumber: "20123456789",
   issuerSocialName: "ACME SAC",
   receiverDocNumber: "20987654321",
@@ -21,14 +22,26 @@ const payload = buildShippingCanonicalPayload({
   gUnmdTotalPeso: "KGM",
   gNroBultos: "3",
   gPlacaVehicPrinc: "ABC123",
-  shippingDrivers: [{ numeroDocumento: "12345678", codTipoDocumento: "1" }],
+  shippingDrivers: [{ numeroDocumento: "12345678", codTipoDocumento: "1", nombres: "LINDER", apellidos: "TAFUR", nroLicencia: "C12345678" }],
   shippingItems: [{ QtyItem: "2", UnmdItem: "NIU", NmbItem: "Box" }],
+  shippingAirport: { codigoPuerto: "CLL", nombrePuerto: "Callao" },
+  shippingContainers: [{ idContenedor: "HLBU123", nroPrecinto: "PREC01" }],
+  shippingReferences: [{ TpoDocRef: "50", SerieRef: "118", FolioRef: "2023-40", RucEmisDocRef: "20602073905" }],
+  shippingIndicators: [{ indicador: "SUNAT_Envio_IndicadorTrasladoTotalDAMoDS" }],
 });
 
 assert.equal(payload.tipo_documento, "09");
 assert.equal(payload.numero, "T001-00000007");
+assert.equal(payload.hora_emision, "12:06:25");
 assert.equal(payload.parte_traslado.modalidad_traslado, "02");
 assert.equal(payload.parte_traslado.peso_bruto_total, 12.5);
+assert.equal(payload.parte_traslado.conductor_nombres, "LINDER");
+assert.equal(payload.parte_traslado.conductor_apellidos, "TAFUR");
+assert.equal(payload.parte_traslado.conductor_licencia, "C12345678");
+assert.equal(payload.parte_traslado.puerto_codigo, "CLL");
+assert.equal(payload.parte_traslado.contenedor_id, "HLBU123");
+assert.equal(payload.parte_traslado.doc_ref_transporte_id, "118-2023-40");
+assert.deepEqual(payload.parte_traslado.indicadores, ["SUNAT_Envio_IndicadorTrasladoTotalDAMoDS"]);
 assert.deepEqual(payload.detalles, [
   {
     codigo_producto: undefined,
